@@ -11,11 +11,11 @@ Tidak tersedia registrasi publik. Admin membuat akun mahasiswa dan dosen. Penggu
 ## 2. Fitur mahasiswa
 1. Dashboard.
 2. Profil mahasiswa.
-3. Kalender akademik.
+3. Kalender akademik (Calendar View + Timeline View).
 4. Mata kuliah.
 5. Materi pembelajaran.
 6. Tugas dan pengumpulan.
-7. Jadwal ujian.
+7. Jadwal ujian (UTS dan UAS).
 8. Target belajar.
 9. Nilai (hanya melihat).
 10. Absensi (hanya mengisi/melihat absensi sendiri sesuai aturan).
@@ -30,7 +30,7 @@ Mahasiswa hanya boleh mengakses data dirinya dan kelas yang diikutinya.
 4. Materi pembelajaran.
 5. Manajemen tugas.
 6. Pengumpulan tugas.
-7. Jadwal ujian.
+7. Jadwal ujian (UTS dan UAS).
 8. Progres belajar mahasiswa.
 9. Data nilai (mengelola nilai kelas yang diajar).
 10. Absensi (melihat/mengelola kelas yang diajar).
@@ -46,7 +46,7 @@ Dosen hanya boleh mengelola kelas yang menjadi tanggung jawabnya.
 5. Data mata kuliah.
 6. Tahun akademik dan semester.
 7. Penjadwalan kuliah.
-8. Kalender akademik.
+8. Kalender akademik institusi.
 
 Admin mengelola data dan agenda sesuai kewenangannya.
 
@@ -56,35 +56,53 @@ Admin mengelola data dan agenda sesuai kewenangannya.
 - Mahasiswa tidak boleh mengubah absensi mahasiswa lain.
 - Dosen dapat mengelola absensi kelas yang diajar.
 - Notifikasi akademik bersifat in-app; tidak perlu push notification/FCM.
-- Email reset password boleh digunakan dan tidak sama dengan notifikasi akademik.
-- Tugas memiliki tanggal dibuat/publikasi dan deadline yang terpisah.
+- Email reset password boleh digunakan dan tidak sama dengan notifikasi akademik dalam aplikasi.
+- Tugas memiliki dua tanggal yang wajib dibedakan: `dipublikasikan_pada` (kapan tugas mulai terlihat dan bisa dikerjakan mahasiswa) dan `deadline` (batas waktu pengumpulan). Jangan menggabungkan atau menghilangkan salah satunya.
 - Materi diunggah dosen untuk kelas tertentu; progres baca dicatat per mahasiswa.
 - Pengingat deadline tugas dan ujian dapat muncul di notifikasi aplikasi.
+- UTS (Ujian Tengah Semester) dan UAS (Ujian Akhir Semester) adalah dua kategori ujian yang berbeda dan harus ditampilkan dengan label yang jelas.
 
 ## 6. Konsep data/entitas
-Rancangan ERD ringkas yang pernah disepakati berisi:
-1. `pengguna`
-2. `tahun_akademik`
-3. `mata_kuliah`
-4. `kelas_mata_kuliah`
-5. `peserta_mata_kuliah`
-6. `jadwal_kuliah`
-7. `materi_pembelajaran`
-8. `progres_materi`
-9. `tugas`
-10. `pengumpulan_tugas`
-11. `agenda_akademik`
-12. `target_belajar`
-13. `notifikasi`
-14. `nilai`
-15. `sesi_absensi`
-16. `absensi`
+Rancangan yang sudah diimplementasikan dalam migration (periksa file migration aktual untuk schema definitif):
 
-Ini adalah rancangan konseptual, bukan bukti bahwa migration/model sudah dibuat. Periksa schema aktual sebelum mengimplementasikan.
+| No | Tabel | Keterangan |
+|---|---|---|
+| 1 | `users` | Pengguna (mahasiswa, dosen, admin) |
+| 2 | `tahun_akademik` | Tahun akademik dan semester |
+| 3 | `mata_kuliah` | Data mata kuliah |
+| 4 | `kelas_mata_kuliah` | Kelas per mata kuliah dan dosen |
+| 5 | `peserta_mata_kuliah` | Mahasiswa yang terdaftar di kelas |
+| 6 | `jadwal_kuliah` | Jadwal kuliah per kelas (hari, jam, ruang) |
+| 7 | `materi_pembelajaran` | Materi yang diunggah dosen |
+| 8 | `progres_materi` | Progres baca materi per mahasiswa |
+| 9 | `tugas` | Tugas dengan `dipublikasikan_pada` dan `deadline` |
+| 10 | `pengumpulan_tugas` | Pengumpulan tugas oleh mahasiswa |
+| 11 | `agenda_akademik` | Agenda: akademik, ujian (UTS/UAS), pengumuman |
+| 12 | `target_belajar` | Target belajar mahasiswa |
+| 13 | `notifikasi` | Notifikasi in-app |
+| 14 | `nilai` | Nilai per mahasiswa per komponen |
+| 15 | `sesi_absensi` | Sesi absensi yang dibuat dosen |
+| 16 | `absensi` | Catatan kehadiran mahasiswa per sesi |
 
-## 7. Batasan fitur
+Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu periksa file migration dan model aktual sebelum mengimplementasikan fitur.
+
+## 7. Catatan schema aktual (gap yang perlu diperhatikan)
+
+### UTS vs UAS di agenda_akademik
+- Enum `JenisAgenda` saat ini memiliki nilai: `akademik`, `ujian`, `pengumuman`.
+- UTS dan UAS **belum dibedakan secara eksplisit** di level enum — keduanya menggunakan `jenis = ujian`.
+- Implementasi UI saat ini menggunakan field `judul` untuk membedakan UTS dari UAS.
+- **Jika dibutuhkan pembedaan di level schema** (contoh: menambahkan nilai enum `uts` dan `uas`), laporkan kebutuhan ini sebelum mengubah migration atau enum. Jangan mengubah schema tanpa persetujuan eksplisit.
+
+### Jadwal kuliah dan ujian
+- Tabel `jadwal_kuliah` menyimpan jadwal reguler kuliah/praktikum.
+- Jadwal ujian (UTS/UAS) disimpan di `agenda_akademik` dengan `jenis = ujian`.
+- Pastikan implementasi UI tidak mencampur dua sumber data ini tanpa label yang jelas.
+
+## 8. Batasan fitur
 - Jangan menambahkan pembayaran, chat real-time, forum, push notification, atau fitur lain yang belum diminta.
 - Jangan menambahkan registrasi mandiri.
 - Jangan menganggap mahasiswa boleh mengubah nilai.
 - Jangan menganggap mahasiswa boleh mengelola kelas atau agenda institusi.
+- Jangan menampilkan angka statistik tanpa sumber query nyata.
 - Jika ada fitur baru yang diperlukan, jelaskan manfaat, dampak database, dan dampak akses sebelum implementasi.

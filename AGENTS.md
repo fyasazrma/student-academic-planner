@@ -43,10 +43,10 @@ Jangan menganggap contoh atau rancangan sebagai bukti bahwa fitur sudah tersedia
 
 ## 4. Aturan teknologi dan struktur
 - Utamakan Laravel conventions, Blade components, named routes, Form Request validation, middleware/policies, Eloquent relationships, dan migration.
-- Gunakan komponen Blade reusable untuk elemen yang berulang: sidebar, topbar, breadcrumb, page header, stat card, button, form field, modal, table, badge, empty state, dan calendar event.
-- Gunakan Tailwind CSS sesuai versi yang sudah terpasang. Jangan mengasumsikan konfigurasi Tailwind versi tertentu.
+- Gunakan komponen Blade reusable untuk elemen yang berulang: sidebar, topbar, breadcrumb, page header, stat card, button, form field, modal, table, badge, empty state, calendar event, dan timeline bar.
+- Gunakan Tailwind CSS sesuai versi yang sudah terpasang (Tailwind v4 dengan @tailwindcss/vite). Jangan mengasumsikan konfigurasi versi lain.
 - Gunakan ikon dari satu library yang sudah terpasang. Jangan mencampur emoji, SVG acak, dan beberapa library ikon tanpa alasan.
-- Pertahankan Plus Jakarta Sans jika sudah tersedia/ditetapkan; jangan menambah font eksternal baru tanpa kebutuhan.
+- Pertahankan Plus Jakarta Sans; font ini sudah dikonfigurasi via Bunny Fonts di vite.config.js. Jangan menambah font eksternal baru tanpa kebutuhan.
 - Gunakan nama route, variabel, dan komponen yang jelas dan konsisten.
 - Hindari duplikasi markup dan inline style yang tidak perlu.
 - Pastikan layout tetap usable pada desktop, tablet, dan mobile.
@@ -65,62 +65,136 @@ Jangan menganggap contoh atau rancangan sebagai bukti bahwa fitur sudah tersedia
 - Reset password melalui mekanisme aman; email reset password berbeda dari notifikasi akademik dalam aplikasi.
 
 ## 6. Aturan kalender akademik — fitur inti
-Kalender akademik adalah komponen paling penting pada dashboard mahasiswa, dosen, dan admin. Jangan memperlakukannya sebagai widget dekoratif.
+Kalender akademik adalah komponen paling penting pada dashboard mahasiswa, dosen, dan admin. Jangan memperlakukannya sebagai widget dekoratif. Kalender harus mendapat area visual yang dominan di dashboard.
 
-Kalender setidaknya mendukung:
+Kalender memiliki dua perspektif yang saling melengkapi:
+
+### 6a. Calendar View
 - Tampilan bulanan dan mingguan; tampilan harian dapat ditambahkan bila bermanfaat.
+- Tampilan agenda/list sebagai alternatif, terutama untuk mobile.
 - Navigasi periode sebelumnya/berikutnya dan tombol kembali ke hari ini.
 - Legenda warna dan filter jenis agenda.
-- Detail agenda saat item dipilih.
+- Detail agenda saat item dipilih (modal atau drawer).
 - Empty state ketika tidak ada agenda.
-- Responsif pada layar kecil; jangan memaksa kalender desktop mengecil hingga sulit dibaca.
+- Responsif pada layar kecil; pada mobile gunakan agenda/list yang mudah dibaca.
 
-Jenis agenda yang perlu dibedakan:
-- Tugas: tampilkan tanggal mulai/dibuat dan deadline secara terpisah; visualisasikan rentang pengerjaan jika sesuai.
-- Ujian: tanggal dan jam ujian.
-- Jadwal kuliah: hari, jam, kelas, dan mata kuliah.
-- Agenda akademik: tanggal mulai dan selesai.
-- Pengumuman: tanggal publikasi, bukan dianggap sebagai deadline.
+### 6b. Timeline View
+- Bar horizontal menampilkan rentang pengerjaan tugas dari tanggal dipublikasikan hingga deadline.
+- Sumbu horizontal adalah skala tanggal.
+- Setiap bar tugas menampilkan: nama tugas, mata kuliah, tanggal dipublikasikan, deadline, dan status.
+- Penanda visual membedakan titik publikasi dan titik deadline secara eksplisit.
+- Status tugas (belum dikerjakan, sedang dikerjakan, sudah dikumpulkan, terlambat) tercermin pada warna/ikon bar.
+- Ujian (UTS/UAS) tampil sebagai penanda titik pada timeline, bukan bar rentang.
 
-Tanggal tugas dibuat dan deadline adalah dua data berbeda. Jangan menyamakan atau menghilangkan salah satunya. Jika data backend belum mendukung rentang tugas, laporkan kebutuhan perubahan data sebelum mengubah schema.
+### 6c. Jenis agenda yang dibedakan
 
-Kalender harus menggunakan data yang relevan untuk role:
-- Mahasiswa: agenda akademik, kelas yang diikuti, jadwalnya, tugas dan deadline miliknya.
-- Dosen: kelas yang diajar, jadwal mengajar, tugas yang dibuat, deadline, ujian, dan agenda relevan.
-- Admin: kalender akademik institusi dan jadwal lintas kelas sesuai hak akses.
+**TUGAS:**
+- `dipublikasikan_pada`: kapan tugas mulai dapat dilihat dan dikerjakan mahasiswa.
+- `deadline`: batas waktu pengumpulan.
+- Kedua tanggal ini **wajib dibedakan secara visual** dan tidak boleh digabungkan atau disamakan.
+- Informasi tambahan: judul, mata kuliah/kelas, status pengumpulan mahasiswa.
+- Data bersumber dari tabel `tugas` dan `pengumpulan_tugas`.
+
+**UTS (Ujian Tengah Semester):**
+- Tanggal ujian, jam mulai, jam selesai.
+- Mata kuliah, lokasi atau metode (online/offline) jika tersedia di schema.
+- Saat ini disimpan di `agenda_akademik` dengan `jenis = ujian`; label UTS dibedakan via field `judul`.
+- **Gap schema:** Enum `JenisAgenda` belum membedakan UTS dan UAS secara eksplisit. Jika diperlukan pembedaan level schema, laporkan sebagai kebutuhan perubahan sebelum mengubah migration.
+
+**UAS (Ujian Akhir Semester):**
+- Tanggal ujian, jam mulai, jam selesai.
+- Mata kuliah, lokasi atau metode (online/offline) jika tersedia di schema.
+- Saat ini disimpan di `agenda_akademik` dengan `jenis = ujian`; label UAS dibedakan via field `judul`.
+
+**JADWAL KULIAH:**
+- Data dari tabel `jadwal_kuliah`.
+- Hari dan jam, mata kuliah dan kelas, ruangan atau link jika tersedia.
+- Jenis: kuliah, praktikum, atau lainnya (sesuai `JenisJadwal` enum: `kuliah`, `praktikum`, `lainnya`).
+
+**AGENDA AKADEMIK INSTITUSI:**
+- Judul, keterangan, tanggal mulai, tanggal selesai.
+- Agenda institusi ditandai dengan `kelas_mata_kuliah_id = NULL` di tabel `agenda_akademik`.
+
+**PENGUMUMAN:**
+- Data dari `agenda_akademik` dengan `jenis = pengumuman`.
+- Tanggal dipublikasikan adalah tanggal publikasi, bukan deadline.
+- Jangan memperlakukan tanggal publikasi pengumuman sebagai deadline.
+
+### 6d. Data per role
+- **Mahasiswa:** agenda akademik institusi, kelas yang diikuti (via `peserta_mata_kuliah`), jadwal kuliah, tugas dengan `dipublikasikan_pada` dan `deadline` miliknya, ujian relevan.
+- **Dosen:** kelas yang diajar (via `kelas_mata_kuliah`), jadwal mengajar, tugas yang dibuat, deadline, ujian, agenda relevan.
+- **Admin:** kalender akademik institusi dan jadwal lintas kelas sesuai hak akses.
 
 Gunakan zona waktu aplikasi yang konsisten. Jangan mengarang tanggal, agenda, atau status.
 
 ## 7. Dashboard per role
-Dashboard harus punya kerangka visual yang konsisten, tetapi informasi dan tindakan disesuaikan dengan role.
+Dashboard harus punya kerangka visual yang konsisten menggunakan satu application shell, tetapi informasi dan tindakan disesuaikan dengan role.
 
 ### Mahasiswa
-Prioritas: kalender akademik, deadline terdekat, tugas belum dikumpulkan, jadwal kuliah/ujian, progres materi, ringkasan nilai/absensi, notifikasi.
+Susunan prioritas konten:
+1. Greeting dan identitas mahasiswa (nama, NIM).
+2. Informasi tahun akademik dan semester aktif.
+3. Ringkasan tugas aktif dan belum dikumpulkan (hanya angka yang didukung data nyata).
+4. Deadline terdekat.
+5. Ringkasan jadwal ujian (UTS/UAS) mendatang.
+6. Kalender akademik berukuran besar di area tengah — Calendar View dan Timeline View tersedia.
+7. Panel notifikasi di kanan: notifikasi terbaru, deadline terdekat, ujian mendatang.
+8. Jadwal kuliah terdekat.
+9. Progres materi pembelajaran.
+
+Jangan memenuhi dashboard dengan terlalu banyak kartu statistik. Tampilkan hanya indikator yang benar-benar membantu keputusan mahasiswa dan didukung data nyata.
 
 ### Dosen
-Prioritas: kalender, jadwal mengajar, tugas yang dibuat, status/jumlah pengumpulan, ujian, ringkasan absensi, progres mahasiswa, notifikasi.
+Susunan prioritas konten:
+- Jadwal mengajar hari ini dan minggu ini.
+- Tugas yang dibuat: status pengumpulan, berapa yang sudah masuk dan belum dinilai.
+- Jadwal ujian yang dikelola.
+- Ringkasan absensi kelas yang diajar.
+- Progres mahasiswa secara ringkas.
+- Notifikasi akademik.
+
+Jangan menampilkan data kelas lain yang tidak menjadi tanggung jawab dosen.
 
 ### Admin
-Prioritas: kalender akademik institusi, statistik pengguna, mahasiswa/dosen, mata kuliah, tahun akademik/semester, jadwal, dan agenda.
+Susunan prioritas konten:
+- Total mahasiswa aktif, total dosen, mata kuliah, kelas aktif (hanya angka didukung query nyata).
+- Tahun akademik dan semester aktif.
+- Kalender akademik institusi.
+- Agenda akademik mendatang.
+- Aktivitas administrasi terbaru.
 
-Jangan menampilkan statistik yang tidak didukung query/data nyata. Jangan menampilkan data role lain tanpa alasan dan otorisasi.
+Jangan menampilkan angka statistik palsu. Jangan menampilkan data role lain tanpa alasan dan otorisasi.
 
-## 8. Aturan UI/UX
+## 8. Panel notifikasi dashboard
+Panel kanan dashboard menampilkan:
+- Notifikasi terbaru dari tabel `notifikasi`: judul, kategori, waktu, status baca/belum baca, link ke detail.
+- Deadline tugas terdekat.
+- Ujian mendatang.
+- Agenda penting.
+
+Semua item harus bersumber dari data aktual. Jangan menampilkan notifikasi contoh yang terlihat seperti data produksi.
+
+## 9. Aturan UI/UX
 - Ikuti `docs/UI_UX_GUIDELINES.md` dan `docs/DESIGN_SYSTEM.md`.
-- Arah visual: dark charcoal dengan aksen indigo/ungu, bersih, modern, profesional, dan mudah dibaca.
-- Gunakan Plus Jakarta Sans jika sudah tersedia.
-- Gunakan sidebar kiri dan topbar sebagai pola utama aplikasi.
+- **Arah visual: Light Lavender Academic Dashboard.**
+  - Latar halaman luar: lavender (`#F0E9FF`).
+  - Permukaan aplikasi utama: putih/off-white (`#FBFBFA`).
+  - Sidebar: navy gelap (`#242238`).
+  - Menu aktif sidebar: lime (`#D8F36A`).
+  - Card: putih (`#FFFFFF`).
+  - Teks utama: charcoal gelap (`#242436`).
+- Gunakan satu application shell untuk ketiga role. Sidebar kiri, topbar, area konten utama, dan panel kanan.
 - Kalender harus menjadi elemen dominan dashboard, bukan kartu kecil yang tenggelam.
-- Gunakan spacing, radius, ukuran heading, warna, dan state komponen secara konsisten.
+- Gunakan spacing, radius, ukuran heading, warna, dan state komponen secara konsisten sesuai `docs/DESIGN_SYSTEM.md`.
 - Hindari gradient berlebihan, glow, glassmorphism berat, dekorasi yang tidak membantu, dan terlalu banyak kartu statistik.
 - Utamakan kontras teks, keterbacaan, fokus keyboard, label form, dan feedback aksi.
 - Jangan menyalin mentah gambar referensi; adaptasikan ke kebutuhan dan data aplikasi.
 - Jangan mengubah tema, struktur navigasi, atau pola komponen yang sudah disetujui tanpa menjelaskan alasan dan meminta persetujuan.
 
-## 9. Proses implementasi halaman
+## 10. Proses implementasi halaman
 Untuk setiap halaman:
 1. Identifikasi role dan tujuan pengguna.
-2. Identifikasi data yang dibutuhkan dan sumber datanya.
+2. Identifikasi data yang dibutuhkan dan sumber datanya (tabel, model, relasi).
 3. Tentukan hierarki konten dan tindakan utama.
 4. Reuse komponen yang tersedia.
 5. Implementasikan loading, empty, success, error, dan validation states yang relevan.
@@ -128,7 +202,7 @@ Untuk setiap halaman:
 7. Periksa otorisasi backend untuk semua aksi.
 8. Uji interaksi utama dan laporkan hasilnya.
 
-## 10. Format laporan setelah bekerja
+## 11. Format laporan setelah bekerja
 Sampaikan secara ringkas:
 - Apa yang diubah.
 - File utama yang dibuat/diubah.

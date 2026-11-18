@@ -2,8 +2,44 @@
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Application surface */
+    --color-page-bg: #f0e9ff;
+    --color-surface: #fbfbfa;
+    --color-card: #ffffff;
+    --color-soft: #f5f6fa;
+    --color-border: #e8e8ef;
+
+    /* Sidebar */
+    --color-sidebar: #242238;
+    --color-sidebar-hover: #34314b;
+
+    /* Primary accent */
+    --color-primary: #d8f36a;
+    --color-primary-hover: #b9d94a;
+    --color-primary-text: #1a2200;
+
+    /* Text */
+    --color-text: #242436;
+    --color-muted: #77788a;
+
+    /* Semantic */
+    --color-success: #42b883;
+    --color-warning: #e9b94f;
+    --color-danger: #d96c75;
+    --color-info: #5d9cec;
+
+    /* Agenda */
+    --color-agenda-tugas: #9a78e8;
+    --color-agenda-uts: #76a9e8;
+    --color-agenda-uas: #5b8fd0;
+    --color-agenda-akademik: #e78db7;
+    --color-agenda-kuliah: #8dbe83;
+    --color-agenda-pengumuman: #e9b94f;
+    --color-agenda-terlambat: #d96c75;
 }

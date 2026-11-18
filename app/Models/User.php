@@ -157,6 +157,18 @@ class User extends Authenticatable
         );
     }
 
+    /**
+     * Get the dashboard route name for the user's role.
+     */
+    public function dashboardRouteName(): string
+    {
+        return match ($this->role) {
+            UserRole::Admin => 'admin.dashboard',
+            UserRole::Dosen => 'dosen.dashboard',
+            UserRole::Mahasiswa => 'mahasiswa.dashboard',
+        };
+    }
+
     public function isMahasiswa(): bool
     {
         return $this->role === UserRole::Mahasiswa;

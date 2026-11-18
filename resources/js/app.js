@@ -1,1 +1,217 @@
-//
+const onReady = (callback) => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', callback);
+        return;
+    }
+
+    callback();
+};
+
+onReady(() => {
+    document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+        const input = document.getElementById(button.dataset.passwordToggle);
+
+        if (! input) {
+            return;
+        }
+
+        const eyeIcon = button.querySelector('[data-eye-icon]');
+        const eyeOffIcon = button.querySelector('[data-eye-off-icon]');
+
+        button.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+
+            input.type = isPassword ? 'text' : 'password';
+            button.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
+            button.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
+
+            eyeIcon?.classList.toggle('hidden', isPassword);
+            eyeOffIcon?.classList.toggle('hidden', ! isPassword);
+        });
+    });
+
+    document.querySelectorAll('form[data-auth-form]').forEach((form) => {
+        form.addEventListener('submit', () => {
+            const button = form.querySelector('[data-submit-button]');
+            const label = form.querySelector('[data-submit-label]');
+            const spinner = form.querySelector('[data-submit-spinner]');
+            const arrow = form.querySelector('[data-submit-arrow]');
+
+            if (! button) {
+                return;
+            }
+
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+
+            if (label) {
+                label.textContent = 'Memproses...';
+            }
+
+            spinner?.classList.remove('hidden');
+            arrow?.classList.add('hidden');
+        });
+    });
+
+    const drawer = document.getElementById('sidebar-drawer');
+    const drawerOpenButton = document.querySelector('[data-sidebar-open]');
+
+    const setDrawer = (open) => {
+        if (! drawer) {
+            return;
+        }
+
+        drawer.classList.toggle('hidden', ! open);
+        drawer.classList.toggle('flex', open);
+        drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+        drawerOpenButton?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+
+    drawerOpenButton?.addEventListener('click', () => setDrawer(true));
+
+    document.querySelectorAll('[data-sidebar-close]').forEach((button) => {
+        button.addEventListener('click', () => setDrawer(false));
+    });
+
+    const detailDialog = document.getElementById('agenda-detail');
+    const eventsData = document.getElementById('agenda-events-data');
+    const timelineData = document.getElementById('timeline-events-data');
+    const addAgendaEvent = (carry, event) => {
+        if (! event || ! event.id) {
+            return carry;
+        }
+
+        carry[event.id] = event;
+
+        return carry;
+    };
+    let agendaEvents = {};
+
+    if (eventsData) {
+        try {
+            JSON.parse(eventsData.textContent || '[]').reduce(addAgendaEvent, agendaEvents);
+        } catch (error) {
+            agendaEvents = {};
+        }
+    }
+
+    if (timelineData) {
+        try {
+            const timeline = JSON.parse(timelineData.textContent || '{}');
+
+            (timeline.bars || []).forEach((bar) => addAgendaEvent(agendaEvents, {
+                id: `tugas-${bar.id}-deadline`,
+                label: 'Deadline tugas',
+                judul: bar.judul,
+                mata_kuliah: bar.mata_kuliah,
+                tanggal_label: bar.deadline_label,
+                waktu_label: bar.deadline_label,
+                awal_label: bar.dipublikasikan_label,
+                akhir_label: bar.deadline_label,
+                awal_label_name: 'Tanggal dipublikasikan',
+                akhir_label_name: 'Deadline',
+                publikasi_label: bar.dipublikasikan_label,
+                deskripsi: bar.deskripsi,
+                status_label: bar.status_label,
+                lokasi: null,
+            }));
+
+            (timeline.markers || []).forEach((marker) => addAgendaEvent(agendaEvents, {
+                id: marker.id,
+                label: 'Ujian',
+                judul: marker.judul,
+                mata_kuliah: marker.mata_kuliah,
+                tanggal_label: marker.tanggal_label,
+                waktu_label: marker.waktu_label || 'Tidak tersedia',
+                awal_label: marker.tanggal_label,
+                akhir_label: marker.tanggal_label,
+                awal_label_name: 'Tanggal ujian',
+                akhir_label_name: 'Tanggal ujian',
+                publikasi_label: 'Tidak tersedia',
+                deskripsi: null,
+                status_label: null,
+                lokasi: marker.lokasi,
+            }));
+        } catch (error) {
+            // Timeline detail tetap dapat dibuka dari data kalender bila tersedia.
+        }
+    }
+
+    const detailFields = {
+        label: document.getElementById('agenda-detail-label'),
+        title: document.getElementById('agenda-detail-title'),
+        course: document.getElementById('agenda-detail-course'),
+        date: document.getElementById('agenda-detail-date'),
+        time: document.getElementById('agenda-detail-time'),
+        startLabel: document.getElementById('agenda-detail-start-label'),
+        start: document.getElementById('agenda-detail-start'),
+        endLabel: document.getElementById('agenda-detail-end-label'),
+        end: document.getElementById('agenda-detail-end'),
+        published: document.getElementById('agenda-detail-published'),
+        location: document.getElementById('agenda-detail-location'),
+        status: document.getElementById('agenda-detail-status'),
+        description: document.getElementById('agenda-detail-description'),
+    };
+
+    const openDetail = (id) => {
+        const event = agendaEvents[id];
+
+        if (! event || ! detailDialog) {
+            return;
+        }
+
+        detailFields.label.textContent = event.label || 'Agenda';
+        detailFields.title.textContent = event.judul || 'Detail agenda';
+        detailFields.course.textContent = event.mata_kuliah || 'Tidak tersedia';
+        detailFields.date.textContent = event.tanggal_label || 'Tidak tersedia';
+        detailFields.time.textContent = event.waktu_label || 'Tidak tersedia';
+        detailFields.startLabel.textContent = event.awal_label_name || 'Tanggal mulai';
+        detailFields.start.textContent = event.awal_label || 'Tidak tersedia';
+        detailFields.endLabel.textContent = event.akhir_label_name || 'Tanggal selesai';
+        detailFields.end.textContent = event.akhir_label || 'Tidak tersedia';
+        detailFields.published.textContent = event.publikasi_label || 'Tidak tersedia';
+        detailFields.location.textContent = event.lokasi || 'Tidak tersedia';
+        detailFields.status.textContent = event.status_label || 'Tidak tersedia';
+        detailFields.description.textContent = event.deskripsi || 'Tidak tersedia';
+
+        if (typeof detailDialog.showModal === 'function') {
+            detailDialog.showModal();
+        } else {
+            detailDialog.setAttribute('open', '');
+        }
+    };
+
+    document.querySelectorAll('[data-agenda-trigger]').forEach((trigger) => {
+        trigger.addEventListener('click', () => openDetail(trigger.dataset.agendaTrigger));
+        trigger.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openDetail(trigger.dataset.agendaTrigger);
+            }
+        });
+    });
+
+    document.querySelectorAll('[data-agenda-close]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (typeof detailDialog?.close === 'function') {
+                detailDialog.close();
+            } else {
+                detailDialog?.removeAttribute('open');
+            }
+        });
+    });
+
+    detailDialog?.addEventListener('click', (event) => {
+        if (event.target === detailDialog) {
+            detailDialog.close();
+        }
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') {
+            return;
+        }
+
+        setDrawer(false);
+    });
+});
