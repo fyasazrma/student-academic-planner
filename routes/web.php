@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\MataKuliahController as AdminMataKuliahController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\KalenderController;
@@ -15,7 +17,23 @@ Route::get('/', function () {
 require __DIR__.'/auth.php';
 
 Route::middleware(['auth', 'active', 'role:admin'])->group(function (): void {
-    Route::get('/admin/dashboard', [DashboardController::class, 'admin'])->name('admin.dashboard');
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+
+    Route::get('/admin/mata-kuliah', [AdminMataKuliahController::class, 'index'])->name('admin.mata-kuliah.index');
+    Route::get('/admin/mata-kuliah/create', [AdminMataKuliahController::class, 'create'])->name('admin.mata-kuliah.create');
+    Route::post('/admin/mata-kuliah', [AdminMataKuliahController::class, 'store'])->name('admin.mata-kuliah.store');
+    Route::get('/admin/mata-kuliah/{mata_kuliah}/edit', [AdminMataKuliahController::class, 'edit'])
+        ->whereNumber('mata_kuliah')
+        ->name('admin.mata-kuliah.edit');
+    Route::match(['put', 'patch'], '/admin/mata-kuliah/{mata_kuliah}', [AdminMataKuliahController::class, 'update'])
+        ->whereNumber('mata_kuliah')
+        ->name('admin.mata-kuliah.update');
+    Route::post('/admin/mata-kuliah/{mata_kuliah}/status', [AdminMataKuliahController::class, 'ubahStatus'])
+        ->whereNumber('mata_kuliah')
+        ->name('admin.mata-kuliah.status');
+    Route::delete('/admin/mata-kuliah/{mata_kuliah}', [AdminMataKuliahController::class, 'destroy'])
+        ->whereNumber('mata_kuliah')
+        ->name('admin.mata-kuliah.destroy');
 });
 
 Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {

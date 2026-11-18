@@ -2,21 +2,32 @@
     'title' => 'Dashboard',
     'user' => null,
     'unreadCount' => 0,
+    'role' => 'mahasiswa',
 ])
 
 @php
-    $breadcrumbLabels = [
-        'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
-        'mahasiswa.kalender' => 'Kalender Akademik',
-        'mahasiswa.mata-kuliah' => 'Mata Kuliah',
-        'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
-        'mahasiswa.tugas' => 'Tugas & Pengumpulan',
-        'mahasiswa.notifikasi' => 'Notifikasi',
-    ];
+    $isAdmin = $role === 'admin';
+    $dashboardRoute = $isAdmin ? 'admin.dashboard' : 'mahasiswa.dashboard';
+
+    $breadcrumbLabels = $isAdmin
+        ? [
+            'admin.dashboard' => 'Dashboard Admin',
+            'admin.mata-kuliah.index' => 'Mata Kuliah',
+            'admin.mata-kuliah.create' => 'Tambah Mata Kuliah',
+            'admin.mata-kuliah.edit' => 'Edit Mata Kuliah',
+        ]
+        : [
+            'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
+            'mahasiswa.kalender' => 'Kalender Akademik',
+            'mahasiswa.mata-kuliah' => 'Mata Kuliah',
+            'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
+            'mahasiswa.tugas' => 'Tugas & Pengumpulan',
+            'mahasiswa.notifikasi' => 'Notifikasi',
+        ];
 
     $currentRoute = request()->route()?->getName();
     $currentLabel = $breadcrumbLabels[$currentRoute] ?? $title;
-    $isDashboard = $currentRoute === 'mahasiswa.dashboard';
+    $isDashboard = $currentRoute === $dashboardRoute;
 @endphp
 
 <header class="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-sm">
@@ -37,7 +48,7 @@
                 <span>Akademik</span>
                 <span aria-hidden="true">/</span>
                 @unless ($isDashboard)
-                    <a href="{{ route('mahasiswa.dashboard') }}" class="transition hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">Dashboard Mahasiswa</a>
+                    <a href="{{ route($dashboardRoute) }}" class="transition hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">{{ $isAdmin ? 'Dashboard Admin' : 'Dashboard Mahasiswa' }}</a>
                     <span aria-hidden="true">/</span>
                 @endunless
                 <span class="font-semibold text-text">{{ $currentLabel }}</span>
@@ -46,18 +57,20 @@
         </div>
 
         <div class="ml-auto flex items-center gap-2 sm:gap-4">
-            <a
-                href="{{ route('mahasiswa.notifikasi') }}"
-                class="relative rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
-                aria-label="Lihat notifikasi{{ $unreadCount > 0 ? ', '.$unreadCount.' belum dibaca' : '' }}"
-            >
-                <x-icon name="bell" class="h-5 w-5" />
-                @if ($unreadCount > 0)
-                    <span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
-                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
-                    </span>
-                @endif
-            </a>
+            @unless ($isAdmin)
+                <a
+                    href="{{ route('mahasiswa.notifikasi') }}"
+                    class="relative rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                    aria-label="Lihat notifikasi{{ $unreadCount > 0 ? ', '.$unreadCount.' belum dibaca' : '' }}"
+                >
+                    <x-icon name="bell" class="h-5 w-5" />
+                    @if ($unreadCount > 0)
+                        <span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
+                            {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                        </span>
+                    @endif
+                </a>
+            @endunless
 
             <div class="flex items-center gap-2.5 border-l border-border pl-3 sm:pl-4">
                 <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-agenda-tugas/15 text-sm font-bold text-agenda-tugas">
@@ -65,7 +78,7 @@
                 </div>
                 <div class="hidden min-w-0 sm:block">
                     <p class="truncate text-sm font-semibold text-text">{{ $user?->name }}</p>
-                    <p class="truncate text-[11px] text-muted">Mahasiswa</p>
+                    <p class="truncate text-[11px] text-muted">{{ $isAdmin ? 'Administrator' : 'Mahasiswa' }}</p>
                 </div>
             </div>
         </div>

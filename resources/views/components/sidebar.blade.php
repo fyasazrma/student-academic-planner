@@ -2,22 +2,31 @@
     'mobile' => false,
     'user' => null,
     'unreadCount' => 0,
+    'role' => 'mahasiswa',
 ])
 
 @php
-    $items = [
-        ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],
-        ['label' => 'Profil Saya', 'icon' => 'user'],
-        ['label' => 'Kalender Akademik', 'icon' => 'calendar', 'routeName' => 'mahasiswa.kalender'],
-        ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'mahasiswa.mata-kuliah'],
-        ['label' => 'Materi Pembelajaran', 'icon' => 'file'],
-        ['label' => 'Tugas & Pengumpulan', 'icon' => 'clipboard', 'routeName' => 'mahasiswa.tugas'],
-        ['label' => 'Jadwal Ujian', 'icon' => 'exam'],
-        ['label' => 'Target Belajar', 'icon' => 'target'],
-        ['label' => 'Nilai', 'icon' => 'chart'],
-        ['label' => 'Absensi', 'icon' => 'check'],
-        ['label' => 'Notifikasi', 'icon' => 'bell', 'routeName' => 'mahasiswa.notifikasi'],
-    ];
+    $isAdmin = $role === 'admin';
+
+    $items = $isAdmin
+        ? [
+            ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'admin.dashboard'],
+            ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'admin.mata-kuliah.index'],
+            ['label' => 'Tahun Akademik', 'icon' => 'calendar'],
+        ]
+        : [
+            ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],
+            ['label' => 'Profil Saya', 'icon' => 'user'],
+            ['label' => 'Kalender Akademik', 'icon' => 'calendar', 'routeName' => 'mahasiswa.kalender'],
+            ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'mahasiswa.mata-kuliah'],
+            ['label' => 'Materi Pembelajaran', 'icon' => 'file'],
+            ['label' => 'Tugas & Pengumpulan', 'icon' => 'clipboard', 'routeName' => 'mahasiswa.tugas'],
+            ['label' => 'Jadwal Ujian', 'icon' => 'exam'],
+            ['label' => 'Target Belajar', 'icon' => 'target'],
+            ['label' => 'Nilai', 'icon' => 'chart'],
+            ['label' => 'Absensi', 'icon' => 'check'],
+            ['label' => 'Notifikasi', 'icon' => 'bell', 'routeName' => 'mahasiswa.notifikasi'],
+        ];
 @endphp
 
 <aside
@@ -25,7 +34,7 @@
         'flex h-full flex-col bg-sidebar text-white',
         'rounded-r-2xl' => $mobile,
     ])
-    aria-label="Navigasi utama mahasiswa"
+    aria-label="{{ $isAdmin ? 'Navigasi utama admin' : 'Navigasi utama mahasiswa' }}"
 >
     <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-text">
@@ -43,7 +52,7 @@
     </div>
 
     <nav class="flex-1 overflow-y-auto px-3 py-5">
-        <p class="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">Menu mahasiswa</p>
+        <p class="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{{ $isAdmin ? 'Menu admin' : 'Menu mahasiswa' }}</p>
         <ul class="space-y-1">
             @foreach ($items as $item)
                 <li>
@@ -63,7 +72,7 @@
                         >
                             <x-icon :name="$item['icon']" class="h-[18px] w-[18px] shrink-0" />
                             <span>{{ $item['label'] }}</span>
-                            @if ($item['label'] === 'Notifikasi' && $unreadCount > 0)
+                            @if (! $isAdmin && $item['label'] === 'Notifikasi' && $unreadCount > 0)
                                 <span @class([
                                     'ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold text-white',
                                     'bg-sidebar' => $active,
@@ -94,7 +103,9 @@
             </div>
             <div class="min-w-0">
                 <p class="truncate text-sm font-semibold">{{ $user?->name }}</p>
-                <p class="truncate text-[11px] text-white/60">{{ $user?->nim ? 'NIM '.$user->nim : 'Mahasiswa' }}</p>
+                <p class="truncate text-[11px] text-white/60">
+                    {{ $isAdmin ? 'Administrator' : ($user?->nim ? 'NIM '.$user->nim : 'Mahasiswa') }}
+                </p>
             </div>
         </div>
 

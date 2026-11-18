@@ -2,7 +2,16 @@
     'title' => 'Dashboard',
     'user' => null,
     'unreadCount' => 0,
+    'role' => null,
 ])
+
+@php
+    // Default mahasiswa menjaga seluruh halaman mahasiswa tetap memakai shell lama.
+    $shellRole = $role === 'admin'
+        || ($role === null && $user instanceof \App\Models\User && $user->isAdmin())
+            ? 'admin'
+            : 'mahasiswa';
+@endphp
 
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -18,7 +27,7 @@
     <body class="min-h-full bg-page-bg font-sans text-text antialiased">
         <div class="min-h-screen lg:pl-[264px]">
             <div class="fixed inset-y-0 left-0 z-40 hidden w-[264px] lg:block">
-                <x-sidebar :user="$user" :unread-count="$unreadCount" />
+                <x-sidebar :user="$user" :unread-count="$unreadCount" :role="$shellRole" />
             </div>
 
             <div
@@ -33,12 +42,12 @@
                     data-sidebar-close
                 ></button>
                 <div class="absolute inset-y-0 left-0 w-[282px] max-w-[86vw] shadow-2xl">
-                    <x-sidebar :user="$user" :unread-count="$unreadCount" mobile />
+                    <x-sidebar :user="$user" :unread-count="$unreadCount" :role="$shellRole" mobile />
                 </div>
             </div>
 
             <div class="flex min-h-screen flex-col">
-                <x-topbar :title="$title" :user="$user" :unread-count="$unreadCount" />
+                <x-topbar :title="$title" :user="$user" :unread-count="$unreadCount" :role="$shellRole" />
 
                 <main class="mx-auto w-full max-w-[1600px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
                     {{ $slot }}

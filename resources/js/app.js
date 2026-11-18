@@ -257,6 +257,69 @@ onReady(() => {
         openGabungDialog();
     }
 
+    const mkConfirmDialog = document.getElementById('dialog-konfirmasi-mk');
+    const mkConfirmForm = document.getElementById('form-konfirmasi-mk');
+    const mkConfirmFields = {
+        judul: mkConfirmDialog?.querySelector('[data-mk-dialog-judul]'),
+        pesan: mkConfirmDialog?.querySelector('[data-mk-dialog-pesan]'),
+        label: mkConfirmDialog?.querySelector('[data-mk-dialog-label]'),
+        submit: mkConfirmDialog?.querySelector('[data-mk-dialog-submit]'),
+        method: mkConfirmForm?.querySelector('[data-mk-method-input]'),
+        status: mkConfirmForm?.querySelector('[data-mk-status-input]'),
+    };
+
+    const closeMkConfirmDialog = () => {
+        if (typeof mkConfirmDialog?.close === 'function') {
+            mkConfirmDialog.close();
+        } else {
+            mkConfirmDialog?.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-mk-konfirmasi]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! mkConfirmDialog || ! mkConfirmForm) {
+                return;
+            }
+
+            mkConfirmForm.action = button.dataset.mkAction || '';
+            if (mkConfirmFields.method) {
+                mkConfirmFields.method.value = button.dataset.mkMethod || 'POST';
+            }
+            if (mkConfirmFields.status) {
+                mkConfirmFields.status.value = button.dataset.mkStatus || '1';
+            }
+            if (mkConfirmFields.judul) {
+                mkConfirmFields.judul.textContent = button.dataset.mkJudul || 'Konfirmasi aksi';
+            }
+            if (mkConfirmFields.pesan) {
+                mkConfirmFields.pesan.textContent = button.dataset.mkPesan || 'Konfirmasi aksi pada mata kuliah terpilih.';
+            }
+            if (mkConfirmFields.label) {
+                mkConfirmFields.label.textContent = button.dataset.mkLabel || 'Mata kuliah terpilih';
+            }
+            if (mkConfirmFields.submit) {
+                mkConfirmFields.submit.textContent = button.dataset.mkSubmit || 'Konfirmasi';
+            }
+
+            if (typeof mkConfirmDialog.showModal === 'function') {
+                mkConfirmDialog.showModal();
+            } else {
+                mkConfirmDialog.setAttribute('open', '');
+            }
+        });
+    });
+
+    mkConfirmDialog?.querySelectorAll('[data-mk-dialog-close]').forEach((button) => {
+        button.addEventListener('click', closeMkConfirmDialog);
+    });
+
+    mkConfirmDialog?.addEventListener('click', (event) => {
+        if (event.target === mkConfirmDialog) {
+            closeMkConfirmDialog();
+        }
+    });
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {
             return;
