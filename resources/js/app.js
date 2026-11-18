@@ -207,6 +207,56 @@ onReady(() => {
         }
     });
 
+    const gabungDialog = document.getElementById('dialog-gabung');
+    const gabungLabel = gabungDialog?.querySelector('[data-gabung-label]');
+
+    const openGabungDialog = (label) => {
+        if (! gabungDialog) {
+            return;
+        }
+
+        if (gabungLabel && label) {
+            gabungLabel.textContent = label;
+        }
+
+        if (typeof gabungDialog.showModal === 'function') {
+            gabungDialog.showModal();
+        } else {
+            gabungDialog.setAttribute('open', '');
+        }
+    };
+
+    const closeGabungDialog = () => {
+        if (! gabungDialog) {
+            return;
+        }
+
+        if (typeof gabungDialog.close === 'function') {
+            gabungDialog.close();
+        } else {
+            gabungDialog.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-gabung-trigger]').forEach((button) => {
+        button.addEventListener('click', () => openGabungDialog(button.dataset.gabungLabel));
+    });
+
+    gabungDialog?.querySelectorAll('[data-gabung-close]').forEach((button) => {
+        button.addEventListener('click', closeGabungDialog);
+    });
+
+    gabungDialog?.addEventListener('click', (event) => {
+        if (event.target === gabungDialog) {
+            closeGabungDialog();
+        }
+    });
+
+    // Buka kembali dialog otomatis saat validasi kunci gabung gagal.
+    if (gabungDialog?.hasAttribute('data-gabung-error')) {
+        openGabungDialog();
+    }
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {
             return;

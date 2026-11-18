@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\StatusPendaftaranKelas;
+use App\Enums\StatusPeserta;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,14 +19,49 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'kode_kelas',
     'nama_kelas',
     'kapasitas',
+    'status_pendaftaran',
 ])]
+#[Hidden(['kode_gabung_hash'])]
 class KelasMataKuliah extends Model
 {
     protected function casts(): array
     {
         return [
             'kapasitas' => 'integer',
+            'status_pendaftaran' => StatusPendaftaranKelas::class,
         ];
+    }
+
+    public function scopePendaftaranBuka(Builder $query): Builder
+    {
+        return $query->where('status_pendaftaran', StatusPendaftaranKelas::Buka->value);
+    }
+
+    public function scopePendaftaranTutup(Builder $query): Builder
+    {
+        return $query->where('status_pendaftaran', StatusPendaftaranKelas::Tutup->value);
+    }
+
+    /**
+     * Jumlah peserta aktif. Peserta nonaktif dan mengulang tidak dihitung.
+     */
+    public function jumlahPesertaAktif(): int
+    {
+        return $this->peserta()
+            ->where('status', StatusPeserta::Aktif->value)
+            ->count();
+    }
+
+    /**
+     * Kapasitas null berarti tidak terbatas; selebihnya membatasi peserta aktif.
+     */
+    public function masihMenerimaPeserta(): bool
+    {
+        if ($this->kapasitas === null) {
+            return true;
+        }
+
+        return $this->jumlahPesertaAktif() < $this->kapasitas;
     }
 
     public function mataKuliah(): BelongsTo

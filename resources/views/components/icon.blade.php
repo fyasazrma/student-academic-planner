@@ -86,6 +86,10 @@
         @case('filter')
             <path d="M4 6h16M7 12h10M10 18h4" />
             @break
+        @case('search')
+            <circle cx="10.75" cy="10.75" r="6.25" />
+            <path d="m15.5 15.5 4 4" />
+            @break
         @case('list')
             <path d="M8 7h12M8 12h12M8 17h12M4 7h.01M4 12h.01M4 17h.01" />
             @break

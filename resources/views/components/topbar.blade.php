@@ -8,6 +8,8 @@
     $breadcrumbLabels = [
         'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
         'mahasiswa.kalender' => 'Kalender Akademik',
+        'mahasiswa.mata-kuliah' => 'Mata Kuliah',
+        'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
         'mahasiswa.tugas' => 'Tugas & Pengumpulan',
         'mahasiswa.notifikasi' => 'Notifikasi',
     ];

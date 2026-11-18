@@ -9,7 +9,7 @@
         ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],
         ['label' => 'Profil Saya', 'icon' => 'user'],
         ['label' => 'Kalender Akademik', 'icon' => 'calendar', 'routeName' => 'mahasiswa.kalender'],
-        ['label' => 'Mata Kuliah', 'icon' => 'book'],
+        ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'mahasiswa.mata-kuliah'],
         ['label' => 'Materi Pembelajaran', 'icon' => 'file'],
         ['label' => 'Tugas & Pengumpulan', 'icon' => 'clipboard', 'routeName' => 'mahasiswa.tugas'],
         ['label' => 'Jadwal Ujian', 'icon' => 'exam'],
@@ -49,7 +49,7 @@
                 <li>
                     @if (! empty($item['routeName']))
                         @php
-                            $active = request()->routeIs($item['routeName']);
+                            $active = request()->routeIs($item['routeName'], $item['routeName'].'.*');
                             $href = route($item['routeName']);
                         @endphp
                         <a

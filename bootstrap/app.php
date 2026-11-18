@@ -29,4 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Kunci gabung bersifat sensitif: jangan pernah dikembalikan sebagai old input.
+        $exceptions->dontFlash('kode_gabung');
     })->create();

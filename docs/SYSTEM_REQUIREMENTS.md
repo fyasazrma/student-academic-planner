@@ -69,8 +69,8 @@ Rancangan yang sudah diimplementasikan dalam migration (periksa file migration a
 |---|---|---|
 | 1 | `users` | Pengguna (mahasiswa, dosen, admin) |
 | 2 | `tahun_akademik` | Tahun akademik dan semester |
-| 3 | `mata_kuliah` | Data mata kuliah |
-| 4 | `kelas_mata_kuliah` | Kelas per mata kuliah dan dosen |
+| 3 | `mata_kuliah` | Data induk mata kuliah (dikelola admin) |
+| 4 | `kelas_mata_kuliah` | Kelas pengampu per mata kuliah, tahun akademik, dan dosen |
 | 5 | `peserta_mata_kuliah` | Mahasiswa yang terdaftar di kelas |
 | 6 | `jadwal_kuliah` | Jadwal kuliah per kelas (hari, jam, ruang) |
 | 7 | `materi_pembelajaran` | Materi yang diunggah dosen |
@@ -99,7 +99,34 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - Jadwal ujian (UTS/UAS) disimpan di `agenda_akademik` dengan `jenis = ujian`.
 - Pastikan implementasi UI tidak mencampur dua sumber data ini tanpa label yang jelas.
 
-## 8. Batasan fitur
+## 8. Data induk mata kuliah, kelas pengampu, dan kunci gabung
+
+### Alur data
+- Admin mengelola **data induk** di `mata_kuliah` (kode, nama, SKS, deskripsi, program studi, semester kurikuler, status aktif) dan `tahun_akademik`.
+- Dosen memilih mata kuliah induk yang sudah ada, lalu membuat **kelas pengampu** di `kelas_mata_kuliah` untuk tahun akademik tertentu.
+- Satu mata kuliah boleh memiliki beberapa kelas pada tahun akademik dan semester yang sama (misalnya A, B, C, D). Kode kelas unik dalam kombinasi `(mata_kuliah_id, tahun_akademik_id, kode_kelas)`.
+- `mata_kuliah.semester` adalah semester kurikuler (angka), sedangkan `tahun_akademik.semester` adalah ganjil/genap. Keduanya bukan field yang sama.
+- Mahasiswa hanya dapat mengakses kelas yang berhasil diikuti melalui `peserta_mata_kuliah` dengan status `aktif`.
+
+### Kunci gabung kelas
+- Setiap kelas memiliki **satu kunci aktif**. Kunci **tidak memiliki masa kedaluwarsa otomatis**; kunci tetap berlaku sampai dosen atau admin menggantinya secara eksplisit.
+- Pembuatan key hanya dilakukan ketika kelas belum memiliki key. Rotasi key hanya dilakukan atas tindakan eksplisit dosen atau admin.
+- Setelah rotasi, hash lama ditimpa dan kunci lama langsung tidak berlaku. Kunci baru yang ditampilkan adalah kunci yang benar-benar tersimpan pada transaksi rotasi yang berhasil.
+- Menutup pendaftaran **tidak menghapus dan tidak mengganti** kunci. Membuka pendaftaran kembali memakai kunci yang sama. Mengganti kunci tidak menghapus peserta yang sudah terdaftar.
+- Kunci asli dibuat dengan generator kriptografis (`random_bytes`, minimal 128 bit entropi) dan hanya dikembalikan sekali oleh operasi pembuatan atau rotasi untuk ditampilkan kepada dosen. Tidak ada mekanisme untuk mengambil kembali kunci asli dari database.
+- Database **tidak pernah menyimpan kunci asli**. Kolom `kode_gabung_hash` menyimpan SHA-256 dari kunci yang sudah dinormalisasi (trim + uppercase). Nilainya nullable dan unique.
+- Verifikasi selalu membaca hash terbaru dari database berdasarkan ID kelas, lalu membandingkannya dengan `hash_equals()`. Instance Eloquent yang stale tidak dapat menerima kunci lama.
+- Rotasi dilakukan dalam transaksi dengan `lockForUpdate()` pada baris kelas agar dua rotasi bersamaan diproses berurutan dan tidak mengembalikan kunci yang sudah tertimpa.
+- Collision ditangani hanya ketika benar-benar terjadi pelanggaran unique pada `kode_gabung_hash`; pelanggaran integrity constraint lain tetap dilempar sebagai exception.
+- Hash tidak boleh ditampilkan sebagai pengganti kunci asli, tidak dikembalikan dari endpoint daftar kelas, dan tidak diekspos melalui serialisasi model (`toArray()`, `toJson()`, `jsonSerialize()`).
+
+### Status pendaftaran dan kapasitas
+- `kelas_mata_kuliah.status_pendaftaran` bernilai `buka` atau `tutup` (enum `StatusPendaftaranKelas`). Default dan kondisi awal seluruh kelas yang sudah ada adalah `tutup`.
+- `kapasitas = null` berarti **tidak terbatas**. Jika berisi angka, kapasitas membatasi jumlah peserta dengan status `aktif`.
+- Peserta berstatus `nonaktif` atau `mengulang` tidak dihitung dalam batas kapasitas.
+- Service/mekanisme key dan status ini merupakan fondasi. Halaman CRUD dosen, form gabung mahasiswa, route, dan notifikasi pendaftaran belum termasuk dalam tahap fondasi ini.
+
+## 9. Batasan fitur
 - Jangan menambahkan pembayaran, chat real-time, forum, push notification, atau fitur lain yang belum diminta.
 - Jangan menambahkan registrasi mandiri.
 - Jangan menganggap mahasiswa boleh mengubah nilai.
