@@ -15,6 +15,9 @@
             'admin.mata-kuliah.index' => 'Mata Kuliah',
             'admin.mata-kuliah.create' => 'Tambah Mata Kuliah',
             'admin.mata-kuliah.edit' => 'Edit Mata Kuliah',
+            'admin.tahun-akademik.index' => 'Tahun Akademik',
+            'admin.tahun-akademik.create' => 'Tambah Tahun Akademik',
+            'admin.tahun-akademik.edit' => 'Edit Tahun Akademik',
         ]
         : [
             'mahasiswa.dashboard' => 'Dashboard Mahasiswa',

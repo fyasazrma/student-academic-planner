@@ -12,7 +12,7 @@
         ? [
             ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'admin.dashboard'],
             ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'admin.mata-kuliah.index'],
-            ['label' => 'Tahun Akademik', 'icon' => 'calendar'],
+            ['label' => 'Tahun Akademik', 'icon' => 'calendar', 'routeName' => 'admin.tahun-akademik.index'],
         ]
         : [
             ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],

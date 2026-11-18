@@ -320,6 +320,69 @@ onReady(() => {
         }
     });
 
+    const taConfirmDialog = document.getElementById('dialog-konfirmasi-ta');
+    const taConfirmForm = document.getElementById('form-konfirmasi-ta');
+    const taConfirmFields = {
+        judul: taConfirmDialog?.querySelector('[data-ta-dialog-judul]'),
+        pesan: taConfirmDialog?.querySelector('[data-ta-dialog-pesan]'),
+        label: taConfirmDialog?.querySelector('[data-ta-dialog-label]'),
+        submit: taConfirmDialog?.querySelector('[data-ta-dialog-submit]'),
+        method: taConfirmForm?.querySelector('[data-ta-method-input]'),
+        status: taConfirmForm?.querySelector('[data-ta-status-input]'),
+    };
+
+    const closeTaConfirmDialog = () => {
+        if (typeof taConfirmDialog?.close === 'function') {
+            taConfirmDialog.close();
+        } else {
+            taConfirmDialog?.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-ta-konfirmasi]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! taConfirmDialog || ! taConfirmForm) {
+                return;
+            }
+
+            taConfirmForm.action = button.dataset.taAction || '';
+            if (taConfirmFields.method) {
+                taConfirmFields.method.value = button.dataset.taMethod || 'POST';
+            }
+            if (taConfirmFields.status) {
+                taConfirmFields.status.value = button.dataset.taStatus || '1';
+            }
+            if (taConfirmFields.judul) {
+                taConfirmFields.judul.textContent = button.dataset.taJudul || 'Konfirmasi aksi';
+            }
+            if (taConfirmFields.pesan) {
+                taConfirmFields.pesan.textContent = button.dataset.taPesan || 'Konfirmasi aksi pada tahun akademik terpilih.';
+            }
+            if (taConfirmFields.label) {
+                taConfirmFields.label.textContent = button.dataset.taLabel || 'Tahun akademik terpilih';
+            }
+            if (taConfirmFields.submit) {
+                taConfirmFields.submit.textContent = button.dataset.taSubmit || 'Konfirmasi';
+            }
+
+            if (typeof taConfirmDialog.showModal === 'function') {
+                taConfirmDialog.showModal();
+            } else {
+                taConfirmDialog.setAttribute('open', '');
+            }
+        });
+    });
+
+    taConfirmDialog?.querySelectorAll('[data-ta-dialog-close]').forEach((button) => {
+        button.addEventListener('click', closeTaConfirmDialog);
+    });
+
+    taConfirmDialog?.addEventListener('click', (event) => {
+        if (event.target === taConfirmDialog) {
+            closeTaConfirmDialog();
+        }
+    });
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {
             return;

@@ -455,7 +455,7 @@ class AdminMataKuliahTest extends TestCase
             ->assertSee('berhasil ditambahkan');
     }
 
-    public function test_menu_mata_kuliah_admin_aktif_dan_tahun_akademik_tetap_segera(): void
+    public function test_menu_mata_kuliah_dan_tahun_akademik_admin_aktif(): void
     {
         $admin = User::factory()->admin()->create();
 
@@ -463,11 +463,12 @@ class AdminMataKuliahTest extends TestCase
             ->get(route('admin.mata-kuliah.index'))
             ->assertOk()
             ->assertSee(route('admin.mata-kuliah.index'), false)
+            ->assertSee(route('admin.tahun-akademik.index'), false)
             ->assertSee('aria-current="page"', false)
             ->assertSee('Menu admin')
             ->assertSee('Dashboard Admin')
             ->assertSee('Tahun Akademik')
-            ->assertSee('Segera')
+            ->assertDontSee('Segera')
             ->assertDontSee('Menu mahasiswa');
     }
 
