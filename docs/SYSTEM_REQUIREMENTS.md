@@ -89,8 +89,9 @@ Rancangan yang sudah diimplementasikan dalam migration (periksa file migration a
 | 15 | `sesi_absensi` | Sesi absensi yang dibuat dosen |
 | 16 | `absensi` | Catatan kehadiran mahasiswa per sesi |
 | 17 | `riwayat_perubahan_nilai` | Audit pembuatan/perubahan UTS/UAS dan konfigurasi komponen tugas |
+| 18 | `riwayat_perubahan_absensi` | Audit koreksi absensi (status lama, status baru, alasan, actor, waktu) |
 
-Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu periksa file migration dan model aktual sebelum mengimplementasikan fitur.
+Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu periksa file migration dan model aktual sebelum mengimplementasikan fitur. Tabel `riwayat_perubahan_absensi` masih berupa **migration file Pending** dan belum dijalankan ke database utama XAMPP; seluruh pengujian otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
 
 ## 7. Catatan schema aktual (gap yang perlu diperhatikan)
 
@@ -145,7 +146,7 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 ### Migration pendukung
 - `2026_11_19_000002_add_gunakan_tugas_to_kelas_mata_kuliah_table.php`: kolom `gunakan_tugas` nullable. `NULL` berarti dosen belum menentukan penggunaan komponen tugas; nilai akhir belum dihitung. `1` berarti tugas dipakai, `0` berarti tidak dipakai.
 - `2026_11_19_000003_create_riwayat_perubahan_nilai_table.php`: tabel audit untuk nilai UTS/UAS (`komponen = uts|uas`) dan perubahan konfigurasi (`komponen = konfigurasi_tugas`). Baris audit tidak pernah dihapus atau ditimpa.
-- Kedua file migration sudah dibuat tetapi **belum dijalankan ke database utama XAMPP**; pemeriksaan otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
+- Kedua file migration sudah dibuat dan **sudah dijalankan (`Ran`) ke database utama XAMPP** pada tahap Batch A; pemeriksaan otomatis tetap memakai SQLite `:memory:` melalui `RefreshDatabase`.
 
 ### Alur dosen
 - Route: `dosen.nilai.index`, `dosen.nilai.kelas`, `dosen.nilai.konfigurasi`, `dosen.nilai.simpan`, `dosen.nilai.riwayat`.
@@ -164,3 +165,45 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - `NilaiAkhirService`: rumus, pembulatan integer cents, agregasi tugas, konversi huruf, dan bobot mutu. Tidak menulis database.
 - `PenilaianService`: otorisasi scoped, penyimpanan UTS/UAS, agregasi tugas, dan audit transaksional.
 - `IndeksPrestasiService`: IP semester, IPK nilai terbaik, dan riwayat mata kuliah. Tidak menyimpan IP/IPK permanen.
+
+## 11. Sistem absensi
+
+### Migration pendukung
+- `2026_11_17_000015_create_sesi_absensi_table.php`: sesi per kelas dengan `pertemuan_ke` unik per kelas, tanggal, topik, waktu mulai/selesai (WIB), dan status `dibuka`/`ditutup`.
+- `2026_11_17_000016_create_absensi_table.php`: satu catatan per peserta per sesi (`absensi_unik`), dengan status `hadir|izin|sakit|alfa`, keterangan, metode `mandiri|otomatis|manual`, `dicatat_pada`, dan `dicatat_oleh` nullable.
+- `2026_11_19_000004_create_riwayat_perubahan_absensi_table.php`: tabel audit koreksi. Status lama dan baru, alasan, actor, serta waktu perubahan disimpan permanen; relasi memakai `nullOnDelete` agar riwayat tetap terbaca. **Masih Pending** pada database utama XAMPP dan menunggu persetujuan untuk dijalankan.
+
+### Sesi
+- Zona waktu yang dipakai untuk tanggal, waktu mulai, waktu selesai, dan jendela pengisian adalah `Asia/Jakarta` (WIB), meski konfigurasi timezone aplikasi adalah `UTC`.
+- Tanggal, waktu mulai, dan waktu selesai wajib diisi; waktu selesai harus lebih besar dari waktu mulai.
+- Status sesi hanya `dibuka` atau `ditutup`. Sesi yang sudah ditutup **tidak dapat dibuka kembali**.
+- Sesi yang sudah memiliki catatan absensi tidak dihapus sembarangan; hapus hanya untuk sesi tanpa catatan.
+- Nomor pertemuan unik per kelas dan divalidasi ulang oleh service ketika membuat/mengubah sesi.
+
+### Hak akses dan pengisian
+- Dosen hanya mengelola sesi, peserta, dan rekap pada kelas yang benar-benar diajar (`dosen_id`). ID dari URL divalidasi ulang lewat scoped lookup; kelas milik dosen lain menghasilkan 404.
+- Mahasiswa hanya melihat dan mengisi absensi pada kelas yang benar-benar diikuti (`peserta_mata_kuliah`). ID sesi dari URL diverifikasi terhadap daftar kelasnya; sesi milih kelas lain menghasilkan 403.
+- Peserta berstatus `aktif` dan `mengulang` boleh absensi; `nonaktif` tidak boleh. Riwayat lama tidak dihapus saat status peserta berubah.
+- Pengisian mandiri hanya dapat dilakukan ketika sesi `dibuka` **dan** waktu sekarang berada di dalam rentang `waktu_mulai`–`waktu_selesai` (inklusif).
+- Mahasiswa hanya dapat mengirim status `hadir` melalui metode `mandiri`. Nilai `izin`, `sakit`, `alfa`, dan identitas apa pun yang dikirim browser tidak dipercaya; service menetapkan status, peserta, dan pencatat dari data server.
+- Satu catatan per peserta per sesi. Duplikasi dicegah oleh kunci unik database, kunci baris saat transaksi, dan pengecekan eksistensi di service.
+
+### Penutupan otomatis
+- Command: `php artisan absensi:tutup-otomatis`. Hanya sesi `dibuka` yang waktu selesainya sudah tercapai yang diproses.
+- Scheduler terdaftar di `routes/console.php`: `everyMinute()`, `timezone('Asia/Jakarta')`, `withoutOverlapping()`. Di XAMPP, jalankan satu entry cron Windows yang memanggil `php artisan schedule:run` setiap menit dari direktori proyek.
+- Penutupan bersifat idempotent dan transaksional: sesi dikunci dengan `lockForUpdate()`, peserta berhak tanpa catatan mendapat `alfa` otomatis (`metode = otomatis`, `dicatat_oleh = null`), sedangkan catatan `hadir`/`izin`/`sakit` tidak diubah.
+- Pemanggilan ulang command tidak menghasilkan catatan baru. Duplikasi karena request bersamaan ditangani oleh kunci unik dan diabaikan dengan aman.
+
+### Koreksi dan audit
+- Koreksi dosen hanya tersedia setelah sesi ditutup, wajib menyertakan alasan, dan hanya untuk peserta di kelasnya sendiri.
+- Setiap koreksi ditulis dalam satu transaksi ke `absensi` dan `riwayat_perubahan_absensi`, menyimpan status sebelum/sesudah, alasan, actor, dan waktu. Mahasiswa tidak memiliki jalur koreksi.
+
+### Rekap
+- Rekap menghitung `hadir`, `izin`, `sakit`, `alfa`, dan jumlah sesi yang sudah ditutup. Sesi yang belum ditutup tidak dihitung.
+- Peserta yang masuk rekap hanya yang berstatus `aktif` atau `mengulang`.
+- Persentase kehadiran = `hadir / jumlah sesi ditutup × 100%`, dibulatkan 2 angka desimal. Jika belum ada sesi ditutup, persentase bernilai `0`.
+
+### Route utama
+- Dosen: `dosen.absensi.index`, `dosen.absensi.kelas`, `dosen.absensi.sesi.create|store|show|edit|update|destroy|buka|tutup`, `dosen.absensi.koreksi.form|koreksi`, `dosen.absensi.riwayat`, `dosen.absensi.rekap`.
+- Mahasiswa: `mahasiswa.absensi.index|riwayat|rekap|simpan`.
+- Panel kanan dashboard dosen menampilkan ringkasan absensi yang bersumber dari query kelas milik dosen yang login.

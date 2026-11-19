@@ -107,6 +107,16 @@
         @case('check')
             <path d="m5 12.5 4.5 4.5L19 7.5" />
             @break
+        @case('plus')
+            <path d="M12 5v14M5 12h14" />
+            @break
+        @case('edit')
+            <path d="m4.5 19.5 3.75-.75L19 7.5a2.12 2.12 0 0 0-3-3L5.25 15.75l-.75 3.75Z" />
+            @break
+        @case('save')
+            <path d="M5.25 4.5h10.5l3 3v12H5.25v-15Z" />
+            <path d="M8.25 4.5v5h7v-5M8.25 19.5v-5h7.5v5" />
+            @break
         @default
             <circle cx="12" cy="12" r="8.25" />
     @endswitch

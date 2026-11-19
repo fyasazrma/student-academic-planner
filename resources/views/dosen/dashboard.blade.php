@@ -68,6 +68,7 @@
                 :deadlines="$deadlines"
                 :next-schedules="$nextSchedules"
                 :unread-count="$unreadCount"
+                :absensi-ringkasan="$absensiRingkasan"
             />
         </div>
 

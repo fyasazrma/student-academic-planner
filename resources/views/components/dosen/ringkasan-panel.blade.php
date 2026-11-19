@@ -3,6 +3,12 @@
     'deadlines' => [],
     'nextSchedules' => [],
     'unreadCount' => 0,
+    'absensiRingkasan' => [
+        'sesi_dibuka' => 0,
+        'sesi_hari_ini' => 0,
+        'belum_mengisi' => 0,
+        'url' => null,
+    ],
 ])
 
 <aside id="panel-ringkasan" class="space-y-4">
@@ -41,6 +47,32 @@
                 @endforeach
             </ul>
         @endif
+    </section>
+
+    <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <x-icon name="check" class="h-5 w-5 text-agenda-tugas" />
+                <h3 class="text-sm font-bold text-text">Ringkasan absensi</h3>
+            </div>
+            @if ($absensiRingkasan['url'] !== null)
+                <a href="{{ $absensiRingkasan['url'] }}" class="text-[11px] font-semibold text-agenda-tugas transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">Kelola</a>
+            @endif
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div class="rounded-xl bg-soft px-2 py-3">
+                <p class="text-sm font-bold text-text">{{ $absensiRingkasan['sesi_dibuka'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Sesi dibuka</p>
+            </div>
+            <div class="rounded-xl bg-soft px-2 py-3">
+                <p class="text-sm font-bold text-text">{{ $absensiRingkasan['sesi_hari_ini'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Sesi hari ini</p>
+            </div>
+            <div class="rounded-xl bg-soft px-2 py-3">
+                <p class="text-sm font-bold text-text">{{ $absensiRingkasan['belum_mengisi'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Belum mengisi</p>
+            </div>
+        </div>
     </section>
 
     <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">

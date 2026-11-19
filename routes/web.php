@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\MataKuliahController as AdminMataKuliahController
 use App\Http\Controllers\Admin\TahunAkademikController as AdminTahunAkademikController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Dosen\AbsensiController as DosenAbsensiController;
 use App\Http\Controllers\Dosen\DashboardController as DosenDashboardController;
 use App\Http\Controllers\Dosen\JadwalKuliahController as DosenJadwalKuliahController;
 use App\Http\Controllers\Dosen\MataKuliahController as DosenMataKuliahController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Dosen\MateriPembelajaranController as DosenMateriPembel
 use App\Http\Controllers\Dosen\NilaiController as DosenNilaiController;
 use App\Http\Controllers\Dosen\PengumpulanTugasController as DosenPengumpulanTugasController;
 use App\Http\Controllers\Dosen\TugasController as DosenTugasController;
+use App\Http\Controllers\Mahasiswa\AbsensiController as MahasiswaAbsensiController;
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\KalenderController;
 use App\Http\Controllers\Mahasiswa\MataKuliahController;
@@ -222,6 +224,47 @@ Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
     Route::get('/dosen/nilai/{kelas}/peserta/{peserta}/riwayat', [DosenNilaiController::class, 'riwayat'])
         ->whereNumber(['kelas', 'peserta'])
         ->name('dosen.nilai.riwayat');
+
+    Route::get('/dosen/absensi', [DosenAbsensiController::class, 'index'])->name('dosen.absensi.index');
+    Route::get('/dosen/absensi/rekap/{kelas}', [DosenAbsensiController::class, 'rekap'])
+        ->whereNumber('kelas')
+        ->name('dosen.absensi.rekap');
+    Route::get('/dosen/absensi/{kelas}', [DosenAbsensiController::class, 'kelas'])
+        ->whereNumber('kelas')
+        ->name('dosen.absensi.kelas');
+    Route::get('/dosen/absensi/{kelas}/sesi/create', [DosenAbsensiController::class, 'create'])
+        ->whereNumber('kelas')
+        ->name('dosen.absensi.sesi.create');
+    Route::post('/dosen/absensi/{kelas}/sesi', [DosenAbsensiController::class, 'store'])
+        ->whereNumber('kelas')
+        ->name('dosen.absensi.sesi.store');
+    Route::get('/dosen/absensi/{kelas}/sesi/{sesi}', [DosenAbsensiController::class, 'show'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.sesi.show');
+    Route::get('/dosen/absensi/{kelas}/sesi/{sesi}/edit', [DosenAbsensiController::class, 'edit'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.sesi.edit');
+    Route::match(['put', 'patch'], '/dosen/absensi/{kelas}/sesi/{sesi}', [DosenAbsensiController::class, 'update'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.sesi.update');
+    Route::delete('/dosen/absensi/{kelas}/sesi/{sesi}', [DosenAbsensiController::class, 'destroy'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.sesi.destroy');
+    Route::post('/dosen/absensi/{kelas}/sesi/{sesi}/buka', [DosenAbsensiController::class, 'buka'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.sesi.buka');
+    Route::post('/dosen/absensi/{kelas}/sesi/{sesi}/tutup', [DosenAbsensiController::class, 'tutup'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.sesi.tutup');
+    Route::get('/dosen/absensi/{kelas}/sesi/{sesi}/riwayat', [DosenAbsensiController::class, 'riwayat'])
+        ->whereNumber(['kelas', 'sesi'])
+        ->name('dosen.absensi.riwayat');
+    Route::get('/dosen/absensi/{kelas}/sesi/{sesi}/peserta/{peserta}/koreksi', [DosenAbsensiController::class, 'koreksiForm'])
+        ->whereNumber(['kelas', 'sesi', 'peserta'])
+        ->name('dosen.absensi.koreksi.form');
+    Route::post('/dosen/absensi/{kelas}/sesi/{sesi}/peserta/{peserta}/koreksi', [DosenAbsensiController::class, 'koreksi'])
+        ->whereNumber(['kelas', 'sesi', 'peserta'])
+        ->name('dosen.absensi.koreksi');
 });
 
 Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void {
@@ -261,4 +304,13 @@ Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void
     Route::get('/mahasiswa/nilai/{mata_kuliah}', [MahasiswaNilaiController::class, 'show'])
         ->whereNumber('mata_kuliah')
         ->name('mahasiswa.nilai.show');
+
+    Route::get('/mahasiswa/absensi', [MahasiswaAbsensiController::class, 'index'])->name('mahasiswa.absensi.index');
+    Route::get('/mahasiswa/absensi/riwayat', [MahasiswaAbsensiController::class, 'riwayat'])
+        ->name('mahasiswa.absensi.riwayat');
+    Route::get('/mahasiswa/absensi/rekap', [MahasiswaAbsensiController::class, 'rekap'])
+        ->name('mahasiswa.absensi.rekap');
+    Route::post('/mahasiswa/absensi/{sesi}', [MahasiswaAbsensiController::class, 'simpan'])
+        ->whereNumber('sesi')
+        ->name('mahasiswa.absensi.simpan');
 });

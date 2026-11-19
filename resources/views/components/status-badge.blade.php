@@ -14,6 +14,12 @@
         'pengumuman' => 'bg-agenda-pengumuman/12 text-agenda-pengumuman ring-agenda-pengumuman/30',
         'selesai' => 'bg-success/10 text-success ring-success/30',
         'peringatan' => 'bg-warning/12 text-warning ring-warning/30',
+        'hadir' => 'bg-success/10 text-success ring-success/30',
+        'izin' => 'bg-agenda-pengumuman/12 text-agenda-pengumuman ring-agenda-pengumuman/30',
+        'sakit' => 'bg-warning/12 text-warning ring-warning/30',
+        'alfa' => 'bg-danger/10 text-danger ring-danger/30',
+        'dibuka' => 'bg-agenda-tugas/10 text-agenda-tugas ring-agenda-tugas/30',
+        'ditutup' => 'bg-soft text-muted ring-border',
     ];
 @endphp
 

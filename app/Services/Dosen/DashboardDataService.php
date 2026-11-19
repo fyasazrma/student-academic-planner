@@ -5,12 +5,14 @@ namespace App\Services\Dosen;
 use App\Enums\JenisAgenda;
 use App\Enums\StatusPendaftaranKelas;
 use App\Enums\StatusPeserta;
+use App\Enums\StatusSesiAbsensi;
 use App\Models\AgendaAkademik;
 use App\Models\JadwalKuliah;
 use App\Models\KelasMataKuliah;
 use App\Models\MateriPembelajaran;
 use App\Models\Notifikasi;
 use App\Models\PesertaMataKuliah;
+use App\Models\SesiAbsensi;
 use App\Services\Calendar\CalendarCategory;
 use App\Services\Calendar\CalendarEventFactory;
 use App\Services\Calendar\CalendarViewBuilder;
@@ -104,6 +106,7 @@ class DashboardDataService
             'ringkasanKelas' => $this->ringkasanKelas($classes, $schedules),
             'deadlines' => $this->deadlines($tasks),
             'nextSchedules' => $this->nextSchedules($schedules, $exams),
+            'absensiRingkasan' => $this->absensiRingkasan($classIds),
             'calendar' => $this->viewBuilder->build($events, $view, $date, $filters),
             'timeline' => $this->viewBuilder->timeline($events),
             'filterOptions' => CalendarCategory::options(CalendarCategory::MAHASISWA),
@@ -269,6 +272,55 @@ class DashboardDataService
                 'jadwal_terdekat_label' => $next['ringkas_label'] ?? 'Belum ada jadwal',
             ];
         })->all();
+    }
+
+    /**
+     * Ringkasan absensi hanya untuk kelas yang benar-benar diampu dosen.
+     * Angka "belum mengisi" dihitung dari jumlah peserta berhak dikurangi
+     * catatan yang sudah ada pada setiap sesi yang masih terbuka.
+     *
+     * @param  array<int, int>  $classIds
+     * @return array{sesi_dibuka: int, sesi_hari_ini: int, belum_mengisi: int, url: string}
+     */
+    private function absensiRingkasan(array $classIds): array
+    {
+        $url = route('dosen.absensi.index');
+
+        if ($classIds === []) {
+            return [
+                'sesi_dibuka' => 0,
+                'sesi_hari_ini' => 0,
+                'belum_mengisi' => 0,
+                'url' => $url,
+            ];
+        }
+
+        $query = SesiAbsensi::query()->whereIn('kelas_mata_kuliah_id', $classIds);
+        $dibuka = (clone $query)
+            ->where('status', StatusSesiAbsensi::Dibuka->value)
+            ->withCount('absensi')
+            ->get();
+
+        $belumMengisi = 0;
+
+        foreach ($dibuka as $sesi) {
+            $berhak = PesertaMataKuliah::query()
+                ->where('kelas_mata_kuliah_id', $sesi->kelas_mata_kuliah_id)
+                ->whereIn('status', [
+                    StatusPeserta::Aktif->value,
+                    StatusPeserta::Mengulang->value,
+                ])
+                ->count();
+
+            $belumMengisi += max(0, $berhak - (int) $sesi->absensi_count);
+        }
+
+        return [
+            'sesi_dibuka' => $dibuka->count(),
+            'sesi_hari_ini' => (clone $query)->whereDate('tanggal', today())->count(),
+            'belum_mengisi' => $belumMengisi,
+            'url' => $url,
+        ];
     }
 
     /**
