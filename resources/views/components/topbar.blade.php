@@ -7,7 +7,9 @@
 
 @php
     $isAdmin = $role === 'admin';
-    $dashboardRoute = $isAdmin ? 'admin.dashboard' : 'mahasiswa.dashboard';
+    $isDosen = $role === 'dosen';
+    $dashboardRoute = $isAdmin ? 'admin.dashboard' : ($isDosen ? 'dosen.dashboard' : 'mahasiswa.dashboard');
+    $dashboardLabel = $isAdmin ? 'Dashboard Admin' : ($isDosen ? 'Dashboard Dosen' : 'Dashboard Mahasiswa');
 
     $breadcrumbLabels = $isAdmin
         ? [
@@ -19,14 +21,22 @@
             'admin.tahun-akademik.create' => 'Tambah Tahun Akademik',
             'admin.tahun-akademik.edit' => 'Edit Tahun Akademik',
         ]
-        : [
-            'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
-            'mahasiswa.kalender' => 'Kalender Akademik',
-            'mahasiswa.mata-kuliah' => 'Mata Kuliah',
-            'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
-            'mahasiswa.tugas' => 'Tugas & Pengumpulan',
-            'mahasiswa.notifikasi' => 'Notifikasi',
-        ];
+        : ($isDosen
+            ? [
+                'dosen.dashboard' => 'Dashboard Dosen',
+                'dosen.mata-kuliah.index' => 'Mata Kuliah Saya',
+                'dosen.mata-kuliah.create' => 'Buat Kelas',
+                'dosen.mata-kuliah.show' => 'Detail Kelas',
+                'dosen.mata-kuliah.edit' => 'Edit Kelas',
+            ]
+            : [
+                'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
+                'mahasiswa.kalender' => 'Kalender Akademik',
+                'mahasiswa.mata-kuliah' => 'Mata Kuliah',
+                'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
+                'mahasiswa.tugas' => 'Tugas & Pengumpulan',
+                'mahasiswa.notifikasi' => 'Notifikasi',
+            ]);
 
     $currentRoute = request()->route()?->getName();
     $currentLabel = $breadcrumbLabels[$currentRoute] ?? $title;
@@ -51,7 +61,7 @@
                 <span>Akademik</span>
                 <span aria-hidden="true">/</span>
                 @unless ($isDashboard)
-                    <a href="{{ route($dashboardRoute) }}" class="transition hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">{{ $isAdmin ? 'Dashboard Admin' : 'Dashboard Mahasiswa' }}</a>
+                    <a href="{{ route($dashboardRoute) }}" class="transition hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">{{ $dashboardLabel }}</a>
                     <span aria-hidden="true">/</span>
                 @endunless
                 <span class="font-semibold text-text">{{ $currentLabel }}</span>
@@ -60,7 +70,7 @@
         </div>
 
         <div class="ml-auto flex items-center gap-2 sm:gap-4">
-            @unless ($isAdmin)
+            @unless ($isAdmin || $isDosen)
                 <a
                     href="{{ route('mahasiswa.notifikasi') }}"
                     class="relative rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
@@ -81,7 +91,7 @@
                 </div>
                 <div class="hidden min-w-0 sm:block">
                     <p class="truncate text-sm font-semibold text-text">{{ $user?->name }}</p>
-                    <p class="truncate text-[11px] text-muted">{{ $isAdmin ? 'Administrator' : 'Mahasiswa' }}</p>
+                    <p class="truncate text-[11px] text-muted">{{ $isAdmin ? 'Administrator' : ($isDosen ? 'Dosen' : 'Mahasiswa') }}</p>
                 </div>
             </div>
         </div>

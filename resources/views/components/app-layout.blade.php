@@ -7,10 +7,13 @@
 
 @php
     // Default mahasiswa menjaga seluruh halaman mahasiswa tetap memakai shell lama.
-    $shellRole = $role === 'admin'
-        || ($role === null && $user instanceof \App\Models\User && $user->isAdmin())
-            ? 'admin'
-            : 'mahasiswa';
+    $shellRole = 'mahasiswa';
+
+    if ($role === 'admin' || ($role === null && $user instanceof \App\Models\User && $user->isAdmin())) {
+        $shellRole = 'admin';
+    } elseif ($role === 'dosen' || ($role === null && $user instanceof \App\Models\User && $user->isDosen())) {
+        $shellRole = 'dosen';
+    }
 @endphp
 
 <!DOCTYPE html>

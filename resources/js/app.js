@@ -383,6 +383,78 @@ onReady(() => {
         }
     });
 
+    const dosenConfirmDialog = document.getElementById('dialog-konfirmasi-dosen');
+    const dosenConfirmForm = document.getElementById('form-konfirmasi-dosen');
+    const dosenConfirmFields = {
+        judul: dosenConfirmDialog?.querySelector('[data-dosen-dialog-judul]'),
+        pesan: dosenConfirmDialog?.querySelector('[data-dosen-dialog-pesan]'),
+        label: dosenConfirmDialog?.querySelector('[data-dosen-dialog-label]'),
+        submit: dosenConfirmDialog?.querySelector('[data-dosen-dialog-submit]'),
+        status: dosenConfirmForm?.querySelector('[data-dosen-status-input]'),
+        method: dosenConfirmForm?.querySelector('[data-dosen-method-input]'),
+    };
+
+    const closeDosenConfirmDialog = () => {
+        if (typeof dosenConfirmDialog?.close === 'function') {
+            dosenConfirmDialog.close();
+        } else {
+            dosenConfirmDialog?.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-dosen-konfirmasi]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! dosenConfirmDialog || ! dosenConfirmForm) {
+                return;
+            }
+
+            dosenConfirmForm.action = button.dataset.dosenAction || '';
+
+            if (dosenConfirmFields.status) {
+                const status = button.dataset.dosenStatus || '';
+
+                dosenConfirmFields.status.value = status;
+                dosenConfirmFields.status.disabled = status === '';
+            }
+
+            if (dosenConfirmFields.method) {
+                const method = button.dataset.dosenMethod || '';
+
+                dosenConfirmFields.method.value = method;
+                dosenConfirmFields.method.disabled = method === '';
+            }
+
+            if (dosenConfirmFields.judul) {
+                dosenConfirmFields.judul.textContent = button.dataset.dosenJudul || 'Konfirmasi aksi';
+            }
+            if (dosenConfirmFields.pesan) {
+                dosenConfirmFields.pesan.textContent = button.dataset.dosenPesan || 'Konfirmasi aksi pada kelas terpilih.';
+            }
+            if (dosenConfirmFields.label) {
+                dosenConfirmFields.label.textContent = button.dataset.dosenLabel || 'Kelas terpilih';
+            }
+            if (dosenConfirmFields.submit) {
+                dosenConfirmFields.submit.textContent = button.dataset.dosenSubmit || 'Konfirmasi';
+            }
+
+            if (typeof dosenConfirmDialog.showModal === 'function') {
+                dosenConfirmDialog.showModal();
+            } else {
+                dosenConfirmDialog.setAttribute('open', '');
+            }
+        });
+    });
+
+    dosenConfirmDialog?.querySelectorAll('[data-dosen-dialog-close]').forEach((button) => {
+        button.addEventListener('click', closeDosenConfirmDialog);
+    });
+
+    dosenConfirmDialog?.addEventListener('click', (event) => {
+        if (event.target === dosenConfirmDialog) {
+            closeDosenConfirmDialog();
+        }
+    });
+
     document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape') {
             return;

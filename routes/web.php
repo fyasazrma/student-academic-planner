@@ -4,6 +4,10 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\MataKuliahController as AdminMataKuliahController;
 use App\Http\Controllers\Admin\TahunAkademikController as AdminTahunAkademikController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Dosen\DashboardController as DosenDashboardController;
+use App\Http\Controllers\Dosen\JadwalKuliahController as DosenJadwalKuliahController;
+use App\Http\Controllers\Dosen\MataKuliahController as DosenMataKuliahController;
+use App\Http\Controllers\Dosen\MateriPembelajaranController as DosenMateriPembelajaranController;
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\KalenderController;
 use App\Http\Controllers\Mahasiswa\MataKuliahController;
@@ -54,7 +58,67 @@ Route::middleware(['auth', 'active', 'role:admin'])->group(function (): void {
 });
 
 Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
-    Route::get('/dosen/dashboard', [DashboardController::class, 'dosen'])->name('dosen.dashboard');
+    Route::get('/dosen/dashboard', [DosenDashboardController::class, 'index'])->name('dosen.dashboard');
+
+    Route::get('/dosen/mata-kuliah', [DosenMataKuliahController::class, 'index'])->name('dosen.mata-kuliah.index');
+    Route::get('/dosen/mata-kuliah/create', [DosenMataKuliahController::class, 'create'])->name('dosen.mata-kuliah.create');
+    Route::post('/dosen/mata-kuliah', [DosenMataKuliahController::class, 'store'])->name('dosen.mata-kuliah.store');
+    Route::get('/dosen/mata-kuliah/{kelas}', [DosenMataKuliahController::class, 'show'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.show');
+    Route::get('/dosen/mata-kuliah/{kelas}/edit', [DosenMataKuliahController::class, 'edit'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.edit');
+    Route::match(['put', 'patch'], '/dosen/mata-kuliah/{kelas}', [DosenMataKuliahController::class, 'update'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.update');
+    Route::post('/dosen/mata-kuliah/{kelas}/status', [DosenMataKuliahController::class, 'ubahStatus'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.status');
+    Route::post('/dosen/mata-kuliah/{kelas}/kunci-gabung', [DosenMataKuliahController::class, 'kelolaKodeGabung'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.kunci');
+
+    Route::get('/dosen/mata-kuliah/{kelas}/jadwal', [DosenJadwalKuliahController::class, 'index'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.jadwal.index');
+    Route::get('/dosen/mata-kuliah/{kelas}/jadwal/create', [DosenJadwalKuliahController::class, 'create'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.jadwal.create');
+    Route::post('/dosen/mata-kuliah/{kelas}/jadwal', [DosenJadwalKuliahController::class, 'store'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.jadwal.store');
+    Route::get('/dosen/mata-kuliah/{kelas}/jadwal/{jadwal}/edit', [DosenJadwalKuliahController::class, 'edit'])
+        ->whereNumber(['kelas', 'jadwal'])
+        ->name('dosen.mata-kuliah.jadwal.edit');
+    Route::match(['put', 'patch'], '/dosen/mata-kuliah/{kelas}/jadwal/{jadwal}', [DosenJadwalKuliahController::class, 'update'])
+        ->whereNumber(['kelas', 'jadwal'])
+        ->name('dosen.mata-kuliah.jadwal.update');
+    Route::delete('/dosen/mata-kuliah/{kelas}/jadwal/{jadwal}', [DosenJadwalKuliahController::class, 'destroy'])
+        ->whereNumber(['kelas', 'jadwal'])
+        ->name('dosen.mata-kuliah.jadwal.destroy');
+
+    Route::get('/dosen/mata-kuliah/{kelas}/materi', [DosenMateriPembelajaranController::class, 'index'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.materi.index');
+    Route::get('/dosen/mata-kuliah/{kelas}/materi/create', [DosenMateriPembelajaranController::class, 'create'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.materi.create');
+    Route::post('/dosen/mata-kuliah/{kelas}/materi', [DosenMateriPembelajaranController::class, 'store'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.materi.store');
+    Route::get('/dosen/mata-kuliah/{kelas}/materi/{materi}/edit', [DosenMateriPembelajaranController::class, 'edit'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('dosen.mata-kuliah.materi.edit');
+    Route::match(['put', 'patch'], '/dosen/mata-kuliah/{kelas}/materi/{materi}', [DosenMateriPembelajaranController::class, 'update'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('dosen.mata-kuliah.materi.update');
+    Route::delete('/dosen/mata-kuliah/{kelas}/materi/{materi}', [DosenMateriPembelajaranController::class, 'destroy'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('dosen.mata-kuliah.materi.destroy');
+    Route::get('/dosen/mata-kuliah/{kelas}/materi/{materi}/download', [DosenMateriPembelajaranController::class, 'download'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('dosen.mata-kuliah.materi.download');
 });
 
 Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void {
