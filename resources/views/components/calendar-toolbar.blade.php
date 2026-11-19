@@ -33,6 +33,16 @@
         'kuliah' => 'bg-agenda-kuliah',
         'akademik' => 'bg-agenda-akademik',
         'pengumuman' => 'bg-agenda-pengumuman',
+        'materi' => 'bg-agenda-materi',
+    ];
+    $textByType = [
+        'tugas' => 'text-agenda-tugas',
+        'deadline' => 'text-agenda-terlambat',
+        'ujian' => 'text-agenda-uts',
+        'kuliah' => 'text-agenda-kuliah',
+        'akademik' => 'text-agenda-akademik',
+        'pengumuman' => 'text-agenda-pengumuman',
+        'materi' => 'text-agenda-materi',
     ];
 @endphp
 
@@ -103,7 +113,13 @@
                         @if (in_array($key, $activeFilters, true)) checked @endif
                         class="h-3.5 w-3.5 rounded border-border text-agenda-tugas focus:ring-agenda-tugas"
                     >
-                    <span class="h-2 w-2 rounded-full {{ $toneByType[$key] ?? 'bg-muted' }}"></span>
+                    @if (($option['shape'] ?? 'titik') === 'rentang')
+                        <span class="h-1.5 w-4 rounded-full {{ $toneByType[$key] ?? 'bg-muted' }}"></span>
+                    @elseif (($option['shape'] ?? 'titik') === 'berulang')
+                        <x-icon name="repeat" class="h-3 w-3 {{ $textByType[$key] ?? 'text-muted' }}" />
+                    @else
+                        <span class="h-2 w-2 rounded-full {{ $toneByType[$key] ?? 'bg-muted' }}"></span>
+                    @endif
                     {{ $option['label'] }}
                 </label>
             @endforeach
@@ -118,7 +134,13 @@
         <span class="text-[11px] font-semibold uppercase tracking-wide text-muted">Legenda</span>
         @foreach ($filterOptions as $key => $option)
             <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-text">
-                <span class="h-2.5 w-2.5 rounded-full {{ $toneByType[$key] ?? 'bg-muted' }}"></span>
+                @if (($option['shape'] ?? 'titik') === 'rentang')
+                    <span class="h-1.5 w-4 rounded-full {{ $toneByType[$key] ?? 'bg-muted' }}"></span>
+                @elseif (($option['shape'] ?? 'titik') === 'berulang')
+                    <x-icon name="repeat" class="h-3.5 w-3.5 {{ $textByType[$key] ?? 'text-muted' }}" />
+                @else
+                    <span class="h-2.5 w-2.5 rounded-full {{ $toneByType[$key] ?? 'bg-muted' }}"></span>
+                @endif
                 {{ $option['label'] }}
             </span>
         @endforeach

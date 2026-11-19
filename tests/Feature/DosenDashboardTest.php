@@ -142,12 +142,11 @@ class DosenDashboardTest extends TestCase
             ->assertSee('Ujian Timeline')
             ->assertSee('Kalender akademik');
 
-        $this->assertContains('tugas-'.$tugas->id.'-publikasi', $ids);
-        $this->assertContains('tugas-'.$tugas->id.'-deadline', $ids);
-        $this->assertContains('agenda-'.$ujian->id.'-2026-11-19', $ids);
-        $this->assertContains('jadwal-'.$jadwal->id.'-2026-11-18', $ids);
-        $this->assertContains('Tugas dipublikasikan', $events->pluck('label')->all());
-        $this->assertContains('Deadline tugas', $events->pluck('label')->all());
+        $this->assertContains('tugas-'.$tugas->id, $ids);
+        $this->assertContains('agenda-'.$ujian->id, $ids);
+        $this->assertContains('jadwal-'.$jadwal->id, $ids);
+        $this->assertContains('Tugas', $events->pluck('label')->all());
+        $this->assertContains('Ujian', $events->pluck('label')->all());
 
         $timeline = $this->actingAs($dosen)->get(route('dosen.dashboard', [
             'view' => 'week',
@@ -163,7 +162,7 @@ class DosenDashboardTest extends TestCase
             ->assertSee('Tugas Publikasi Deadline')
             ->assertSee('Dipublikasikan')
             ->assertSee('Deadline')
-            ->assertSee('Penanda ujian')
+            ->assertSee('Penanda penting')
             ->assertSee('jenis = ujian', false);
 
         $this->assertCount(1, $bars);
@@ -191,7 +190,7 @@ class DosenDashboardTest extends TestCase
         $this->assertSame(['tugas'], $respons->viewData('activeFilters'));
         $this->assertCount(1, $events);
         $this->assertSame(['tugas'], $events->pluck('jenis')->all());
-        $this->assertSame('Tugas dipublikasikan', $events->first()['label']);
+        $this->assertSame('Tugas', $events->first()['label']);
     }
 
     public function test_shell_dosen_tidak_menampilkan_tautan_notifikasi_mahasiswa(): void

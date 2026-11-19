@@ -20,6 +20,24 @@
             'admin.tahun-akademik.index' => 'Tahun Akademik',
             'admin.tahun-akademik.create' => 'Tambah Tahun Akademik',
             'admin.tahun-akademik.edit' => 'Edit Tahun Akademik',
+            'admin.jadwal-kuliah.index' => 'Jadwal Kuliah',
+            'admin.jadwal-kuliah.create' => 'Tambah Jadwal Kuliah',
+            'admin.jadwal-kuliah.edit' => 'Ubah Jadwal Kuliah',
+            'admin.jadwal-ujian.index' => 'Jadwal Ujian',
+            'admin.jadwal-ujian.create' => 'Tambah Jadwal Ujian',
+            'admin.jadwal-ujian.edit' => 'Ubah Jadwal Ujian',
+            'admin.pengguna.index' => 'Manajemen Pengguna',
+            'admin.pengguna.create' => 'Tambah Pengguna',
+            'admin.pengguna.show' => 'Detail Pengguna',
+            'admin.pengguna.edit' => 'Ubah Pengguna',
+            'admin.mahasiswa.index' => 'Data Mahasiswa',
+            'admin.mahasiswa.create' => 'Tambah Mahasiswa',
+            'admin.mahasiswa.show' => 'Detail Mahasiswa',
+            'admin.mahasiswa.edit' => 'Ubah Mahasiswa',
+            'admin.dosen.index' => 'Data Dosen',
+            'admin.dosen.create' => 'Tambah Dosen',
+            'admin.dosen.show' => 'Detail Dosen',
+            'admin.dosen.edit' => 'Ubah Dosen',
         ]
         : ($isDosen
             ? [
@@ -28,14 +46,19 @@
                 'dosen.mata-kuliah.create' => 'Buat Kelas',
                 'dosen.mata-kuliah.show' => 'Detail Kelas',
                 'dosen.mata-kuliah.edit' => 'Edit Kelas',
+                'dosen.profil' => 'Profil Saya',
+                'dosen.profil.edit' => 'Edit Profil',
             ]
             : [
                 'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
                 'mahasiswa.kalender' => 'Kalender Akademik',
                 'mahasiswa.mata-kuliah' => 'Mata Kuliah',
                 'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
+                'mahasiswa.materi.index' => 'Materi Pembelajaran',
                 'mahasiswa.tugas' => 'Tugas & Pengumpulan',
                 'mahasiswa.notifikasi' => 'Notifikasi',
+                'mahasiswa.profil' => 'Profil Saya',
+                'mahasiswa.profil.edit' => 'Edit Profil',
             ]);
 
     $currentRoute = request()->route()?->getName();
@@ -85,15 +108,34 @@
                 </a>
             @endunless
 
-            <div class="flex items-center gap-2.5 border-l border-border pl-3 sm:pl-4">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-agenda-tugas/15 text-sm font-bold text-agenda-tugas">
-                    {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
+            @php
+                $profilRoute = $isDosen ? 'dosen.profil' : ($isAdmin ? null : 'mahasiswa.profil');
+            @endphp
+            @if ($profilRoute !== null)
+                <a
+                    href="{{ route($profilRoute) }}"
+                    class="flex items-center gap-2.5 border-l border-border pl-3 transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas sm:pl-4"
+                    aria-label="Buka profil saya"
+                >
+                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-agenda-tugas/15 text-sm font-bold text-agenda-tugas">
+                        {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
+                    </span>
+                    <span class="hidden min-w-0 sm:block">
+                        <span class="block truncate text-sm font-semibold text-text">{{ $user?->name }}</span>
+                        <span class="block truncate text-[11px] text-muted">{{ $isDosen ? 'Dosen' : 'Mahasiswa' }}</span>
+                    </span>
+                </a>
+            @else
+                <div class="flex items-center gap-2.5 border-l border-border pl-3 sm:pl-4">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-agenda-tugas/15 text-sm font-bold text-agenda-tugas">
+                        {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
+                    </div>
+                    <div class="hidden min-w-0 sm:block">
+                        <p class="truncate text-sm font-semibold text-text">{{ $user?->name }}</p>
+                        <p class="truncate text-[11px] text-muted">Administrator</p>
+                    </div>
                 </div>
-                <div class="hidden min-w-0 sm:block">
-                    <p class="truncate text-sm font-semibold text-text">{{ $user?->name }}</p>
-                    <p class="truncate text-[11px] text-muted">{{ $isAdmin ? 'Administrator' : ($isDosen ? 'Dosen' : 'Mahasiswa') }}</p>
-                </div>
-            </div>
+            @endif
         </div>
     </div>
 </header>

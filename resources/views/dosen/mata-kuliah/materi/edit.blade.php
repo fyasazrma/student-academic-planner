@@ -1,15 +1,61 @@
-<x-app-layout title="Edit Materi" :user="$user" :unread-count="$unreadCount" role="dosen">
-    <x-page-header
-        title="Edit Materi"
-        eyebrow="Mata kuliah saya"
-        description="Pembaruan materi pada kelas ini."
-    />
+<x-app-layout title="Ubah Materi" :user="$user" :unread-count="$unreadCount" role="dosen">
+    <div class="mx-auto max-w-3xl space-y-6">
+        <x-page-header
+            title="Ubah Materi"
+            eyebrow="{{ $kelas->kode_kelas }} — {{ $kelas->mataKuliah?->nama ?? 'Mata kuliah tidak tersedia' }}"
+            description="Perbarui judul, deskripsi, status, atau berkas materi. File lama dipertahankan jika tidak diganti."
+        >
+            <x-slot:actions>
+                <a
+                    href="{{ route('dosen.mata-kuliah.materi.index', $kelas) }}"
+                    class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                >
+                    <x-icon name="chevron-left" class="h-4 w-4" />
+                    Kembali ke daftar
+                </a>
+            </x-slot:actions>
+        </x-page-header>
 
-    <div class="rounded-2xl border border-border bg-card p-5 text-sm leading-6 text-text">
-        <p class="font-semibold">{{ $materi->judul }}</p>
-        <p class="mt-1 text-xs text-muted">{{ $data['file_name'] }} · {{ $data['dipublikasikan_label'] }}</p>
-        <p class="mt-3 text-xs text-muted">
-            Endpoints backend untuk memperbarui materi sudah tersedia. Formulir pengelolaan akan disiapkan pada tahap antarmuka.
-        </p>
+        @if (session('status'))
+            <div role="status" class="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm font-semibold text-text">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div role="alert" class="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-semibold text-text">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        <form
+            method="POST"
+            action="{{ route('dosen.mata-kuliah.materi.update', [$kelas, $materi]) }}"
+            enctype="multipart/form-data"
+            class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6"
+            data-auth-form
+            novalidate
+        >
+            @csrf
+            @method('PUT')
+            @include('dosen.mata-kuliah.materi._form', ['materi' => $materi])
+
+            <div class="mt-6 flex flex-wrap items-center justify-end gap-3 border-t border-border pt-5">
+                <a
+                    href="{{ route('dosen.mata-kuliah.materi.index', $kelas) }}"
+                    class="inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                >
+                    Batal
+                </a>
+                <button
+                    type="submit"
+                    data-submit-button
+                    class="inline-flex items-center gap-2 rounded-xl bg-agenda-tugas px-4 py-2.5 text-sm font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2"
+                >
+                    <x-icon name="check" class="h-4 w-4" />
+                    <span data-submit-label>Simpan perubahan</span>
+                </button>
+            </div>
+        </form>
     </div>
 </x-app-layout>

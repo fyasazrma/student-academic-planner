@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\JenisAgenda;
+use App\Enums\JenisUjian;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'judul',
     'deskripsi',
     'jenis',
+    'jenis_ujian',
     'tanggal_mulai',
     'tanggal_selesai',
     'waktu_mulai',
@@ -28,6 +30,7 @@ class AgendaAkademik extends Model
     {
         return [
             'jenis' => JenisAgenda::class,
+            'jenis_ujian' => JenisUjian::class,
             'tanggal_mulai' => 'date',
             'tanggal_selesai' => 'date',
             'dipublikasikan_pada' => 'datetime',

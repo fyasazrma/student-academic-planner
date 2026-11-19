@@ -15,18 +15,24 @@
             ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'admin.dashboard'],
             ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'admin.mata-kuliah.index'],
             ['label' => 'Tahun Akademik', 'icon' => 'calendar', 'routeName' => 'admin.tahun-akademik.index'],
+            ['label' => 'Jadwal Kuliah', 'icon' => 'calendar', 'routeName' => 'admin.jadwal-kuliah.index'],
+            ['label' => 'Jadwal Ujian', 'icon' => 'exam', 'routeName' => 'admin.jadwal-ujian.index'],
+            ['label' => 'Manajemen Pengguna', 'icon' => 'user', 'routeName' => 'admin.pengguna.index'],
+            ['label' => 'Data Mahasiswa', 'icon' => 'user', 'routeName' => 'admin.mahasiswa.index'],
+            ['label' => 'Data Dosen', 'icon' => 'user', 'routeName' => 'admin.dosen.index'],
         ]
         : ($isDosen
             ? [
                 ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'dosen.dashboard'],
+                ['label' => 'Profil Saya', 'icon' => 'user', 'routeName' => 'dosen.profil'],
                 ['label' => 'Mata Kuliah Saya', 'icon' => 'book', 'routeName' => 'dosen.mata-kuliah.index'],
             ]
             : [
                 ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],
-                ['label' => 'Profil Saya', 'icon' => 'user'],
+                ['label' => 'Profil Saya', 'icon' => 'user', 'routeName' => 'mahasiswa.profil'],
                 ['label' => 'Kalender Akademik', 'icon' => 'calendar', 'routeName' => 'mahasiswa.kalender'],
                 ['label' => 'Mata Kuliah', 'icon' => 'book', 'routeName' => 'mahasiswa.mata-kuliah'],
-                ['label' => 'Materi Pembelajaran', 'icon' => 'file'],
+                ['label' => 'Materi Pembelajaran', 'icon' => 'file', 'routeName' => 'mahasiswa.materi.index'],
                 ['label' => 'Tugas & Pengumpulan', 'icon' => 'clipboard', 'routeName' => 'mahasiswa.tugas'],
                 ['label' => 'Jadwal Ujian', 'icon' => 'exam'],
                 ['label' => 'Target Belajar', 'icon' => 'target'],

@@ -3,37 +3,29 @@
 namespace App\Services\Admin;
 
 use App\Enums\JenisAgenda;
+use App\Enums\JenisUjian;
 use App\Enums\UserRole;
 use App\Models\AgendaAkademik;
 use App\Models\JadwalKuliah;
 use App\Models\KelasMataKuliah;
 use App\Models\MataKuliah;
+use App\Models\MateriPembelajaran;
 use App\Models\TahunAkademik;
 use App\Models\User;
+use App\Services\Calendar\CalendarCategory;
+use App\Services\Calendar\CalendarEventFactory;
+use App\Services\Calendar\CalendarViewBuilder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class AdminDashboardDataService
 {
-    /** @var array<int, string> */
-    private const HARI = [
-        0 => 'Minggu',
-        1 => 'Senin',
-        2 => 'Selasa',
-        3 => 'Rabu',
-        4 => 'Kamis',
-        5 => 'Jumat',
-        6 => 'Sabtu',
-    ];
-
-    /** @var array<string, array{label: string, token: string}> */
-    private const JENIS = [
-        'akademik' => ['label' => 'Agenda akademik', 'token' => 'agenda-akademik'],
-        'ujian' => ['label' => 'Ujian', 'token' => 'agenda-uts'],
-        'pengumuman' => ['label' => 'Pengumuman', 'token' => 'agenda-pengumuman'],
-        'kuliah' => ['label' => 'Jadwal kuliah', 'token' => 'agenda-kuliah'],
-    ];
+    public function __construct(
+        private readonly CalendarEventFactory $eventFactory,
+        private readonly CalendarViewBuilder $viewBuilder,
+    ) {
+    }
 
     /**
      * Build all data needed by the admin dashboard from real database rows.
@@ -76,7 +68,7 @@ class AdminDashboardDataService
             ->map(fn (AgendaAkademik $agenda): array => [
                 'id' => $agenda->id,
                 'judul' => $agenda->judul,
-                'jenis_label' => self::JENIS[$this->jenisKey($agenda->jenis)]['label'],
+                'jenis_label' => CalendarCategory::label($this->jenisKey($agenda->jenis, $agenda->jenis_ujian)),
                 'tanggal_label' => $agenda->tanggal_mulai->translatedFormat('D, d M Y'),
                 'waktu_label' => $agenda->waktu_mulai
                     ? $this->timeLabel($agenda->waktu_mulai).($agenda->waktu_selesai ? ' – '.$this->timeLabel($agenda->waktu_selesai) : '')
@@ -88,20 +80,43 @@ class AdminDashboardDataService
 
         [$start, $end] = $this->periode($view, $date);
 
-        $agendaKalender = AgendaAkademik::institusi()
+        $tahunAktifId = $tahunAktif?->getKey() ?? 0;
+
+        $agendaKalender = AgendaAkademik::query()
+            ->where(function ($query) use ($tahunAktifId): void {
+                $query->whereNull('kelas_mata_kuliah_id')
+                    ->orWhere(function ($ujian) use ($tahunAktifId): void {
+                        $ujian->where('jenis', JenisAgenda::Ujian->value)
+                            ->whereNotNull('jenis_ujian')
+                            ->whereHas(
+                                'kelasMataKuliah',
+                                fn ($kelas) => $kelas->where('tahun_akademik_id', $tahunAktifId),
+                            );
+                    });
+            })
             ->dipublikasikan()
             ->where('tanggal_mulai', '<=', $end->toDateString())
+            ->with('kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik')
             ->orderBy('tanggal_mulai')
+            ->orderBy('waktu_mulai')
             ->get();
 
         $jadwalKalender = $tahunAktif === null
             ? collect()
             : JadwalKuliah::query()
                 ->whereHas('kelasMataKuliah', fn ($query) => $query->where('tahun_akademik_id', $tahunAktif->id))
-                ->with('kelasMataKuliah.mataKuliah')
+                ->with('kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik')
                 ->get();
 
-        $events = $this->calendarEvents($agendaKalender, $jadwalKalender, $start, $end);
+        $materiKalender = $tahunAktif === null
+            ? collect()
+            : MateriPembelajaran::dipublikasikan()
+                ->whereHas('kelasMataKuliah', fn ($query) => $query->where('tahun_akademik_id', $tahunAktif->id))
+                ->with('kelasMataKuliah.mataKuliah')
+                ->orderBy('dipublikasikan_pada')
+                ->get();
+
+        $events = $this->calendarEvents($agendaKalender, $jadwalKalender, $materiKalender);
 
         return [
             'user' => $user,
@@ -110,10 +125,10 @@ class AdminDashboardDataService
             'tahunAkademikAktif' => $tahunAktif,
             'agendaMendatang' => $agendaMendatang,
             'perubahanTerbaru' => $this->perubahanTerbaru(),
-            'calendar' => $this->calendar($events, $view, $date, $start, $end, $filters),
+            'calendar' => $this->viewBuilder->build($events, $view, $date, $filters),
             'currentView' => $view,
             'activeFilters' => $filters,
-            'filterOptions' => self::JENIS,
+            'filterOptions' => CalendarCategory::options(CalendarCategory::ADMIN),
             'today' => $today,
         ];
     }
@@ -168,8 +183,8 @@ class AdminDashboardDataService
             ? $date->copy()->startOfWeek(Carbon::MONDAY)
             : $date->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
         $end = $view === 'week'
-            ? $date->copy()->endOfWeek(Carbon::MONDAY)
-            : $date->copy()->endOfMonth()->endOfWeek(Carbon::MONDAY);
+            ? $date->copy()->endOfWeek(Carbon::SUNDAY)
+            : $date->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
         return [$start, $end];
     }
@@ -177,129 +192,33 @@ class AdminDashboardDataService
     /**
      * @param  \Illuminate\Support\Collection<int, AgendaAkademik>  $agendas
      * @param  \Illuminate\Support\Collection<int, JadwalKuliah>  $schedules
+     * @param  \Illuminate\Support\Collection<int, MateriPembelajaran>  $materials
      * @return \Illuminate\Support\Collection<int, array<string, mixed>>
      */
     private function calendarEvents(
         Collection $agendas,
         Collection $schedules,
-        Carbon $start,
-        Carbon $end,
+        Collection $materials,
     ): Collection {
-        $events = collect();
-
-        foreach ($agendas as $agenda) {
-            $agendaStart = $agenda->tanggal_mulai->copy()->startOfDay();
-            $agendaEnd = ($agenda->tanggal_selesai ?? $agenda->tanggal_mulai)->copy()->endOfDay();
-            $jenis = $this->jenisKey($agenda->jenis);
-
-            for ($cursor = $agendaStart->copy(); $cursor->lessThanOrEqualTo($agendaEnd) && $cursor->lessThanOrEqualTo($end); $cursor->addDay()) {
-                if ($cursor->lessThan($start)) {
-                    continue;
-                }
-
-                $events->push([
-                    'id' => 'agenda-'.$agenda->id.'-'.$cursor->toDateString(),
-                    'jenis' => $jenis,
-                    'label' => self::JENIS[$jenis]['label'],
-                    'judul' => $agenda->judul,
-                    'mata_kuliah' => 'Agenda institusi',
-                    'tanggal' => $cursor->toDateString(),
-                    'tanggal_label' => $cursor->translatedFormat('D, d M Y'),
-                    'waktu_label' => $agenda->waktu_mulai
-                        ? $this->timeLabel($agenda->waktu_mulai).($agenda->waktu_selesai ? ' – '.$this->timeLabel($agenda->waktu_selesai) : '')
-                        : null,
-                    'awal_label' => $agenda->tanggal_mulai->translatedFormat('d M Y'),
-                    'akhir_label' => ($agenda->tanggal_selesai ?? $agenda->tanggal_mulai)->translatedFormat('d M Y'),
-                    'awal_label_name' => 'Tanggal mulai',
-                    'akhir_label_name' => 'Tanggal selesai',
-                    'publikasi_label' => $agenda->dipublikasikan_pada?->translatedFormat('d M Y H:i') ?? 'Tidak tersedia',
-                    'lokasi' => $agenda->lokasi,
-                    'deskripsi' => $agenda->deskripsi,
-                    'status_label' => null,
-                    'urutan' => $cursor->format('Ymd').($agenda->waktu_mulai ? $this->timeLabel($agenda->waktu_mulai, 'Hi') : '0000'),
-                ]);
-            }
-        }
-
-        foreach ($schedules as $jadwal) {
-            $kelas = $jadwal->kelasMataKuliah;
-
-            for ($cursor = $start->copy(); $cursor->lessThanOrEqualTo($end); $cursor->addDay()) {
-                if ($cursor->dayOfWeek !== $jadwal->hari) {
-                    continue;
-                }
-
-                $events->push([
-                    'id' => 'jadwal-'.$jadwal->id.'-'.$cursor->toDateString(),
-                    'jenis' => 'kuliah',
-                    'label' => ucfirst($jadwal->jenis?->value ?? 'kuliah'),
-                    'judul' => $kelas?->mataKuliah?->nama ?? 'Jadwal kuliah',
-                    'mata_kuliah' => $kelas?->mataKuliah?->nama ?? 'Mata kuliah tidak tersedia',
-                    'tanggal' => $cursor->toDateString(),
-                    'tanggal_label' => $cursor->translatedFormat('D, d M Y'),
-                    'waktu_label' => $this->timeLabel($jadwal->jam_mulai).' – '.$this->timeLabel($jadwal->jam_selesai),
-                    'awal_label' => self::HARI[$jadwal->hari].', '.$this->timeLabel($jadwal->jam_mulai),
-                    'akhir_label' => $this->timeLabel($jadwal->jam_selesai),
-                    'awal_label_name' => 'Hari / jam mulai',
-                    'akhir_label_name' => 'Jam selesai',
-                    'publikasi_label' => 'Tidak tersedia',
-                    'lokasi' => $jadwal->ruang,
-                    'deskripsi' => 'Kelas '.$kelas?->kode_kelas,
-                    'status_label' => null,
-                    'urutan' => $cursor->format('Ymd').$this->timeLabel($jadwal->jam_mulai, 'Hi'),
-                ]);
-            }
-        }
-
-        return $events->values();
+        return $this->eventFactory->agendas($agendas)
+            ->concat($this->eventFactory->schedules($schedules))
+            ->concat($this->eventFactory->materials($materials))
+            ->values();
     }
 
-    /**
-     * @param  \Illuminate\Support\Collection<int, array<string, mixed>>  $events
-     * @return array<string, mixed>
-     */
-    private function calendar(
-        Collection $events,
-        string $view,
-        Carbon $date,
-        Carbon $start,
-        Carbon $end,
-        array $filters,
-    ): array {
-        $days = [];
-        for ($cursor = $start->copy(); $cursor->lessThanOrEqualTo($end); $cursor->addDay()) {
-            $days[] = $cursor->copy();
-        }
-
-        $filtered = $filters === []
-            ? $events
-            : $events->filter(fn (array $event): bool => in_array($event['jenis'], $filters, true))->values();
-
-        return [
-            'days' => $days,
-            'focusDate' => $date->format('Y-m'),
-            'view' => $view,
-            'events' => $filtered,
-            'eventsByDate' => $filtered->groupBy('tanggal'),
-            'agendaList' => $filtered->sortBy(fn (array $event): string => $event['tanggal'].'|'.$event['urutan'])->values(),
-            'label' => $view === 'week'
-                ? $start->translatedFormat('d M').' – '.$end->translatedFormat('d M Y')
-                : $date->translatedFormat('F Y'),
-            'previous' => $view === 'week'
-                ? $date->copy()->subWeek()->toDateString()
-                : $date->copy()->subMonth()->toDateString(),
-            'next' => $view === 'week'
-                ? $date->copy()->addWeek()->toDateString()
-                : $date->copy()->addMonth()->toDateString(),
-        ];
-    }
-
-    private function jenisKey(JenisAgenda $jenis): string
+    private function jenisKey(JenisAgenda $jenis, ?JenisUjian $jenisUjian = null): string
     {
+        if ($jenis === JenisAgenda::Ujian && $jenisUjian !== null) {
+            return match ($jenisUjian) {
+                JenisUjian::Uts => CalendarCategory::UTS,
+                JenisUjian::Uas => CalendarCategory::UAS,
+            };
+        }
+
         return match ($jenis) {
-            JenisAgenda::Akademik => 'akademik',
-            JenisAgenda::Ujian => 'ujian',
-            JenisAgenda::Pengumuman => 'pengumuman',
+            JenisAgenda::Akademik => CalendarCategory::AKADEMIK,
+            JenisAgenda::Ujian => CalendarCategory::UJIAN,
+            JenisAgenda::Pengumuman => CalendarCategory::PENGUMUMAN,
         };
     }
 
@@ -339,9 +258,6 @@ class AdminDashboardDataService
             return [];
         }
 
-        return array_values(array_filter(
-            array_map(fn ($item): string => is_string($item) ? $item : '', $value),
-            fn (string $item): bool => array_key_exists($item, self::JENIS),
-        ));
+        return CalendarCategory::parseFilters($value, CalendarCategory::ADMIN);
     }
 }

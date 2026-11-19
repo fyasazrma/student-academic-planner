@@ -53,6 +53,80 @@ onReady(() => {
         });
     });
 
+    const roleSelect = document.querySelector('[data-role-select]');
+
+    const updateRoleFields = () => {
+        if (! roleSelect) {
+            return;
+        }
+
+        document.querySelectorAll('[data-role-field]').forEach((field) => {
+            field.classList.toggle('hidden', field.dataset.roleField !== roleSelect.value);
+        });
+    };
+
+    roleSelect?.addEventListener('change', updateRoleFields);
+    updateRoleFields();
+
+    const userConfirmDialog = document.getElementById('dialog-konfirmasi-pengguna');
+    const userConfirmForm = document.getElementById('form-konfirmasi-pengguna');
+    const userConfirmFields = {
+        judul: userConfirmDialog?.querySelector('[data-user-dialog-judul]'),
+        pesan: userConfirmDialog?.querySelector('[data-user-dialog-pesan]'),
+        label: userConfirmDialog?.querySelector('[data-user-dialog-label]'),
+        submit: userConfirmDialog?.querySelector('[data-user-dialog-submit]'),
+        status: userConfirmForm?.querySelector('[data-user-status-input]'),
+    };
+
+    const closeUserConfirmDialog = () => {
+        if (typeof userConfirmDialog?.close === 'function') {
+            userConfirmDialog.close();
+        } else {
+            userConfirmDialog?.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-user-konfirmasi]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! userConfirmDialog || ! userConfirmForm) {
+                return;
+            }
+
+            userConfirmForm.action = button.dataset.userAction || '';
+            if (userConfirmFields.status) {
+                userConfirmFields.status.value = button.dataset.userStatus || '1';
+            }
+            if (userConfirmFields.judul) {
+                userConfirmFields.judul.textContent = button.dataset.userJudul || 'Konfirmasi aksi';
+            }
+            if (userConfirmFields.pesan) {
+                userConfirmFields.pesan.textContent = button.dataset.userPesan || 'Konfirmasi perubahan status akun.';
+            }
+            if (userConfirmFields.label) {
+                userConfirmFields.label.textContent = button.dataset.userLabel || '';
+            }
+            if (userConfirmFields.submit) {
+                userConfirmFields.submit.textContent = button.dataset.userSubmit || 'Konfirmasi';
+            }
+
+            if (typeof userConfirmDialog.showModal === 'function') {
+                userConfirmDialog.showModal();
+            } else {
+                userConfirmDialog.setAttribute('open', '');
+            }
+        });
+    });
+
+    userConfirmDialog?.querySelectorAll('[data-user-dialog-close]').forEach((button) => {
+        button.addEventListener('click', closeUserConfirmDialog);
+    });
+
+    userConfirmDialog?.addEventListener('click', (event) => {
+        if (event.target === userConfirmDialog) {
+            closeUserConfirmDialog();
+        }
+    });
+
     const drawer = document.getElementById('sidebar-drawer');
     const drawerOpenButton = document.querySelector('[data-sidebar-open]');
 
@@ -75,65 +149,23 @@ onReady(() => {
 
     const detailDialog = document.getElementById('agenda-detail');
     const eventsData = document.getElementById('agenda-events-data');
-    const timelineData = document.getElementById('timeline-events-data');
-    const addAgendaEvent = (carry, event) => {
-        if (! event || ! event.id) {
-            return carry;
-        }
-
-        carry[event.id] = event;
-
-        return carry;
-    };
     let agendaEvents = {};
 
     if (eventsData) {
         try {
-            JSON.parse(eventsData.textContent || '[]').reduce(addAgendaEvent, agendaEvents);
+            const parsed = JSON.parse(eventsData.textContent || '{}');
+
+            if (Array.isArray(parsed)) {
+                parsed.forEach((event) => {
+                    if (event && event.id) {
+                        agendaEvents[event.id] = event;
+                    }
+                });
+            } else if (parsed && typeof parsed === 'object') {
+                agendaEvents = parsed;
+            }
         } catch (error) {
             agendaEvents = {};
-        }
-    }
-
-    if (timelineData) {
-        try {
-            const timeline = JSON.parse(timelineData.textContent || '{}');
-
-            (timeline.bars || []).forEach((bar) => addAgendaEvent(agendaEvents, {
-                id: `tugas-${bar.id}-deadline`,
-                label: 'Deadline tugas',
-                judul: bar.judul,
-                mata_kuliah: bar.mata_kuliah,
-                tanggal_label: bar.deadline_label,
-                waktu_label: bar.deadline_label,
-                awal_label: bar.dipublikasikan_label,
-                akhir_label: bar.deadline_label,
-                awal_label_name: 'Tanggal dipublikasikan',
-                akhir_label_name: 'Deadline',
-                publikasi_label: bar.dipublikasikan_label,
-                deskripsi: bar.deskripsi,
-                status_label: bar.status_label,
-                lokasi: null,
-            }));
-
-            (timeline.markers || []).forEach((marker) => addAgendaEvent(agendaEvents, {
-                id: marker.id,
-                label: 'Ujian',
-                judul: marker.judul,
-                mata_kuliah: marker.mata_kuliah,
-                tanggal_label: marker.tanggal_label,
-                waktu_label: marker.waktu_label || 'Tidak tersedia',
-                awal_label: marker.tanggal_label,
-                akhir_label: marker.tanggal_label,
-                awal_label_name: 'Tanggal ujian',
-                akhir_label_name: 'Tanggal ujian',
-                publikasi_label: 'Tidak tersedia',
-                deskripsi: null,
-                status_label: null,
-                lokasi: marker.lokasi,
-            }));
-        } catch (error) {
-            // Timeline detail tetap dapat dibuka dari data kalender bila tersedia.
         }
     }
 
@@ -380,6 +412,145 @@ onReady(() => {
     taConfirmDialog?.addEventListener('click', (event) => {
         if (event.target === taConfirmDialog) {
             closeTaConfirmDialog();
+        }
+    });
+
+    const jadwalConfirmDialog = document.getElementById('dialog-konfirmasi-jadwal');
+    const jadwalConfirmForm = document.getElementById('form-konfirmasi-jadwal');
+    const jadwalConfirmFields = {
+        judul: jadwalConfirmDialog?.querySelector('[data-jadwal-dialog-judul]'),
+        pesan: jadwalConfirmDialog?.querySelector('[data-jadwal-dialog-pesan]'),
+        label: jadwalConfirmDialog?.querySelector('[data-jadwal-dialog-label]'),
+        submit: jadwalConfirmDialog?.querySelector('[data-jadwal-dialog-submit]'),
+        method: jadwalConfirmForm?.querySelector('[data-jadwal-method-input]'),
+    };
+
+    const closeJadwalConfirmDialog = () => {
+        if (typeof jadwalConfirmDialog?.close === 'function') {
+            jadwalConfirmDialog.close();
+        } else {
+            jadwalConfirmDialog?.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-jadwal-konfirmasi]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! jadwalConfirmDialog || ! jadwalConfirmForm) {
+                return;
+            }
+
+            jadwalConfirmForm.action = button.dataset.jadwalAction || '';
+            if (jadwalConfirmFields.method) {
+                jadwalConfirmFields.method.value = button.dataset.jadwalMethod || 'DELETE';
+            }
+            if (jadwalConfirmFields.judul) {
+                jadwalConfirmFields.judul.textContent = button.dataset.jadwalJudul || 'Konfirmasi aksi';
+            }
+            if (jadwalConfirmFields.pesan) {
+                jadwalConfirmFields.pesan.textContent = button.dataset.jadwalPesan || 'Konfirmasi aksi pada jadwal terpilih.';
+            }
+            if (jadwalConfirmFields.label) {
+                jadwalConfirmFields.label.textContent = button.dataset.jadwalLabel || 'Jadwal terpilih';
+            }
+            if (jadwalConfirmFields.submit) {
+                jadwalConfirmFields.submit.textContent = button.dataset.jadwalSubmit || 'Hapus';
+            }
+
+            if (typeof jadwalConfirmDialog.showModal === 'function') {
+                jadwalConfirmDialog.showModal();
+            } else {
+                jadwalConfirmDialog.setAttribute('open', '');
+            }
+        });
+    });
+
+    jadwalConfirmDialog?.querySelectorAll('[data-jadwal-dialog-close]').forEach((button) => {
+        button.addEventListener('click', closeJadwalConfirmDialog);
+    });
+
+    jadwalConfirmDialog?.addEventListener('click', (event) => {
+        if (event.target === jadwalConfirmDialog) {
+            closeJadwalConfirmDialog();
+        }
+    });
+
+    const materiDialog = document.getElementById('dialog-detail-materi');
+    const materiFields = {
+        judul: materiDialog?.querySelector('[data-materi-field="judul"]'),
+        deskripsi: materiDialog?.querySelector('[data-materi-field="deskripsi"]'),
+        dipublikasikan: materiDialog?.querySelector('[data-materi-field="dipublikasikan_label"]'),
+        fileName: materiDialog?.querySelector('[data-materi-field="file_name"]'),
+        fileSize: materiDialog?.querySelector('[data-materi-field="file_size_label"]'),
+        fileMime: materiDialog?.querySelector('[data-materi-field="file_mime"]'),
+        dibuatOleh: materiDialog?.querySelector('[data-materi-field="dibuat_oleh"]'),
+        download: materiDialog?.querySelector('[data-materi-action="download"]'),
+        edit: materiDialog?.querySelector('[data-materi-action="edit"]'),
+        statusDraft: materiDialog?.querySelector('[data-materi-status-wrap="draft"]'),
+        statusPublik: materiDialog?.querySelector('[data-materi-status-wrap="dipublikasikan"]'),
+    };
+
+    const isiFieldMateri = (element, nilai, fallback = '-') => {
+        if (element) {
+            element.textContent = nilai || fallback;
+        }
+    };
+
+    const tutupMateriDialog = () => {
+        if (typeof materiDialog?.close === 'function') {
+            materiDialog.close();
+        } else {
+            materiDialog?.removeAttribute('open');
+        }
+    };
+
+    document.querySelectorAll('[data-materi-detail-trigger]').forEach((button) => {
+        button.addEventListener('click', () => {
+            if (! materiDialog) {
+                return;
+            }
+
+            let materi;
+
+            try {
+                materi = JSON.parse(button.dataset.materiDetail || '{}');
+            } catch (error) {
+                return;
+            }
+
+            isiFieldMateri(materiFields.judul, materi.judul, 'Judul materi');
+            isiFieldMateri(materiFields.deskripsi, materi.deskripsi, 'Tidak ada deskripsi.');
+            isiFieldMateri(materiFields.dipublikasikan, materi.dipublikasikan_label, 'Belum dipublikasikan');
+            isiFieldMateri(materiFields.fileName, materi.file_name);
+            isiFieldMateri(materiFields.fileSize, materi.file_size_label);
+            isiFieldMateri(materiFields.fileMime, materi.file_mime);
+            isiFieldMateri(materiFields.dibuatOleh, materi.dibuat_oleh);
+
+            materiFields.statusDraft?.classList.toggle('hidden', materi.status !== 'draft');
+            materiFields.statusPublik?.classList.toggle('hidden', materi.status !== 'dipublikasikan');
+
+            if (materiFields.download) {
+                materiFields.download.href = button.dataset.materiDownload || materiFields.download.href;
+            }
+
+            if (materiFields.edit) {
+                materiFields.edit.href = button.dataset.materiEdit || materiFields.edit.href;
+            }
+
+            if (typeof materiDialog.showModal === 'function') {
+                materiDialog.showModal();
+            } else {
+                materiDialog.setAttribute('open', '');
+            }
+        });
+    });
+
+    materiDialog?.querySelectorAll('[data-materi-detail-close]').forEach((button) => {
+        button.addEventListener('click', tutupMateriDialog);
+    });
+
+    materiDialog?.addEventListener('click', (event) => {
+        if (event.target === materiDialog) {
+            tutupMateriDialog();
         }
     });
 

@@ -8,7 +8,6 @@
 ])
 
 @php
-    $weekdays = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     $today = $today ?? today();
 @endphp
 
@@ -27,82 +26,23 @@
             :route-name="$routeName"
         />
 
-        <div class="mt-5 hidden overflow-hidden rounded-xl border border-border sm:block">
-            <div class="grid grid-cols-7 border-b border-border bg-soft">
-                @foreach ($weekdays as $weekday)
-                    <div class="px-2 py-2.5 text-center text-[11px] font-bold uppercase tracking-wide text-muted">{{ $weekday }}</div>
-                @endforeach
-            </div>
-            <div class="grid grid-cols-7">
-                @foreach ($calendar['days'] as $day)
-                    @php
-                        $dayEvents = $calendar['eventsByDate'][$day->toDateString()] ?? collect();
-                        $isToday = $day->toDateString() === $today->toDateString();
-                        $outside = $calendar['view'] === 'month' && $day->format('Y-m') !== $calendar['focusDate'];
-                    @endphp
-                    <div @class([
-                        'min-h-[112px] border-b border-r border-border p-1.5 last:border-r-0',
-                        'bg-soft/50' => $outside,
-                        'bg-card' => ! $outside,
-                    ])>
-                        <div class="mb-1.5 flex items-center justify-between px-0.5">
-                            <span @class([
-                                'flex h-6 w-6 items-center justify-center rounded-lg text-[11px] font-semibold',
-                                'bg-sidebar text-white' => $isToday,
-                                'text-muted' => $outside && ! $isToday,
-                                'text-text' => ! $outside && ! $isToday,
-                            ])>{{ $day->format('d') }}</span>
-                            @if ($dayEvents->count() > 3)
-                                <span class="text-[9px] font-semibold text-muted">+{{ $dayEvents->count() - 3 }}</span>
-                            @endif
-                        </div>
-                        <div class="space-y-1">
-                            @foreach ($dayEvents->take(3) as $event)
-                                <x-calendar-event :event="$event" />
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+        <div class="mt-5">
+            <x-calendar-grid :calendar="$calendar" :today="$today" />
         </div>
 
         <div class="mt-5 sm:hidden">
             <p class="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Agenda periode ini</p>
-            @if ($calendar['agendaList']->isEmpty())
-                <x-empty-state
-                    title="Tidak ada agenda"
-                    description="Tidak ada agenda institusi atau jadwal kelas pada periode ini."
-                    icon="calendar"
-                />
-            @else
-                <div class="space-y-2">
-                    @foreach ($calendar['agendaList'] as $event)
-                        <button
-                            type="button"
-                            data-agenda-trigger="{{ $event['id'] }}"
-                            class="flex w-full items-start gap-3 rounded-xl border border-border bg-soft p-3 text-left transition hover:bg-card focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
-                        >
-                            <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full
-                                {{ $event['jenis'] === 'akademik' ? 'bg-agenda-akademik' : '' }}
-                                {{ $event['jenis'] === 'ujian' ? 'bg-agenda-uts' : '' }}
-                                {{ $event['jenis'] === 'pengumuman' ? 'bg-agenda-pengumuman' : '' }}
-                                {{ $event['jenis'] === 'kuliah' ? 'bg-agenda-kuliah' : '' }}"></span>
-                            <span class="min-w-0">
-                                <span class="block text-[10px] font-semibold uppercase tracking-wide text-muted">{{ $event['label'] }} · {{ $event['tanggal_label'] }}</span>
-                                <span class="mt-0.5 block text-sm font-semibold text-text">{{ $event['judul'] }}</span>
-                                <span class="mt-0.5 block text-[11px] text-muted">{{ $event['mata_kuliah'] }}</span>
-                            </span>
-                        </button>
-                    @endforeach
-                </div>
-            @endif
+            <x-calendar-list
+                :events="$calendar['agendaList']"
+                empty-description="Tidak ada agenda institusi atau jadwal kelas pada periode ini."
+            />
         </div>
     </div>
 </section>
 
 {{-- Dialog detail agenda memakai handler yang sama dengan panel mahasiswa, tanpa mengubah file mahasiswa. --}}
 @push('modals')
-    <script type="application/json" id="agenda-events-data">@json($calendar['events'])</script>
+    <script type="application/json" id="agenda-events-data">@json($calendar['detailEvents'])</script>
 
     <dialog
         id="agenda-detail"

@@ -3,7 +3,7 @@
 ])
 
 @php
-    $barTone = match ($bar['status']) {
+    $barTone = match ($bar['status'] ?? null) {
         'terlambat' => 'bg-agenda-terlambat',
         'dinilai', 'terkumpul' => 'bg-success',
         'mendekati_deadline' => 'bg-agenda-pengumuman',
@@ -15,7 +15,7 @@
     class="rounded-xl border border-border bg-card p-4 transition hover:border-agenda-tugas/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
     role="button"
     tabindex="0"
-    data-agenda-trigger="{{ $bar['id'] }}-deadline"
+    data-agenda-trigger="{{ $bar['event_id'] }}"
     aria-label="Lihat detail tugas {{ $bar['judul'] }}"
 >
     <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

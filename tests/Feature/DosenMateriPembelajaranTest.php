@@ -631,6 +631,155 @@ class DosenMateriPembelajaranTest extends TestCase
         $this->assertFalse(config('filesystems.disks.local.serve'));
     }
 
+    public function test_halaman_daftar_materi_menampilkan_informasi_dan_aksi_yang_terhubung(): void
+    {
+        $dosen = $this->dosen();
+        $tahun = $this->tahun();
+        $kelas = $this->kelas($dosen, $tahun, $this->mataKuliah(), 'A01');
+        $kelasLain = $this->kelas($dosen, $tahun, $this->mataKuliah(), 'B02');
+        $draft = $this->materi($kelas, $dosen, 'Draft UI', null, "%PDF-1.4\nDraft\n%%EOF\n");
+        $publik = $this->materi($kelas, $dosen, 'Publik UI', '2026-11-18 08:00:00', "%PDF-1.4\nPublik\n%%EOF\n");
+        $this->materi($kelasLain, $dosen, 'Materi Kelas Lain UI');
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.mata-kuliah.materi.index', $kelas))
+            ->assertOk()
+            ->assertSee('Draft UI')
+            ->assertSee('Publik UI')
+            ->assertDontSee('Materi Kelas Lain UI')
+            ->assertSee('Draft')
+            ->assertSee('Dipublikasikan')
+            ->assertSee('Belum dipublikasikan')
+            ->assertSee('Detail')
+            ->assertSee('Unduh')
+            ->assertSee('Hapus')
+            ->assertSee(route('dosen.mata-kuliah.materi.create', $kelas))
+            ->assertSee(route('dosen.mata-kuliah.materi.edit', [$kelas, $draft]))
+            ->assertSee(route('dosen.mata-kuliah.materi.edit', [$kelas, $publik]))
+            ->assertSee(route('dosen.mata-kuliah.materi.download', [$kelas, $draft]))
+            ->assertSee(route('dosen.mata-kuliah.materi.destroy', [$kelas, $draft]));
+    }
+
+    public function test_halaman_daftar_materi_kosong_menampilkan_empty_state(): void
+    {
+        $dosen = $this->dosen();
+        $kelas = $this->kelas($dosen, $this->tahun(), $this->mataKuliah(), 'A01');
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.mata-kuliah.materi.index', $kelas))
+            ->assertOk()
+            ->assertSee('Belum ada materi')
+            ->assertSee('Tambahkan materi pertama untuk kelas ini.')
+            ->assertSee(route('dosen.mata-kuliah.materi.create', $kelas));
+    }
+
+    public function test_form_tambah_materi_menampilkan_batasan_file_dan_route(): void
+    {
+        $dosen = $this->dosen();
+        $kelas = $this->kelas($dosen, $this->tahun(), $this->mataKuliah(), 'A01');
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.mata-kuliah.materi.create', $kelas))
+            ->assertOk()
+            ->assertSee(route('dosen.mata-kuliah.materi.store', $kelas))
+            ->assertSee('multipart/form-data')
+            ->assertSee('name="judul"', false)
+            ->assertSee('name="deskripsi"', false)
+            ->assertSee('name="status"', false)
+            ->assertSee('value="draft"', false)
+            ->assertSee('value="dipublikasikan"', false)
+            ->assertSee('name="file"', false)
+            ->assertSee('.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip')
+            ->assertSee('Ukuran maksimal 10 MB')
+            ->assertSee('PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, ZIP');
+    }
+
+    public function test_form_tambah_materi_menampilkan_validasi_yang_gagal(): void
+    {
+        $this->withViewErrors([
+            'judul' => ['Judul materi wajib diisi.'],
+            'file' => ['File materi wajib diunggah.'],
+        ]);
+
+        $this->blade('@include("dosen.mata-kuliah.materi._form")', [
+            'materi' => null,
+            'data' => [
+                'judul' => '',
+                'deskripsi' => '',
+                'status' => 'draft',
+                'file_name' => null,
+                'file_size_label' => null,
+                'dipublikasikan_label' => 'Belum dipublikasikan',
+                'ukuran_maksimal_kb' => 10240,
+            ],
+        ])
+            ->assertSee('Periksa kembali formulir materi.')
+            ->assertSee('Judul materi wajib diisi.')
+            ->assertSee('File materi wajib diunggah.');
+    }
+
+    public function test_form_ubah_materi_menampilkan_file_lama_dan_status_saat_ini(): void
+    {
+        $dosen = $this->dosen();
+        $kelas = $this->kelas($dosen, $this->tahun(), $this->mataKuliah(), 'A01');
+        $materi = $this->materi($kelas, $dosen, 'Judul Awal', '2026-11-18 08:00:00');
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.mata-kuliah.materi.edit', [$kelas, $materi]))
+            ->assertOk()
+            ->assertSee(route('dosen.mata-kuliah.materi.update', [$kelas, $materi]))
+            ->assertSee('value="PUT"', false)
+            ->assertSee('Judul Awal')
+            ->assertSee($materi->file_name)
+            ->assertSee('File tersimpan')
+            ->assertSee('Ganti file (opsional)')
+            ->assertSee('Biarkan kosong jika file lama tetap digunakan.')
+            ->assertSee('Status saat ini:')
+            ->assertSee('value="dipublikasikan"', false)
+            ->assertSee('multipart/form-data');
+    }
+
+    public function test_detail_kelas_menampilkan_ringkasan_materi_kelas_sendiri(): void
+    {
+        $dosen = $this->dosen();
+        $tahun = $this->tahun();
+        $kelas = $this->kelas($dosen, $tahun, $this->mataKuliah(), 'A01');
+        $kelasLain = $this->kelas($dosen, $tahun, $this->mataKuliah(), 'B02');
+        $this->materi($kelas, $dosen, 'Materi A Draft');
+        $this->materi($kelas, $dosen, 'Materi A Publik', '2026-11-18 08:00:00');
+        $this->materi($kelasLain, $dosen, 'Materi B Publik', '2026-11-18 08:00:00');
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.mata-kuliah.show', $kelas))
+            ->assertOk()
+            ->assertSee('Ringkasan materi')
+            ->assertSee('Kelola materi')
+            ->assertSee(route('dosen.mata-kuliah.materi.index', $kelas))
+            ->assertSee('Materi A Draft')
+            ->assertSee('Materi A Publik')
+            ->assertDontSee('Materi B Publik')
+            ->assertSee('Total 2 materi pada kelas ini.');
+    }
+
+    public function test_kegagalan_hapus_materi_menampilkan_notifikasi_error(): void
+    {
+        $dosen = $this->dosen();
+        $kelas = $this->kelas($dosen, $this->tahun(), $this->mataKuliah(), 'A01');
+        $materi = $this->materi($kelas, $dosen, 'Materi Gagal Dihapus');
+
+        MateriPembelajaran::deleting(function (): never {
+            throw new RuntimeException('Simulasi kegagalan penghapusan.');
+        });
+
+        $this->actingAs($dosen)
+            ->delete(route('dosen.mata-kuliah.materi.destroy', [$kelas, $materi]))
+            ->assertRedirect(route('dosen.mata-kuliah.materi.index', $kelas))
+            ->assertSessionHas('error', 'Materi gagal dihapus. Silakan coba lagi.');
+
+        $this->assertDatabaseHas('materi_pembelajaran', ['id' => $materi->id]);
+        $this->assertTrue(Storage::disk('local')->exists($materi->file_path));
+    }
+
     /**
      * @param array<string, mixed> $overrides
      */

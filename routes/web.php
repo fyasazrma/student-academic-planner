@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\JadwalKuliahController as AdminJadwalKuliahController;
+use App\Http\Controllers\Admin\JadwalUjianController as AdminJadwalUjianController;
 use App\Http\Controllers\Admin\MataKuliahController as AdminMataKuliahController;
 use App\Http\Controllers\Admin\TahunAkademikController as AdminTahunAkademikController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Dosen\DashboardController as DosenDashboardController;
 use App\Http\Controllers\Dosen\JadwalKuliahController as DosenJadwalKuliahController;
@@ -11,8 +14,10 @@ use App\Http\Controllers\Dosen\MateriPembelajaranController as DosenMateriPembel
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\KalenderController;
 use App\Http\Controllers\Mahasiswa\MataKuliahController;
+use App\Http\Controllers\Mahasiswa\MateriPembelajaranController as MahasiswaMateriPembelajaranController;
 use App\Http\Controllers\Mahasiswa\NotifikasiController;
 use App\Http\Controllers\Mahasiswa\TugasController;
+use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -55,10 +60,59 @@ Route::middleware(['auth', 'active', 'role:admin'])->group(function (): void {
     Route::delete('/admin/tahun-akademik/{tahun_akademik}', [AdminTahunAkademikController::class, 'destroy'])
         ->whereNumber('tahun_akademik')
         ->name('admin.tahun-akademik.destroy');
+
+    Route::get('/admin/jadwal-kuliah', [AdminJadwalKuliahController::class, 'index'])->name('admin.jadwal-kuliah.index');
+    Route::get('/admin/jadwal-kuliah/create', [AdminJadwalKuliahController::class, 'create'])->name('admin.jadwal-kuliah.create');
+    Route::post('/admin/jadwal-kuliah', [AdminJadwalKuliahController::class, 'store'])->name('admin.jadwal-kuliah.store');
+    Route::get('/admin/jadwal-kuliah/{jadwal}/edit', [AdminJadwalKuliahController::class, 'edit'])
+        ->whereNumber('jadwal')
+        ->name('admin.jadwal-kuliah.edit');
+    Route::match(['put', 'patch'], '/admin/jadwal-kuliah/{jadwal}', [AdminJadwalKuliahController::class, 'update'])
+        ->whereNumber('jadwal')
+        ->name('admin.jadwal-kuliah.update');
+    Route::delete('/admin/jadwal-kuliah/{jadwal}', [AdminJadwalKuliahController::class, 'destroy'])
+        ->whereNumber('jadwal')
+        ->name('admin.jadwal-kuliah.destroy');
+
+    Route::get('/admin/jadwal-ujian', [AdminJadwalUjianController::class, 'index'])->name('admin.jadwal-ujian.index');
+    Route::get('/admin/jadwal-ujian/create', [AdminJadwalUjianController::class, 'create'])->name('admin.jadwal-ujian.create');
+    Route::post('/admin/jadwal-ujian', [AdminJadwalUjianController::class, 'store'])->name('admin.jadwal-ujian.store');
+    Route::get('/admin/jadwal-ujian/{ujian}/edit', [AdminJadwalUjianController::class, 'edit'])
+        ->whereNumber('ujian')
+        ->name('admin.jadwal-ujian.edit');
+    Route::match(['put', 'patch'], '/admin/jadwal-ujian/{ujian}', [AdminJadwalUjianController::class, 'update'])
+        ->whereNumber('ujian')
+        ->name('admin.jadwal-ujian.update');
+    Route::delete('/admin/jadwal-ujian/{ujian}', [AdminJadwalUjianController::class, 'destroy'])
+        ->whereNumber('ujian')
+        ->name('admin.jadwal-ujian.destroy');
+
+    foreach (['pengguna' => 'admin.pengguna', 'mahasiswa' => 'admin.mahasiswa', 'dosen' => 'admin.dosen'] as $segmen => $prefiks) {
+        Route::get('/admin/'.$segmen, [AdminUserController::class, 'index'])->name($prefiks.'.index');
+        Route::get('/admin/'.$segmen.'/create', [AdminUserController::class, 'create'])->name($prefiks.'.create');
+        Route::post('/admin/'.$segmen, [AdminUserController::class, 'store'])->name($prefiks.'.store');
+        Route::get('/admin/'.$segmen.'/{user}', [AdminUserController::class, 'show'])
+            ->whereNumber('user')
+            ->name($prefiks.'.show');
+        Route::get('/admin/'.$segmen.'/{user}/edit', [AdminUserController::class, 'edit'])
+            ->whereNumber('user')
+            ->name($prefiks.'.edit');
+        Route::match(['put', 'patch'], '/admin/'.$segmen.'/{user}', [AdminUserController::class, 'update'])
+            ->whereNumber('user')
+            ->name($prefiks.'.update');
+        Route::post('/admin/'.$segmen.'/{user}/status', [AdminUserController::class, 'ubahStatus'])
+            ->whereNumber('user')
+            ->name($prefiks.'.status');
+    }
 });
 
 Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
     Route::get('/dosen/dashboard', [DosenDashboardController::class, 'index'])->name('dosen.dashboard');
+
+    Route::get('/dosen/profil', [ProfilController::class, 'show'])->name('dosen.profil');
+    Route::get('/dosen/profil/edit', [ProfilController::class, 'edit'])->name('dosen.profil.edit');
+    Route::match(['put', 'patch'], '/dosen/profil', [ProfilController::class, 'update'])->name('dosen.profil.update');
+    Route::post('/dosen/profil/password', [ProfilController::class, 'ubahPassword'])->name('dosen.profil.password');
 
     Route::get('/dosen/mata-kuliah', [DosenMataKuliahController::class, 'index'])->name('dosen.mata-kuliah.index');
     Route::get('/dosen/mata-kuliah/create', [DosenMataKuliahController::class, 'create'])->name('dosen.mata-kuliah.create');
@@ -123,6 +177,12 @@ Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
 
 Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void {
     Route::get('/mahasiswa/dashboard', [MahasiswaDashboardController::class, 'index'])->name('mahasiswa.dashboard');
+
+    Route::get('/mahasiswa/profil', [ProfilController::class, 'show'])->name('mahasiswa.profil');
+    Route::get('/mahasiswa/profil/edit', [ProfilController::class, 'edit'])->name('mahasiswa.profil.edit');
+    Route::match(['put', 'patch'], '/mahasiswa/profil', [ProfilController::class, 'update'])->name('mahasiswa.profil.update');
+    Route::post('/mahasiswa/profil/password', [ProfilController::class, 'ubahPassword'])->name('mahasiswa.profil.password');
+
     Route::get('/mahasiswa/kalender', [KalenderController::class, 'index'])->name('mahasiswa.kalender');
     Route::get('/mahasiswa/tugas', [TugasController::class, 'index'])->name('mahasiswa.tugas');
     Route::get('/mahasiswa/mata-kuliah', [MataKuliahController::class, 'index'])->name('mahasiswa.mata-kuliah');
@@ -130,6 +190,11 @@ Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void
     Route::post('/mahasiswa/mata-kuliah/gabung', [MataKuliahController::class, 'gabung'])
         ->middleware('throttle:gabung-kelas')
         ->name('mahasiswa.mata-kuliah.gabung');
+    Route::get('/mahasiswa/materi', [MahasiswaMateriPembelajaranController::class, 'index'])
+        ->name('mahasiswa.materi.index');
+    Route::get('/mahasiswa/materi/{kelas}/{materi}/unduh', [MahasiswaMateriPembelajaranController::class, 'download'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('mahasiswa.materi.unduh');
     Route::get('/mahasiswa/notifikasi', [NotifikasiController::class, 'index'])->name('mahasiswa.notifikasi');
     Route::post('/mahasiswa/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibaca'])
         ->whereNumber('notifikasi')

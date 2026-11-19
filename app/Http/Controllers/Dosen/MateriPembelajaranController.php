@@ -92,10 +92,11 @@ class MateriPembelajaranController extends Controller
         mixed $materi,
     ): RedirectResponse {
         $hasil = $this->service->hapus($this->dosenId($request), $kelas, $materi);
+        $redirect = redirect()->route('dosen.mata-kuliah.materi.index', $hasil['kelas']->getKey());
 
-        return redirect()
-            ->route('dosen.mata-kuliah.materi.index', $hasil['kelas']->getKey())
-            ->with('status', $hasil['pesan']);
+        return $hasil['berhasil']
+            ? $redirect->with('status', $hasil['pesan'])
+            : $redirect->with('error', $hasil['pesan']);
     }
 
     public function download(

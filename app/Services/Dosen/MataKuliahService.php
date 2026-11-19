@@ -159,6 +159,23 @@ class MataKuliahService
     {
         $jumlahAktif = $kelas->jumlahPesertaAktif();
         $kapasitas = $kelas->kapasitas;
+        $materiQuery = $kelas->materi();
+        $jumlahMateriDraft = (clone $materiQuery)->whereNull('dipublikasikan_pada')->count();
+        $jumlahMateriPublik = (clone $materiQuery)->whereNotNull('dipublikasikan_pada')->count();
+        $materiTerbaru = (clone $materiQuery)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit(3)
+            ->get()
+            ->map(fn ($item): array => [
+                'id' => $item->getKey(),
+                'judul' => $item->judul,
+                'file_name' => $item->file_name,
+                'file_size_label' => $this->labelUkuran((int) $item->file_size),
+                'status_label' => $item->dipublikasikan_pada === null ? 'Draft' : 'Dipublikasikan',
+                'status_tone' => $item->dipublikasikan_pada === null ? 'peringatan' : 'selesai',
+                'dipublikasikan_label' => $item->dipublikasikan_pada?->format('d M Y H:i') ?? 'Belum dipublikasikan',
+            ]);
 
         return [
             'id' => $kelas->id,
@@ -178,6 +195,10 @@ class MataKuliahService
             'kapasitas_label' => $kapasitas === null ? 'Tanpa batas' : $jumlahAktif.'/'.$kapasitas,
             'memiliki_kode_gabung' => $this->memilikiKunci($kelas),
             'kode_gabung_status_label' => $this->memilikiKunci($kelas) ? 'Sudah dibuat' : 'Belum dibuat',
+            'jumlah_materi' => $jumlahMateriDraft + $jumlahMateriPublik,
+            'jumlah_materi_draft' => $jumlahMateriDraft,
+            'jumlah_materi_dipublikasikan' => $jumlahMateriPublik,
+            'materi_terbaru' => $materiTerbaru,
         ];
     }
 
@@ -414,6 +435,19 @@ class MataKuliahService
             ->where('dosen_id', $dosenId)
             ->lockForUpdate()
             ->first();
+    }
+
+    private function labelUkuran(int $byte): string
+    {
+        if ($byte >= 1048576) {
+            return number_format($byte / 1048576, 1, ',', '.').' MB';
+        }
+
+        if ($byte >= 1024) {
+            return (string) round($byte / 1024).' KB';
+        }
+
+        return $byte.' B';
     }
 
     private function memilikiKunci(KelasMataKuliah $kelas): bool

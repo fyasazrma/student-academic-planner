@@ -15,7 +15,6 @@
         'jenis' => request('jenis'),
     ], fn ($value): bool => $value !== null && $value !== '');
     $tabLink = fn (string $target): string => route($routeName, $queryBase + ['tab' => $target]);
-    $weekdays = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
     $today = $today ?? today();
 @endphp
 
@@ -69,74 +68,13 @@
                 :route-name="$routeName"
             />
 
-            <div class="mt-5 hidden overflow-hidden rounded-xl border border-border sm:block">
-                <div class="grid grid-cols-7 border-b border-border bg-soft">
-                    @foreach ($weekdays as $weekday)
-                        <div class="px-2 py-2.5 text-center text-[11px] font-bold uppercase tracking-wide text-muted">{{ $weekday }}</div>
-                    @endforeach
-                </div>
-                <div class="grid grid-cols-7">
-                    @foreach ($calendar['days'] as $day)
-                        @php
-                            $dayEvents = $calendar['eventsByDate'][$day->toDateString()] ?? collect();
-                            $isToday = $day->toDateString() === $today->toDateString();
-                            $outside = $calendar['view'] === 'month'
-                                && $day->format('Y-m') !== $calendar['focusDate'];
-                        @endphp
-                        <div @class([
-                            'min-h-[112px] border-b border-r border-border p-1.5 last:border-r-0',
-                            'bg-soft/50' => $outside,
-                            'bg-card' => ! $outside,
-                        ])>
-                            <div class="mb-1.5 flex items-center justify-between px-0.5">
-                                <span @class([
-                                    'flex h-6 w-6 items-center justify-center rounded-lg text-[11px] font-semibold',
-                                    'bg-sidebar text-white' => $isToday,
-                                    'text-muted' => $outside && ! $isToday,
-                                    'text-text' => ! $outside && ! $isToday,
-                                ])>{{ $day->format('d') }}</span>
-                                @if ($dayEvents->count() > 3)
-                                    <span class="text-[9px] font-semibold text-muted">+{{ $dayEvents->count() - 3 }}</span>
-                                @endif
-                            </div>
-                            <div class="space-y-1">
-                                @foreach ($dayEvents->take(3) as $event)
-                                    <x-calendar-event :event="$event" />
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+            <div class="mt-5">
+                <x-calendar-grid :calendar="$calendar" :today="$today" />
             </div>
 
             <div class="mt-5 sm:hidden">
                 <p class="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Agenda periode ini</p>
-                @if ($calendar['agendaList']->isEmpty())
-                    <x-empty-state title="Tidak ada agenda" description="Tidak ada agenda pada periode ini untuk akun Anda." icon="calendar" />
-                @else
-                    <div class="space-y-2">
-                        @foreach ($calendar['agendaList'] as $event)
-                            <button
-                                type="button"
-                                data-agenda-trigger="{{ $event['id'] }}"
-                                class="flex w-full items-start gap-3 rounded-xl border border-border bg-soft p-3 text-left transition hover:bg-card focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
-                            >
-                                <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full
-                                    {{ $event['jenis'] === 'tugas' ? 'bg-agenda-tugas' : '' }}
-                                    {{ $event['jenis'] === 'deadline' ? 'bg-agenda-terlambat' : '' }}
-                                    {{ $event['jenis'] === 'ujian' ? 'bg-agenda-uts' : '' }}
-                                    {{ $event['jenis'] === 'kuliah' ? 'bg-agenda-kuliah' : '' }}
-                                    {{ $event['jenis'] === 'akademik' ? 'bg-agenda-akademik' : '' }}
-                                    {{ $event['jenis'] === 'pengumuman' ? 'bg-agenda-pengumuman' : '' }}"></span>
-                                <span class="min-w-0">
-                                    <span class="block text-[10px] font-semibold uppercase tracking-wide text-muted">{{ $event['label'] }} · {{ $event['tanggal_label'] }}</span>
-                                    <span class="mt-0.5 block text-sm font-semibold text-text">{{ $event['judul'] }}</span>
-                                    <span class="mt-0.5 block text-[11px] text-muted">{{ $event['mata_kuliah'] }}</span>
-                                </span>
-                            </button>
-                        @endforeach
-                    </div>
-                @endif
+                <x-calendar-list :events="$calendar['agendaList']" />
             </div>
         </div>
     @else
@@ -172,27 +110,27 @@
 
                     @if ($timeline['markers'] !== [])
                         <div class="mt-6 rounded-xl border border-border bg-soft p-4">
-                            <p class="text-xs font-bold text-text">Penanda ujian</p>
+                            <p class="text-xs font-bold text-text">Penanda penting</p>
                             <div class="relative mt-5 h-8 border-b border-border">
                                 @foreach ($timeline['ticks'] as $tick)
                                     <span class="absolute -translate-x-1/2 text-[10px] text-muted" style="left: {{ $tick['posisi'] }}%;">{{ $tick['label'] }}</span>
                                 @endforeach
                                 @foreach ($timeline['markers'] as $marker)
                                     <span
-                                        class="absolute -top-1 h-4 w-4 -translate-x-1/2 rotate-45 rounded-sm bg-agenda-uts shadow"
+                                        class="absolute -top-1 h-4 w-4 -translate-x-1/2 rotate-45 rounded-sm shadow {{ $marker['jenis'] === 'deadline' ? 'bg-agenda-terlambat' : 'bg-agenda-uts' }}"
                                         style="left: {{ $marker['posisi'] }}%;"
-                                        title="{{ $marker['judul'] }} — {{ $marker['tanggal_label'] }}"
+                                        title="{{ $marker['label'] }}: {{ $marker['judul'] }} — {{ $marker['tanggal_label'] }}"
                                         role="button"
                                         tabindex="0"
-                                        data-agenda-trigger="{{ $marker['id'] }}"
-                                        aria-label="Lihat detail ujian {{ $marker['judul'] }}"
+                                        data-agenda-trigger="{{ $marker['event_id'] }}"
+                                        aria-label="Lihat detail {{ $marker['label'] }} {{ $marker['judul'] }}"
                                     ></span>
                                     <span class="absolute top-5 -translate-x-1/2 whitespace-nowrap text-[9px] font-semibold text-muted" style="left: {{ $marker['posisi'] }}%;">{{ $marker['tanggal_label'] }}</span>
                                 @endforeach
                             </div>
                             <div class="mt-3 space-y-1.5">
                                 @foreach ($timeline['markers'] as $marker)
-                                    <p class="text-[11px] text-text"><span class="font-bold text-agenda-uts">◆ Ujian</span> — {{ $marker['judul'] }} · {{ $marker['mata_kuliah'] }}</p>
+                                    <p class="text-[11px] text-text"><span class="font-bold {{ $marker['jenis'] === 'deadline' ? 'text-agenda-terlambat' : 'text-agenda-uts' }}">◆ {{ $marker['label'] }}</span> — {{ $marker['judul'] }} · {{ $marker['mata_kuliah'] }}</p>
                                 @endforeach
                             </div>
                         </div>
@@ -222,10 +160,10 @@
                             class="rounded-xl border border-border bg-soft p-3"
                             role="button"
                             tabindex="0"
-                            data-agenda-trigger="{{ $marker['id'] }}"
-                            aria-label="Lihat detail ujian {{ $marker['judul'] }}"
+                            data-agenda-trigger="{{ $marker['event_id'] }}"
+                            aria-label="Lihat detail {{ $marker['label'] }} {{ $marker['judul'] }}"
                         >
-                            <p class="text-[10px] font-bold uppercase tracking-wide text-agenda-uts">Ujian · {{ $marker['tanggal_label'] }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wide {{ $marker['jenis'] === 'deadline' ? 'text-agenda-terlambat' : 'text-agenda-uts' }}">{{ $marker['label'] }} · {{ $marker['tanggal_label'] }}</p>
                             <p class="mt-1 text-sm font-semibold text-text">{{ $marker['judul'] }}</p>
                             <p class="mt-0.5 text-[11px] text-muted">{{ $marker['mata_kuliah'] }}</p>
                         </article>
@@ -235,15 +173,14 @@
 
             <p class="mt-5 flex items-start gap-2 rounded-xl bg-soft p-3 text-[11px] leading-5 text-muted">
                 <x-icon name="info" class="mt-0.5 h-4 w-4 shrink-0 text-agenda-uts" />
-                <span>Schema saat ini menyimpan ujian sebagai <strong class="font-semibold text-text">jenis = ujian</strong> tanpa field UTS/UAS terpisah. Label ujian tidak ditebak dari judul agenda.</span>
+                <span>Schema saat ini menyimpan ujian sebagai <strong class="font-semibold text-text">jenis = ujian</strong>. UTS dan UAS dibedakan dari penanda <strong class="font-semibold text-text">jenis ujian</strong> pada agenda, bukan dari judul. Agenda ujian lama tanpa penanda tetap tampil sebagai “Ujian”.</span>
             </p>
         </div>
     @endif
 </section>
 
 @push('modals')
-    <script type="application/json" id="agenda-events-data">@json($calendar['events'])</script>
-    <script type="application/json" id="timeline-events-data">@json(['bars' => $timeline['bars'], 'markers' => $timeline['markers']])</script>
+    <script type="application/json" id="agenda-events-data">@json($calendar['detailEvents'])</script>
 
     <dialog
         id="agenda-detail"

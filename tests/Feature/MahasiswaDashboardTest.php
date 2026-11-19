@@ -110,7 +110,7 @@ class MahasiswaDashboardTest extends TestCase
     public function test_timeline_menampilkan_tanggal_publikasi_dan_deadline_secara_terpisah(): void
     {
         $mahasiswa = $this->mahasiswaWithClass();
-        $this->createTask(
+        $task = $this->createTask(
             $mahasiswa['class'],
             'Tugas Rentang Waktu',
             Carbon::create(2026, 11, 10, 8, 0),
@@ -127,9 +127,11 @@ class MahasiswaDashboardTest extends TestCase
             ->assertSee('Publikasi')
             ->assertSee('Deadline')
             ->assertSee('Schema saat ini menyimpan ujian')
-            ->assertSee('id="timeline-events-data"', false);
+            ->assertSee('id="agenda-events-data"', false)
+            ->assertSee('data-agenda-trigger="tugas-'.$task->id.'"', false);
 
         $this->assertCount(1, $response->viewData('timeline')['bars']);
+        $this->assertSame('tugas-'.$task->id, $response->viewData('timeline')['bars'][0]['event_id']);
     }
 
     public function test_filter_dan_navigasi_periode_kalender_berfungsi(): void
@@ -207,7 +209,7 @@ class MahasiswaDashboardTest extends TestCase
         $this->assertNotNull($event);
         $this->assertSame('pengumuman', $event['jenis']);
         $this->assertSame('Tanggal mulai', $event['awal_label_name']);
-        $this->assertSame('Tanggal selesai', $event['akhir_label_name']);
+        $this->assertSame('Tanggal agenda', $event['akhir_label_name']);
         $this->assertStringNotContainsString('deadline', strtolower($event['akhir_label_name']));
         $this->assertSame(
             $agenda->dipublikasikan_pada->translatedFormat('d M Y H:i'),

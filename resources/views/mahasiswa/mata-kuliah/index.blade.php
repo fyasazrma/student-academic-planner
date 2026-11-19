@@ -89,6 +89,16 @@
                                     </dd>
                                 </div>
                             </dl>
+
+                            <div class="mt-4 border-t border-border pt-3">
+                                <a
+                                    href="{{ route('mahasiswa.materi.index', ['kelas' => $pendaftaran['kelas_id']]) }}"
+                                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                                >
+                                    <x-icon name="file" class="h-3.5 w-3.5 text-agenda-tugas" />
+                                    Lihat Materi
+                                </a>
+                            </div>
                         </article>
                     @endforeach
                 </div>
