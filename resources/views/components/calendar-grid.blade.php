@@ -10,6 +10,8 @@
         'tugas' => 'bg-agenda-tugas',
         'deadline' => 'bg-agenda-terlambat',
         'ujian' => 'bg-agenda-uts',
+        'uts' => 'bg-agenda-uts',
+        'uas' => 'bg-agenda-uas',
         'kuliah' => 'bg-agenda-kuliah',
         'akademik' => 'bg-agenda-akademik',
         'pengumuman' => 'bg-agenda-pengumuman',

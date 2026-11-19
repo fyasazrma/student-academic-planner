@@ -43,6 +43,18 @@ class KelasMataKuliah extends Model
     }
 
     /**
+     * Status komponen tugas: true = digunakan, false = tidak digunakan,
+     * null = belum ditentukan. Jangan menambahkan cast boolean karena null
+     * akan berubah menjadi false dan menghilangkan kondisi "belum ditentukan".
+     */
+    public function gunakanTugas(): ?bool
+    {
+        $nilai = $this->getAttribute('gunakan_tugas');
+
+        return $nilai === null ? null : (bool) $nilai;
+    }
+
+    /**
      * Jumlah peserta aktif. Peserta nonaktif dan mengulang tidak dihitung.
      */
     public function jumlahPesertaAktif(): int

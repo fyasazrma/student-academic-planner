@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Nilai, identitas peserta, dan penilai sengaja tidak mass-assignable.
@@ -38,5 +39,10 @@ class Nilai extends Model
     public function penilai(): BelongsTo
     {
         return $this->belongsTo(User::class, 'dinilai_oleh');
+    }
+
+    public function riwayatPerubahan(): HasMany
+    {
+        return $this->hasMany(RiwayatPerubahanNilai::class, 'nilai_id');
     }
 }

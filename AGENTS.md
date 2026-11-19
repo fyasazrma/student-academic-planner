@@ -106,6 +106,8 @@ Kalender memiliki dua perspektif yang saling melengkapi:
 - Mata kuliah, lokasi atau metode (online/offline) jika tersedia di schema.
 - Saat ini disimpan di `agenda_akademik` dengan `jenis = ujian`; label UAS dibedakan via field `judul`.
 
+**Catatan penilaian UTS/UAS:** jadwal ujian institusional tetap bersumber dari `agenda_akademik`, sedangkan nilai UTS/UAS mahasiswa disimpan di tabel `nilai` dengan `komponen = uts|uas`. Gap enum `JenisAgenda` di atas tidak diubah oleh fitur penilaian; jangan menyamakan jadwal ujian dengan nilai ujian.
+
 **JADWAL KULIAH:**
 - Data dari tabel `jadwal_kuliah`.
 - Hari dan jam, mata kuliah dan kelas, ruangan atau link jika tersedia.

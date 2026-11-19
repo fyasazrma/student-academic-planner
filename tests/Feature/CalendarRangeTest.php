@@ -62,7 +62,7 @@ class CalendarRangeTest extends TestCase
         $this->assertSame('Deadline', $events->first()['akhir_label_name']);
     }
 
-    public function test_tugas_tanpa_tanggal_publikasi_hanya_menjadi_penanda_deadline(): void
+    public function test_tugas_draft_tidak_muncul_di_kalender_dan_timeline_mahasiswa(): void
     {
         $student = $this->studentWithClass();
         $task = $this->task(
@@ -78,14 +78,35 @@ class CalendarRangeTest extends TestCase
         ]);
 
         $calendar = $response->viewData('calendar');
-        $event = $calendar['events']->firstWhere('id', 'tugas-'.$task->id);
+        $timeline = $response->viewData('timeline');
 
-        $this->assertNotNull($event);
-        $this->assertSame(CalendarCategory::DEADLINE, $event['jenis']);
-        $this->assertSame('point', $event['kind']);
-        $this->assertSame(['deadline'], collect($event['markers'])->pluck('type')->all());
-        $this->assertSame('2026-11-21', $event['start']->toDateString());
-        $this->assertArrayHasKey('tugas-'.$task->id, $calendar['detailEvents']);
+        $this->assertNull($calendar['events']->firstWhere('id', 'tugas-'.$task->id));
+        $this->assertArrayNotHasKey('tugas-'.$task->id, $calendar['detailEvents']);
+        $this->assertFalse(collect($timeline['bars'])->contains('id', 'tugas-'.$task->id));
+        $this->assertFalse(collect($timeline['markers'])->contains('id', 'deadline-'.$task->id));
+        $this->assertFalse(collect($response->viewData('tasks'))->contains('id', $task->id));
+        $response->assertDontSee('Tugas Tanpa Publikasi');
+    }
+
+    public function test_tugas_dengan_publikasi_masa_depan_tidak_muncul_di_kalender_mahasiswa(): void
+    {
+        $student = $this->studentWithClass();
+        $task = $this->task(
+            $student['class'],
+            'Tugas Terjadwal',
+            Carbon::parse('2026-11-20 08:00:00'),
+            Carbon::parse('2026-11-25 12:00:00'),
+        );
+
+        $response = $this->dashboard('mahasiswa', $student['user'], [
+            'view' => 'month',
+            'date' => '2026-11-01',
+        ]);
+
+        $calendar = $response->viewData('calendar');
+
+        $this->assertNull($calendar['events']->firstWhere('id', 'tugas-'.$task->id));
+        $this->assertArrayNotHasKey('tugas-'.$task->id, $calendar['detailEvents']);
         $this->assertFalse(collect($response->viewData('tasks'))->contains('id', $task->id));
     }
 

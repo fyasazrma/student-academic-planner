@@ -11,11 +11,16 @@ use App\Http\Controllers\Dosen\DashboardController as DosenDashboardController;
 use App\Http\Controllers\Dosen\JadwalKuliahController as DosenJadwalKuliahController;
 use App\Http\Controllers\Dosen\MataKuliahController as DosenMataKuliahController;
 use App\Http\Controllers\Dosen\MateriPembelajaranController as DosenMateriPembelajaranController;
+use App\Http\Controllers\Dosen\NilaiController as DosenNilaiController;
+use App\Http\Controllers\Dosen\PengumpulanTugasController as DosenPengumpulanTugasController;
+use App\Http\Controllers\Dosen\TugasController as DosenTugasController;
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
 use App\Http\Controllers\Mahasiswa\KalenderController;
 use App\Http\Controllers\Mahasiswa\MataKuliahController;
 use App\Http\Controllers\Mahasiswa\MateriPembelajaranController as MahasiswaMateriPembelajaranController;
+use App\Http\Controllers\Mahasiswa\NilaiController as MahasiswaNilaiController;
 use App\Http\Controllers\Mahasiswa\NotifikasiController;
+use App\Http\Controllers\Mahasiswa\PengumpulanTugasController as MahasiswaPengumpulanTugasController;
 use App\Http\Controllers\Mahasiswa\TugasController;
 use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
@@ -173,6 +178,50 @@ Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
     Route::get('/dosen/mata-kuliah/{kelas}/materi/{materi}/download', [DosenMateriPembelajaranController::class, 'download'])
         ->whereNumber(['kelas', 'materi'])
         ->name('dosen.mata-kuliah.materi.download');
+
+    Route::get('/dosen/mata-kuliah/{kelas}/tugas', [DosenTugasController::class, 'index'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.tugas.index');
+    Route::get('/dosen/mata-kuliah/{kelas}/tugas/create', [DosenTugasController::class, 'create'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.tugas.create');
+    Route::post('/dosen/mata-kuliah/{kelas}/tugas', [DosenTugasController::class, 'store'])
+        ->whereNumber('kelas')
+        ->name('dosen.mata-kuliah.tugas.store');
+    Route::get('/dosen/mata-kuliah/{kelas}/tugas/{tugas}/edit', [DosenTugasController::class, 'edit'])
+        ->whereNumber(['kelas', 'tugas'])
+        ->name('dosen.mata-kuliah.tugas.edit');
+    Route::match(['put', 'patch'], '/dosen/mata-kuliah/{kelas}/tugas/{tugas}', [DosenTugasController::class, 'update'])
+        ->whereNumber(['kelas', 'tugas'])
+        ->name('dosen.mata-kuliah.tugas.update');
+    Route::delete('/dosen/mata-kuliah/{kelas}/tugas/{tugas}', [DosenTugasController::class, 'destroy'])
+        ->whereNumber(['kelas', 'tugas'])
+        ->name('dosen.mata-kuliah.tugas.destroy');
+    Route::get('/dosen/mata-kuliah/{kelas}/tugas/{tugas}/download', [DosenTugasController::class, 'download'])
+        ->whereNumber(['kelas', 'tugas'])
+        ->name('dosen.mata-kuliah.tugas.download');
+
+    Route::get('/dosen/mata-kuliah/{kelas}/tugas/{tugas}/pengumpulan', [DosenPengumpulanTugasController::class, 'index'])
+        ->whereNumber(['kelas', 'tugas'])
+        ->name('dosen.mata-kuliah.tugas.pengumpulan.index');
+    Route::get('/dosen/mata-kuliah/{kelas}/tugas/{tugas}/pengumpulan/{pengumpulan}', [DosenPengumpulanTugasController::class, 'show'])
+        ->whereNumber(['kelas', 'tugas', 'pengumpulan'])
+        ->name('dosen.mata-kuliah.tugas.pengumpulan.show');
+
+    Route::get('/dosen/nilai', [DosenNilaiController::class, 'index'])->name('dosen.nilai.index');
+    Route::get('/dosen/nilai/{kelas}', [DosenNilaiController::class, 'kelas'])
+        ->whereNumber('kelas')
+        ->name('dosen.nilai.kelas');
+    Route::post('/dosen/nilai/{kelas}/konfigurasi', [DosenNilaiController::class, 'konfigurasi'])
+        ->whereNumber('kelas')
+        ->name('dosen.nilai.konfigurasi');
+    Route::post('/dosen/nilai/{kelas}/peserta/{peserta}/{komponen}', [DosenNilaiController::class, 'simpan'])
+        ->whereNumber(['kelas', 'peserta'])
+        ->where('komponen', 'uts|uas')
+        ->name('dosen.nilai.simpan');
+    Route::get('/dosen/nilai/{kelas}/peserta/{peserta}/riwayat', [DosenNilaiController::class, 'riwayat'])
+        ->whereNumber(['kelas', 'peserta'])
+        ->name('dosen.nilai.riwayat');
 });
 
 Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void {
@@ -185,6 +234,15 @@ Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void
 
     Route::get('/mahasiswa/kalender', [KalenderController::class, 'index'])->name('mahasiswa.kalender');
     Route::get('/mahasiswa/tugas', [TugasController::class, 'index'])->name('mahasiswa.tugas');
+    Route::get('/mahasiswa/tugas/{tugas}/pengumpulan', [MahasiswaPengumpulanTugasController::class, 'form'])
+        ->whereNumber('tugas')
+        ->name('mahasiswa.tugas.pengumpulan');
+    Route::post('/mahasiswa/tugas/{tugas}/pengumpulan', [MahasiswaPengumpulanTugasController::class, 'simpan'])
+        ->whereNumber('tugas')
+        ->name('mahasiswa.tugas.pengumpulan.simpan');
+    Route::get('/mahasiswa/tugas/{tugas}/pengumpulan/unduh', [MahasiswaPengumpulanTugasController::class, 'unduh'])
+        ->whereNumber('tugas')
+        ->name('mahasiswa.tugas.pengumpulan.unduh');
     Route::get('/mahasiswa/mata-kuliah', [MataKuliahController::class, 'index'])->name('mahasiswa.mata-kuliah');
     Route::get('/mahasiswa/mata-kuliah/cari', [MataKuliahController::class, 'cari'])->name('mahasiswa.mata-kuliah.cari');
     Route::post('/mahasiswa/mata-kuliah/gabung', [MataKuliahController::class, 'gabung'])
@@ -199,4 +257,8 @@ Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void
     Route::post('/mahasiswa/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibaca'])
         ->whereNumber('notifikasi')
         ->name('mahasiswa.notifikasi.baca');
+    Route::get('/mahasiswa/nilai', [MahasiswaNilaiController::class, 'index'])->name('mahasiswa.nilai');
+    Route::get('/mahasiswa/nilai/{mata_kuliah}', [MahasiswaNilaiController::class, 'show'])
+        ->whereNumber('mata_kuliah')
+        ->name('mahasiswa.nilai.show');
 });

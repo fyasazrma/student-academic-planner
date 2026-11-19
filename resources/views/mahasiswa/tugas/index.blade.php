@@ -135,6 +135,46 @@
                             Belum ada pengumpulan untuk tugas ini.
                         </p>
                     @endif
+
+                    <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                        @if ($task['pengumpulan'])
+                            <a
+                                href="{{ $task['pengumpulan']['unduh_url'] }}"
+                                class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                            >
+                                <x-icon name="file" class="h-4 w-4 text-agenda-tugas" />
+                                Unduh lampiran saya
+                            </a>
+
+                            @if ($task['pengumpulan']['bisa_resubmit'])
+                                <a
+                                    href="{{ route('mahasiswa.tugas.pengumpulan', $task['id']) }}"
+                                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                                >
+                                    <x-icon name="repeat" class="h-4 w-4" />
+                                    Kirim ulang
+                                </a>
+                            @else
+                                <span class="inline-flex items-center gap-2 rounded-xl bg-soft px-3 py-2 text-xs font-semibold text-muted">
+                                    <x-icon name="check" class="h-4 w-4 text-success" />
+                                    Terkunci setelah dinilai
+                                </span>
+                            @endif
+                        @elseif ($task['bisa_dikumpulkan'])
+                            <a
+                                href="{{ route('mahasiswa.tugas.pengumpulan', $task['id']) }}"
+                                class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                            >
+                                <x-icon name="clipboard" class="h-4 w-4" />
+                                Kumpulkan tugas
+                            </a>
+                        @else
+                            <span class="inline-flex items-center gap-2 rounded-xl bg-soft px-3 py-2 text-xs font-semibold text-muted">
+                                <x-icon name="clock" class="h-4 w-4" />
+                                Pengumpulan ditutup
+                            </span>
+                        @endif
+                    </div>
                 </article>
             @endforeach
         </div>

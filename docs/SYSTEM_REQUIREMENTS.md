@@ -61,6 +61,11 @@ Admin mengelola data dan agenda sesuai kewenangannya.
 - Materi diunggah dosen untuk kelas tertentu; progres baca dicatat per mahasiswa.
 - Pengingat deadline tugas dan ujian dapat muncul di notifikasi aplikasi.
 - UTS (Ujian Tengah Semester) dan UAS (Ujian Akhir Semester) adalah dua kategori ujian yang berbeda dan harus ditampilkan dengan label yang jelas.
+- Nilai UTS dan UAS ditulis oleh dosen; nilai tugas bersumber dari `pengumpulan_tugas.nilai` dan tidak ditulis lewat form nilai.
+- Nilai akhir dihitung dengan bobot UTS 35%, UAS 55%, dan tugas 10% bila komponen tugas dipakai. Bila tidak dipakai, UTS/UAS dinormalisasi dengan rasio eksak 35/90 dan 55/90.
+- Nilai akhir dibulatkan dua angka desimal. Nilai 0 valid bila memang diberikan; nilai di luar rentang 0–100 ditolak.
+- Konversi huruf/bobot mutu: A 80–100 (4.00), B 70–<80 (3.00), C 60–<70 (2.00), D 50–<60 (1.00), E 0–<50 (0.00). Nilai E tetap masuk denominator IP/IPK.
+- IP semester memakai nilai pengambilan pada semester itu. IPK memakai satu nilai terbaik per `mata_kuliah_id` dari seluruh riwayat, sehingga SKS tidak dihitung ganda. Riwayat pengambilan tidak dihapus. IP/IPK dihitung dinamis, bukan disimpan permanen.
 
 ## 6. Konsep data/entitas
 Rancangan yang sudah diimplementasikan dalam migration (periksa file migration aktual untuk schema definitif):
@@ -83,6 +88,7 @@ Rancangan yang sudah diimplementasikan dalam migration (periksa file migration a
 | 14 | `nilai` | Nilai per mahasiswa per komponen |
 | 15 | `sesi_absensi` | Sesi absensi yang dibuat dosen |
 | 16 | `absensi` | Catatan kehadiran mahasiswa per sesi |
+| 17 | `riwayat_perubahan_nilai` | Audit pembuatan/perubahan UTS/UAS dan konfigurasi komponen tugas |
 
 Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu periksa file migration dan model aktual sebelum mengimplementasikan fitur.
 
@@ -133,3 +139,28 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - Jangan menganggap mahasiswa boleh mengelola kelas atau agenda institusi.
 - Jangan menampilkan angka statistik tanpa sumber query nyata.
 - Jika ada fitur baru yang diperlukan, jelaskan manfaat, dampak database, dan dampak akses sebelum implementasi.
+
+## 10. Sistem penilaian akademik
+
+### Migration pendukung
+- `2026_11_19_000002_add_gunakan_tugas_to_kelas_mata_kuliah_table.php`: kolom `gunakan_tugas` nullable. `NULL` berarti dosen belum menentukan penggunaan komponen tugas; nilai akhir belum dihitung. `1` berarti tugas dipakai, `0` berarti tidak dipakai.
+- `2026_11_19_000003_create_riwayat_perubahan_nilai_table.php`: tabel audit untuk nilai UTS/UAS (`komponen = uts|uas`) dan perubahan konfigurasi (`komponen = konfigurasi_tugas`). Baris audit tidak pernah dihapus atau ditimpa.
+- Kedua file migration sudah dibuat tetapi **belum dijalankan ke database utama XAMPP**; pemeriksaan otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
+
+### Alur dosen
+- Route: `dosen.nilai.index`, `dosen.nilai.kelas`, `dosen.nilai.konfigurasi`, `dosen.nilai.simpan`, `dosen.nilai.riwayat`.
+- Setiap aksi memakai scoped lookup kelas berdasarkan `dosen_id`. Peserta harus benar-benar terdaftar di kelas tersebut. Kelas atau peserta milik dosen lain menghasilkan 404.
+- Hanya `uts` dan `uas` yang dapat ditulis. FormRequest, route constraint, dan service menolak komponen lain termasuk `tugas`.
+- Nilai UTS/UAS disimpan dengan `updateOrCreate` yang diawali `lockForUpdate()` pada transaksi yang sama dengan penulisan audit. Nilai 0 tidak dianggap sebagai data kosong.
+- Rekap kelas menampilkan UTS, UAS, rata-rata tugas, nilai akhir, huruf, bobot mutu, dan status kelengkapan. Peserta nonaktif tetap ditampilkan bila memiliki nilai atau pengumpulan.
+
+### Alur mahasiswa
+- Route: `mahasiswa.nilai`, `mahasiswa.nilai.show`.
+- Mahasiswa hanya dapat melihat nilai dan riwayat pengambilan miliknya. ID mata kuliah pada URL divalidasi terhadap kelas yang benar-benar diikuti.
+- Halaman menampilkan IP semester, IPK, nilai per mata kuliah, konversi huruf/bobot, dan riwayat pengambilan dengan penanda nilai yang dipakai untuk IPK.
+- Tie-breaker IPK: nilai akhir tertinggi → periode paling awal (`tahun_mulai`, ganjil sebelum genap) → `peserta_id` terkecil.
+
+### Perhitungan
+- `NilaiAkhirService`: rumus, pembulatan integer cents, agregasi tugas, konversi huruf, dan bobot mutu. Tidak menulis database.
+- `PenilaianService`: otorisasi scoped, penyimpanan UTS/UAS, agregasi tugas, dan audit transaksional.
+- `IndeksPrestasiService`: IP semester, IPK nilai terbaik, dan riwayat mata kuliah. Tidak menyimpan IP/IPK permanen.

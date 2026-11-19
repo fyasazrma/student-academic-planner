@@ -76,13 +76,12 @@ class DashboardDataService
         $classIds = $registrations->pluck('kelas_mata_kuliah_id')->all();
         $registrationIds = $registrations->pluck('id')->all();
 
-        $allTasks = $this->tasks($classIds, $registrationIds, false);
-        $tasks = $allTasks->filter(fn (array $task): bool => $task['dipublikasikan_at'] !== null)->values();
+        $tasks = $this->tasks($classIds, $registrationIds);
         $agendas = $this->agendas($classIds);
         $exams = $agendas->where('jenis', JenisAgenda::Ujian);
         $materials = $this->materials($classIds);
         $progress = $this->materialProgress($registrationIds, $materials);
-        $events = $this->calendarEvents($allTasks, $agendas, $registrations, $materials);
+        $events = $this->calendarEvents($tasks, $agendas, $registrations, $materials);
 
         $stats = [
             'belum_dikumpulkan' => $tasks->filter(fn (array $task): bool => ! $task['sudah_dikumpulkan'])->count(),
@@ -143,10 +142,10 @@ class DashboardDataService
         $classIds = $registrations->pluck('kelas_mata_kuliah_id')->all();
         $registrationIds = $registrations->pluck('id')->all();
 
-        $allTasks = $this->tasks($classIds, $registrationIds, false);
+        $tasks = $this->tasks($classIds, $registrationIds);
         $agendas = $this->agendas($classIds);
         $materials = $this->materials($classIds);
-        $events = $this->calendarEvents($allTasks, $agendas, $registrations, $materials);
+        $events = $this->calendarEvents($tasks, $agendas, $registrations, $materials);
 
         return [
             'user' => $user,
@@ -303,6 +302,9 @@ class DashboardDataService
             $deadline = $task->deadline;
             $isLate = $deadline->isPast();
             $hoursToDeadline = now()->diffInHours($deadline, false);
+            $deadlineDitutup = $isLate && ! $task->izinkan_terlambat;
+            $bisaDikumpulkan = ! $deadlineDitutup
+                && ($submission === null || ! $submission->sudahDinilai());
 
             $status = 'belum_dikumpulkan';
             if ($submission !== null) {
@@ -327,9 +329,13 @@ class DashboardDataService
                 'status' => $status,
                 'status_label' => $this->taskStatusLabel($status),
                 'sudah_dikumpulkan' => $submission !== null,
+                'bisa_dikumpulkan' => $bisaDikumpulkan,
                 'pengumpulan' => $submission === null ? null : [
+                    'id' => $submission->id,
                     'dikumpulkan_label' => $submission->dikumpulkan_pada?->translatedFormat('d M Y H:i') ?? 'Tidak tersedia',
                     'file_nama' => $submission->file_name,
+                    'unduh_url' => route('mahasiswa.tugas.pengumpulan.unduh', $task->id),
+                    'bisa_resubmit' => ! $submission->sudahDinilai(),
                     'catatan' => $submission->catatan,
                     'nilai' => $submission->nilai !== null ? (string) $submission->nilai : null,
                     'umpan_balik' => $submission->umpan_balik,

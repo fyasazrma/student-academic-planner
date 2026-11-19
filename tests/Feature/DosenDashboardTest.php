@@ -193,6 +193,67 @@ class DosenDashboardTest extends TestCase
         $this->assertSame('Tugas', $events->first()['label']);
     }
 
+    public function test_kalender_timeline_dan_deadline_dosen_hanya_memakai_tugas_terpublikasi(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $kelas = $this->createKelas($dosen, $this->createTahunAkademik(), $this->createMataKuliah('MK-PUBLIKASI'), 'A01');
+
+        $draft = $this->createTask(
+            $kelas,
+            'Tugas Draft Dashboard',
+            null,
+            Carbon::parse('2026-11-25 23:59:00'),
+        );
+        $masaDepan = $this->createTask(
+            $kelas,
+            'Tugas Publikasi Masa Depan Dashboard',
+            Carbon::parse('2026-11-20 08:00:00'),
+            Carbon::parse('2026-11-27 23:59:00'),
+        );
+        $published = $this->createTask(
+            $kelas,
+            'Tugas Published Dashboard',
+            Carbon::parse('2026-11-17 08:00:00'),
+            Carbon::parse('2026-11-24 23:59:00'),
+        );
+
+        $respons = $this->actingAs($dosen)->get(route('dosen.dashboard', [
+            'view' => 'week',
+            'date' => '2026-11-19',
+        ]));
+
+        $events = collect($respons->viewData('calendar')['events']);
+        $eventIds = $events->pluck('id')->all();
+
+        $respons->assertOk()
+            ->assertSee('Tugas Published Dashboard')
+            ->assertDontSee('Tugas Draft Dashboard')
+            ->assertDontSee('Tugas Publikasi Masa Depan Dashboard');
+
+        $this->assertContains('tugas-'.$published->id, $eventIds);
+        $this->assertNotContains('tugas-'.$draft->id, $eventIds);
+        $this->assertNotContains('tugas-'.$masaDepan->id, $eventIds);
+
+        $timeline = $this->actingAs($dosen)->get(route('dosen.dashboard', [
+            'view' => 'week',
+            'date' => '2026-11-19',
+            'tab' => 'timeline',
+        ]));
+
+        $bars = collect($timeline->viewData('timeline')['bars']);
+        $markerIds = collect($timeline->viewData('timeline')['markers'])->pluck('id')->all();
+
+        $this->assertSame([$published->id], $bars->pluck('id')->all());
+        $this->assertSame(['Tugas Published Dashboard'], $bars->pluck('judul')->all());
+        $this->assertNotContains('deadline-'.$draft->id, $markerIds);
+        $this->assertNotContains('deadline-'.$masaDepan->id, $markerIds);
+
+        $this->assertSame(
+            ['Tugas Published Dashboard'],
+            collect($respons->viewData('deadlines'))->pluck('judul')->all(),
+        );
+    }
+
     public function test_shell_dosen_tidak_menampilkan_tautan_notifikasi_mahasiswa(): void
     {
         $dosen = User::factory()->dosen()->create();
@@ -334,7 +395,7 @@ class DosenDashboardTest extends TestCase
     private function createTask(
         KelasMataKuliah $kelas,
         string $judul,
-        Carbon $dipublikasikan,
+        ?Carbon $dipublikasikan,
         Carbon $deadline,
     ): Tugas {
         $tugas = new Tugas();

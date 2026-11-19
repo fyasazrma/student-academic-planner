@@ -22,6 +22,13 @@
                         Kelola jadwal
                     </a>
                     <a
+                        href="{{ route('dosen.mata-kuliah.tugas.index', $kelas->id) }}"
+                        class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                    >
+                        <x-icon name="clipboard" class="h-4 w-4" />
+                        Kelola tugas
+                    </a>
+                    <a
                         href="{{ route('dosen.mata-kuliah.materi.index', $kelas->id) }}"
                         class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
                     >

@@ -26,6 +26,7 @@
                 ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'dosen.dashboard'],
                 ['label' => 'Profil Saya', 'icon' => 'user', 'routeName' => 'dosen.profil'],
                 ['label' => 'Mata Kuliah Saya', 'icon' => 'book', 'routeName' => 'dosen.mata-kuliah.index'],
+                ['label' => 'Nilai', 'icon' => 'chart', 'routeName' => 'dosen.nilai.index'],
             ]
             : [
                 ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],
@@ -36,7 +37,7 @@
                 ['label' => 'Tugas & Pengumpulan', 'icon' => 'clipboard', 'routeName' => 'mahasiswa.tugas'],
                 ['label' => 'Jadwal Ujian', 'icon' => 'exam'],
                 ['label' => 'Target Belajar', 'icon' => 'target'],
-                ['label' => 'Nilai', 'icon' => 'chart'],
+                ['label' => 'Nilai', 'icon' => 'chart', 'routeName' => 'mahasiswa.nilai'],
                 ['label' => 'Absensi', 'icon' => 'check'],
                 ['label' => 'Notifikasi', 'icon' => 'bell', 'routeName' => 'mahasiswa.notifikasi'],
             ]);

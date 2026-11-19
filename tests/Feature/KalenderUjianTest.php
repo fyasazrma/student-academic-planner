@@ -126,6 +126,30 @@ class KalenderUjianTest extends TestCase
         $this->assertSame('Ujian', $detail['agenda-'.$this->ujianTanpaPenanda->id]['label']);
     }
 
+    public function test_komponen_kalender_memakai_warna_tersendiri_untuk_uts_dan_uas(): void
+    {
+        $response = $this->actingAs($this->mahasiswaSatu)->get(route('mahasiswa.dashboard', [
+            'view' => 'month',
+            'date' => '2026-12-01',
+        ]));
+        $response->assertOk();
+
+        $html = $response->getContent();
+        $utsId = 'agenda-'.$this->utsInstitusional->id;
+        $uasId = 'agenda-'.$this->uasInstitusional->id;
+
+        $this->assertSame(2, preg_match_all(
+            '/data-agenda-trigger="'.preg_quote($utsId, '/').'"[\s\S]{0,600}?bg-agenda-uts/',
+            $html,
+        ));
+        $this->assertSame(2, preg_match_all(
+            '/data-agenda-trigger="'.preg_quote($uasId, '/').'"[\s\S]{0,600}?bg-agenda-uas/',
+            $html,
+        ));
+        $this->assertMatchesRegularExpression('/value="uas"[\s\S]{0,300}?bg-agenda-uas/', $html);
+        $this->assertMatchesRegularExpression('/value="uts"[\s\S]{0,300}?bg-agenda-uts/', $html);
+    }
+
     public function test_semua_mahasiswa_dari_kelas_berbeda_melihat_agenda_institusional_yang_sama(): void
     {
         $pertama = $this->actingAs($this->mahasiswaSatu)->get(route('mahasiswa.kalender', [

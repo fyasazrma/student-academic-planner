@@ -69,15 +69,14 @@ class DashboardDataService
         $classes = $this->classes((int) $user->getAuthIdentifier());
         $classIds = $classes->pluck('id')->all();
         $schedules = $this->schedules($classIds);
-        $allTasks = $this->tasks($classIds, false);
-        $tasks = $allTasks->filter(fn (array $task): bool => $task['dipublikasikan_at'] !== null)->values();
+        $tasks = $this->tasks($classIds);
         $agendas = $this->agendas($classIds);
         $materials = $this->materials($classIds);
         $exams = $agendas
             ->filter(fn (AgendaAkademik $agenda): bool => $agenda->jenis === JenisAgenda::Ujian
                 && $agenda->tanggal_mulai->greaterThanOrEqualTo($today))
             ->values();
-        $events = $this->calendarEvents($allTasks, $agendas, $schedules, $materials);
+        $events = $this->calendarEvents($tasks, $agendas, $schedules, $materials);
 
         $notifications = Notifikasi::untukUser((int) $user->getAuthIdentifier())
             ->latest()
