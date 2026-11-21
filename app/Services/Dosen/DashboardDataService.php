@@ -109,11 +109,24 @@ class DashboardDataService
             'absensiRingkasan' => $this->absensiRingkasan($classIds),
             'calendar' => $this->viewBuilder->build($events, $view, $date, $filters),
             'timeline' => $this->viewBuilder->timeline($events),
-            'filterOptions' => CalendarCategory::options(CalendarCategory::MAHASISWA),
+            'filterOptions' => CalendarCategory::options(CalendarCategory::DOSEN),
             'activeFilters' => $filters,
             'currentView' => $view,
             'today' => $today,
         ];
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function classIds(int $dosenId): array
+    {
+        return $this->classes($dosenId)->pluck('id')->all();
+    }
+
+    public function unreadCount(int $dosenId): int
+    {
+        return Notifikasi::untukUser($dosenId)->belumDibaca()->count();
     }
 
     /**
@@ -212,7 +225,7 @@ class DashboardDataService
     private function agendas(array $classIds): Collection
     {
         $query = AgendaAkademik::dipublikasikan()
-            ->with('kelasMataKuliah.mataKuliah');
+            ->with(['tahunAkademik', 'kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik']);
 
         $query->where(function ($query) use ($classIds): void {
             $query->whereNull('kelas_mata_kuliah_id');
@@ -347,9 +360,11 @@ class DashboardDataService
         $items = $schedules->map(fn (JadwalKuliah $schedule): array => $this->nextSchedule($schedule))->all();
 
         foreach ($exams as $exam) {
+            $kategori = $this->eventFactory->agendaCategory($exam->jenis, $exam->jenis_ujian);
+
             $items[] = [
-                'jenis' => 'ujian',
-                'label' => 'Ujian',
+                'jenis' => $kategori,
+                'label' => CalendarCategory::label($kategori),
                 'judul' => $exam->judul,
                 'tanggal' => $exam->tanggal_mulai->toDateString(),
                 'tanggal_label' => $exam->tanggal_mulai->translatedFormat('D, d M'),

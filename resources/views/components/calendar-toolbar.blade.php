@@ -8,7 +8,8 @@
 
 @php
     $tab = request('tab') === 'timeline' ? 'timeline' : 'calendar';
-    $base = [
+    $custom = request()->except(['view', 'date', 'tab', 'jenis']);
+    $base = $custom + [
         'date' => request('date'),
         'tab' => $tab,
         'jenis' => request('jenis'),
@@ -20,7 +21,7 @@
         return route($routeName, $params);
     };
 
-    $resetLink = fn (): string => route($routeName, array_filter([
+    $resetLink = fn (): string => route($routeName, array_filter($custom + [
         'date' => request('date'),
         'tab' => $tab,
         'view' => $currentView,
@@ -29,7 +30,7 @@
     $toneByType = [
         'tugas' => 'bg-agenda-tugas',
         'deadline' => 'bg-agenda-terlambat',
-        'ujian' => 'bg-agenda-uts',
+        'ujian' => 'bg-agenda-ujian',
         'uts' => 'bg-agenda-uts',
         'uas' => 'bg-agenda-uas',
         'kuliah' => 'bg-agenda-kuliah',
@@ -40,7 +41,7 @@
     $textByType = [
         'tugas' => 'text-agenda-tugas',
         'deadline' => 'text-agenda-terlambat',
-        'ujian' => 'text-agenda-uts',
+        'ujian' => 'text-agenda-ujian',
         'uts' => 'text-agenda-uts',
         'uas' => 'text-agenda-uas',
         'kuliah' => 'text-agenda-kuliah',
@@ -104,6 +105,11 @@
             <input type="hidden" name="view" value="{{ $currentView }}">
             <input type="hidden" name="date" value="{{ request('date') }}">
             <input type="hidden" name="tab" value="{{ $tab }}">
+            @foreach ($custom as $customKey => $customValue)
+                @if (! is_array($customValue))
+                    <input type="hidden" name="{{ $customKey }}" value="{{ $customValue }}">
+                @endif
+            @endforeach
             <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
                 <x-icon name="filter" class="h-4 w-4" />
                 Filter

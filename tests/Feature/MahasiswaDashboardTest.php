@@ -260,7 +260,7 @@ class MahasiswaDashboardTest extends TestCase
         $this->actingAs($data['user'])->get(route('mahasiswa.dashboard'))
             ->assertOk()
             ->assertSee('aria-current="page"', false)
-            ->assertSee('Segera')
+            ->assertSee('Jadwal Ujian')
             ->assertSee('Profil Saya')
             ->assertSee('Buka kalender penuh');
 

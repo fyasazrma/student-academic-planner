@@ -15,6 +15,13 @@
                         <x-icon name="user" class="h-4 w-4 text-agenda-tugas" />
                         {{ $user?->name ?? 'Administrator' }}
                     </span>
+                    <a
+                        href="{{ route('admin.jadwal-ujian.index') }}"
+                        class="inline-flex items-center gap-2 rounded-xl bg-agenda-uts px-3 py-2 font-bold text-white transition hover:bg-agenda-uts/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-uts"
+                    >
+                        <x-icon name="exam" class="h-4 w-4" />
+                        Kelola jadwal ujian
+                    </a>
                 </div>
             </x-slot:actions>
         </x-page-header>
@@ -53,6 +60,7 @@
         <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <x-admin.calendar-panel
                 :calendar="$calendar"
+                :timeline="$timeline"
                 :current-view="$currentView"
                 :active-filters="$activeFilters"
                 :filter-options="$filterOptions"

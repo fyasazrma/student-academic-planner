@@ -54,6 +54,8 @@ class DashboardDataService
     public function __construct(
         private readonly CalendarEventFactory $eventFactory,
         private readonly CalendarViewBuilder $viewBuilder,
+        private readonly TargetBelajarService $targetBelajar,
+        private readonly ProgresMateriService $progresMateri,
     ) {
     }
 
@@ -82,6 +84,8 @@ class DashboardDataService
         $materials = $this->materials($classIds);
         $progress = $this->materialProgress($registrationIds, $materials);
         $events = $this->calendarEvents($tasks, $agendas, $registrations, $materials);
+        $targetRingkasan = $this->targetBelajar->ringkasan((int) $user->getAuthIdentifier());
+        $progresOtomatis = $this->progresMateri->ringkasanOtomatis((int) $user->getAuthIdentifier());
 
         $stats = [
             'belum_dikumpulkan' => $tasks->filter(fn (array $task): bool => ! $task['sudah_dikumpulkan'])->count(),
@@ -90,6 +94,8 @@ class DashboardDataService
             'progres_selesai' => $progress['selesai'],
             'progres_total' => $progress['total'],
             'progres_persen' => $progress['persen'],
+            'target_aktif' => $targetRingkasan['aktif'],
+            'target_selesai' => $targetRingkasan['selesai'],
         ];
 
         $notifications = Notifikasi::untukUser($user->id)->latest()->limit(5)->get();
@@ -121,6 +127,8 @@ class DashboardDataService
             'activeFilters' => $filters,
             'currentView' => $view,
             'today' => today(),
+            'targetRingkasan' => $targetRingkasan,
+            'progresOtomatis' => $progresOtomatis,
         ];
     }
 
@@ -158,6 +166,21 @@ class DashboardDataService
             'today' => today(),
             'unreadCount' => Notifikasi::untukUser($user->id)->belumDibaca()->count(),
         ];
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function classIds(int $mahasiswaId): array
+    {
+        return $this->registrations($mahasiswaId)
+            ->pluck('kelas_mata_kuliah_id')
+            ->all();
+    }
+
+    public function unreadCount(int $mahasiswaId): int
+    {
+        return Notifikasi::untukUser($mahasiswaId)->belumDibaca()->count();
     }
 
     /**
@@ -226,7 +249,7 @@ class DashboardDataService
         return [
             'user' => $user,
             'tahunAkademikAktif' => TahunAkademik::aktif()->first(),
-            'notifications' => $query->latest()->get(),
+            'notifications' => $query->latest()->paginate(10)->withQueryString(),
             'unreadCount' => Notifikasi::untukUser($user->id)->belumDibaca()->count(),
             'activeStatus' => $activeStatus,
             'statusOptions' => self::NOTIFICATION_STATUS_FILTERS,
@@ -354,7 +377,7 @@ class DashboardDataService
     private function agendas(array $classIds): Collection
     {
         $query = AgendaAkademik::dipublikasikan()
-            ->with('kelasMataKuliah.mataKuliah');
+            ->with(['tahunAkademik', 'kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik']);
 
         $query->where(function ($query) use ($classIds): void {
             $query->whereNull('kelas_mata_kuliah_id');
@@ -480,9 +503,11 @@ class DashboardDataService
                 continue;
             }
 
+            $kategori = $this->eventFactory->agendaCategory($exam->jenis, $exam->jenis_ujian);
+
             $items[] = [
-                'jenis' => 'ujian',
-                'label' => 'Ujian',
+                'jenis' => $kategori,
+                'label' => CalendarCategory::label($kategori),
                 'judul' => $exam->judul,
                 'tanggal' => $exam->tanggal_mulai->toDateString(),
                 'tanggal_label' => $exam->tanggal_mulai->translatedFormat('D, d M'),

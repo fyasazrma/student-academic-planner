@@ -339,18 +339,19 @@ class AdminJadwalUjianTest extends TestCase
         $this->assertDatabaseCount('agenda_akademik', 0);
     }
 
-    public function test_tidak_ada_validasi_bentrok_kelas_ruangan_atau_jadwal_kuliah(): void
+    public function test_bentrok_lokasi_ujian_ditolak_dan_jadwal_kuliah_tidak_menghalangi(): void
     {
         $admin = User::factory()->admin()->create();
         $tahun = $this->tahun();
         $kelas = $this->kelas(User::factory()->dosen()->create(), $tahun, $this->mataKuliah(), 'A01');
 
+        // Jadwal kuliah bukan sumber bentrok untuk pengumuman ujian institusional.
         JadwalKuliah::query()->create([
             'kelas_mata_kuliah_id' => $kelas->id,
             'hari' => Carbon::parse('2026-12-01')->dayOfWeek,
             'jam_mulai' => '08:00:00',
             'jam_selesai' => '10:00:00',
-            'ruang' => 'R. reguler',
+            'ruang' => 'Aula Utama',
             'jenis' => 'kuliah',
         ]);
 
@@ -358,16 +359,94 @@ class AdminJadwalUjianTest extends TestCase
 
         $this->actingAs($admin)
             ->post(route('admin.jadwal-ujian.store'), $this->payload($tahun, [
+                'waktu_mulai' => '09:30',
+                'waktu_selesai' => '11:30',
+                'lokasi' => 'Aula Utama',
+            ]))
+            ->assertSessionHasErrors('lokasi');
+
+        $this->assertSame(1, AgendaAkademik::query()->count());
+
+        // Waktu berbeda pada lokasi sama diperbolehkan.
+        $this->actingAs($admin)
+            ->post(route('admin.jadwal-ujian.store'), $this->payload($tahun, [
+                'waktu_mulai' => '12:00',
+                'waktu_selesai' => '13:00',
+                'lokasi' => 'Aula Utama',
+            ]))
+            ->assertSessionDoesntHaveErrors();
+
+        // Lokasi berbeda pada waktu sama diperbolehkan.
+        $this->actingAs($admin)
+            ->post(route('admin.jadwal-ujian.store'), $this->payload($tahun, [
+                'lokasi' => 'Aula Timur',
+            ]))
+            ->assertSessionDoesntHaveErrors();
+
+        // Lokasi kosong tidak dapat dibuktikan sama, jadi tidak diblokir.
+        $this->actingAs($admin)
+            ->post(route('admin.jadwal-ujian.store'), $this->payload($tahun, [
+                'lokasi' => null,
+                'judul' => 'Jadwal Ujian Tengah Semester (UTS) — Ganjil 2026/2027',
+            ]))
+            ->assertSessionDoesntHaveErrors();
+
+        $this->assertSame(4, AgendaAkademik::query()->count());
+    }
+
+    public function test_bentrok_sebagian_pada_agenda_multi_hari_ditolak_dan_record_sendiri_dikecualikan(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $tahun = $this->tahun();
+        $ujian = $this->ujian(
+            $admin,
+            $tahun,
+            JenisUjian::Uts,
+            '2026-12-01',
+            '2026-12-05',
+            true,
+            null,
+            'Aula Utama',
+        );
+
+        $this->actingAs($admin)
+            ->post(route('admin.jadwal-ujian.store'), $this->payload($tahun, [
+                'tanggal_mulai' => '2026-12-05',
+                'tanggal_selesai' => '2026-12-05',
+                'waktu_mulai' => '09:30',
+                'waktu_selesai' => '11:30',
+                'lokasi' => 'aula utama',
+            ]))
+            ->assertSessionHasErrors('lokasi');
+
+        $this->actingAs($admin)
+            ->put(route('admin.jadwal-ujian.update', $ujian), $this->payload($tahun, [
                 'tanggal_mulai' => '2026-12-01',
-                'tanggal_selesai' => '2026-12-01',
+                'tanggal_selesai' => '2026-12-05',
                 'waktu_mulai' => '09:00',
                 'waktu_selesai' => '11:00',
                 'lokasi' => 'Aula Utama',
             ]))
-            ->assertRedirect(route('admin.jadwal-ujian.index'))
             ->assertSessionDoesntHaveErrors();
 
-        $this->assertSame(2, AgendaAkademik::query()->count());
+        $this->assertSame(1, AgendaAkademik::query()->count());
+    }
+
+    public function test_agenda_tanpa_jam_pada_lokasi_sama_tetap_dianggap_bentrok(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $tahun = $this->tahun();
+        $tanpaJam = $this->ujian($admin, $tahun, JenisUjian::Uts, '2026-12-03', '2026-12-03', true, null, 'Aula Utama');
+
+        $tanpaJam->fill(['waktu_mulai' => null, 'waktu_selesai' => null])->save();
+
+        $this->actingAs($admin)
+            ->post(route('admin.jadwal-ujian.store'), $this->payload($tahun, [
+                'tanggal_mulai' => '2026-12-03',
+                'tanggal_selesai' => '2026-12-03',
+                'lokasi' => $tanpaJam->lokasi,
+            ]))
+            ->assertSessionHasErrors('lokasi');
     }
 
     public function test_agenda_ujian_lama_tidak_diubah_dan_tidak_bisa_disunting_di_halaman_ini(): void
@@ -449,6 +528,7 @@ class AdminJadwalUjianTest extends TestCase
         $agenda->forceFill([
             'dibuat_oleh' => $admin->id,
             'kelas_mata_kuliah_id' => null,
+            'tahun_akademik_id' => $tahun->id,
             'judul' => $judul ?? $this->judulOtomatis($jenis, $tahun),
             'jenis' => JenisAgenda::Ujian->value,
             'jenis_ujian' => $jenis->value,

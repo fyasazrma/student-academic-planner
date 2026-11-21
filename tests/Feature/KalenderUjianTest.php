@@ -25,6 +25,8 @@ class KalenderUjianTest extends TestCase
     private User $dosenDua;
     private User $mahasiswaSatu;
     private User $mahasiswaDua;
+    private TahunAkademik $tahunAktif;
+    private TahunAkademik $tahunLama;
     private KelasMataKuliah $kelasAktif;
     private KelasMataKuliah $kelasLama;
     private AgendaAkademik $utsInstitusional;
@@ -45,18 +47,18 @@ class KalenderUjianTest extends TestCase
         $this->mahasiswaSatu = User::factory()->mahasiswa()->create();
         $this->mahasiswaDua = User::factory()->mahasiswa()->create();
 
-        $tahunAktif = $this->tahun(2026, true);
-        $tahunLama = $this->tahun(2025, false, 'genap');
+        $this->tahunAktif = $this->tahun(2026, true);
+        $this->tahunLama = $this->tahun(2025, false, 'genap');
 
         $this->kelasAktif = $this->kelas(
             $this->dosenSatu,
-            $tahunAktif,
+            $this->tahunAktif,
             $this->mataKuliah('MK-PROG', 'Pemrograman Laravel'),
             'A01',
         );
         $this->kelasLama = $this->kelas(
             $this->dosenDua,
-            $tahunLama,
+            $this->tahunLama,
             $this->mataKuliah('MK-DB', 'Database'),
             'B02',
         );
@@ -64,8 +66,8 @@ class KalenderUjianTest extends TestCase
         $this->daftar($this->kelasAktif, $this->mahasiswaSatu);
         $this->daftar($this->kelasLama, $this->mahasiswaDua);
 
-        $this->utsInstitusional = $this->ujianInstitusional($tahunAktif, JenisUjian::Uts, '2026-12-01');
-        $this->uasInstitusional = $this->ujianInstitusional($tahunAktif, JenisUjian::Uas, '2026-12-10');
+        $this->utsInstitusional = $this->ujianInstitusional($this->tahunAktif, JenisUjian::Uts, '2026-12-01');
+        $this->uasInstitusional = $this->ujianInstitusional($this->tahunAktif, JenisUjian::Uas, '2026-12-10');
         $this->utsLamaKelas = $this->ujianKelas(
             $this->dosenDua,
             $this->kelasLama,
@@ -312,6 +314,100 @@ class KalenderUjianTest extends TestCase
         $this->assertTrue($options->contains(CalendarCategory::UAS));
     }
 
+    public function test_halaman_jadwal_ujian_mahasiswa_hanya_memuat_agenda_institusional_dan_kelas_diikuti(): void
+    {
+        $response = $this->actingAs($this->mahasiswaSatu)->get(route('mahasiswa.jadwal-ujian'));
+
+        $response->assertOk();
+        $response->assertSee('Jadwal Ujian UTS & UAS');
+        $response->assertSee('Hanya baca');
+
+        $ids = collect($response->viewData('ujian'))->pluck('id');
+        $this->assertTrue($ids->contains($this->utsInstitusional->id));
+        $this->assertTrue($ids->contains($this->uasInstitusional->id));
+        $this->assertTrue($ids->contains($this->ujianTanpaPenanda->id));
+        $this->assertFalse($ids->contains($this->utsLamaKelas->id));
+
+        $events = $response->viewData('calendar')['events'];
+        $this->assertTrue($events->contains('id', 'agenda-'.$this->utsInstitusional->id));
+        $this->assertTrue($events->contains('id', 'agenda-'.$this->ujianTanpaPenanda->id));
+        $this->assertFalse($events->contains('id', 'agenda-'.$this->utsLamaKelas->id));
+
+        $baris = collect($response->viewData('ujian'))->firstWhere('id', $this->utsInstitusional->id);
+        $this->assertSame('UTS', $baris['label']);
+        $this->assertSame(CalendarCategory::UTS, $baris['kategori']);
+        $this->assertSame('Agenda institusi', $baris['konteks']);
+    }
+
+    public function test_halaman_jadwal_ujian_dosen_hanya_memuat_agenda_institusional_dan_kelas_diampu(): void
+    {
+        $response = $this->actingAs($this->dosenSatu)->get(route('dosen.jadwal-ujian'));
+
+        $response->assertOk();
+        $response->assertSee('Jadwal Ujian UTS & UAS');
+        $response->assertSee('Hanya baca');
+
+        $ids = collect($response->viewData('ujian'))->pluck('id');
+        $this->assertTrue($ids->contains($this->utsInstitusional->id));
+        $this->assertTrue($ids->contains($this->uasInstitusional->id));
+        $this->assertTrue($ids->contains($this->ujianTanpaPenanda->id));
+        $this->assertFalse($ids->contains($this->utsLamaKelas->id));
+
+        $events = $response->viewData('calendar')['events'];
+        $this->assertTrue($events->contains('id', 'agenda-'.$this->utsInstitusional->id));
+        $this->assertFalse($events->contains('id', 'agenda-'.$this->utsLamaKelas->id));
+    }
+
+    public function test_filter_jenis_ujian_dan_tahun_akademik_pada_halaman_read_only(): void
+    {
+        $uts = $this->actingAs($this->mahasiswaSatu)->get(route('mahasiswa.jadwal-ujian', [
+            'jenis_ujian' => 'uts',
+        ]));
+        $uts->assertOk();
+        $utsIds = collect($uts->viewData('ujian'))->pluck('id');
+        $this->assertTrue($utsIds->contains($this->utsInstitusional->id));
+        $this->assertFalse($utsIds->contains($this->ujianTanpaPenanda->id));
+        $this->assertFalse($utsIds->contains($this->uasInstitusional->id));
+
+        $periodeAktif = $this->actingAs($this->mahasiswaSatu)->get(route('mahasiswa.jadwal-ujian', [
+            'tahun_akademik' => $this->tahunAktif->id,
+        ]));
+        $periodeAktif->assertOk();
+        $aktifIds = collect($periodeAktif->viewData('ujian'))->pluck('id');
+        $this->assertTrue($aktifIds->contains($this->utsInstitusional->id));
+        $this->assertFalse($aktifIds->contains($this->utsLamaKelas->id));
+
+        $periodeKosong = $this->actingAs($this->mahasiswaSatu)->get(route('mahasiswa.jadwal-ujian', [
+            'tahun_akademik' => $this->tahunLama->id,
+        ]));
+        $periodeKosong->assertOk();
+        $this->assertSame([], $periodeKosong->viewData('ujian'));
+        $periodeKosong->assertSee('Tidak ada jadwal ditemukan');
+    }
+
+    public function test_halaman_jadwal_ujian_dosen_dan_mahasiswa_read_only_tanpa_route_tulis(): void
+    {
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('dosen.jadwal-ujian.store'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('dosen.jadwal-ujian.update'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('dosen.jadwal-ujian.destroy'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('mahasiswa.jadwal-ujian.store'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('mahasiswa.jadwal-ujian.update'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('mahasiswa.jadwal-ujian.destroy'));
+
+        foreach ([
+            [$this->dosenSatu, 'dosen.jadwal-ujian'],
+            [$this->mahasiswaSatu, 'mahasiswa.jadwal-ujian'],
+        ] as [$user, $route]) {
+            foreach (['post', 'put', 'patch', 'delete'] as $method) {
+                $this->actingAs($user)->{$method}(route($route))->assertStatus(405);
+            }
+
+            $this->actingAs($user)
+                ->post(route('admin.jadwal-ujian.store'))
+                ->assertForbidden();
+        }
+    }
+
     private function daftar(KelasMataKuliah $kelas, User $mahasiswa): void
     {
         $pendaftaran = new PesertaMataKuliah();
@@ -338,6 +434,7 @@ class KalenderUjianTest extends TestCase
         $agenda->forceFill([
             'dibuat_oleh' => $this->admin->id,
             'kelas_mata_kuliah_id' => null,
+            'tahun_akademik_id' => $tahun->id,
             'judul' => $judul,
             'jenis' => JenisAgenda::Ujian->value,
             'jenis_ujian' => $jenis->value,

@@ -10,12 +10,18 @@
 
 @php
     $tab = request('tab') === 'timeline' ? 'timeline' : 'calendar';
-    $queryBase = array_filter([
+    $queryBase = array_filter(request()->except(['view', 'tab']) + [
         'date' => request('date'),
         'jenis' => request('jenis'),
     ], fn ($value): bool => $value !== null && $value !== '');
     $tabLink = fn (string $target): string => route($routeName, $queryBase + ['tab' => $target]);
     $today = $today ?? today();
+    $markerTones = [
+        'deadline' => ['bg' => 'bg-agenda-terlambat', 'text' => 'text-agenda-terlambat'],
+        'uts' => ['bg' => 'bg-agenda-uts', 'text' => 'text-agenda-uts'],
+        'uas' => ['bg' => 'bg-agenda-uas', 'text' => 'text-agenda-uas'],
+        'ujian' => ['bg' => 'bg-agenda-ujian', 'text' => 'text-agenda-ujian'],
+    ];
 @endphp
 
 <section id="kalender-akademik" class="min-w-0">
@@ -114,7 +120,7 @@
                                 @endforeach
                                 @foreach ($timeline['markers'] as $marker)
                                     <span
-                                        class="absolute -top-1 h-4 w-4 -translate-x-1/2 rotate-45 rounded-sm shadow {{ $marker['jenis'] === 'deadline' ? 'bg-agenda-terlambat' : 'bg-agenda-uts' }}"
+                                        class="absolute -top-1 h-4 w-4 -translate-x-1/2 rotate-45 rounded-sm shadow {{ $markerTones[$marker['jenis']]['bg'] ?? $markerTones['ujian']['bg'] }}"
                                         style="left: {{ $marker['posisi'] }}%;"
                                         title="{{ $marker['label'] }}: {{ $marker['judul'] }} — {{ $marker['tanggal_label'] }}"
                                         role="button"
@@ -127,7 +133,7 @@
                             </div>
                             <div class="mt-3 space-y-1.5">
                                 @foreach ($timeline['markers'] as $marker)
-                                    <p class="text-[11px] text-text"><span class="font-bold {{ $marker['jenis'] === 'deadline' ? 'text-agenda-terlambat' : 'text-agenda-uts' }}">◆ {{ $marker['label'] }}</span> — {{ $marker['judul'] }} · {{ $marker['mata_kuliah'] }}</p>
+                                    <p class="text-[11px] text-text"><span class="font-bold {{ $markerTones[$marker['jenis']]['text'] ?? $markerTones['ujian']['text'] }}">◆ {{ $marker['label'] }}</span> — {{ $marker['judul'] }} · {{ $marker['mata_kuliah'] }}</p>
                                 @endforeach
                             </div>
                         </div>
@@ -160,7 +166,7 @@
                             data-agenda-trigger="{{ $marker['event_id'] }}"
                             aria-label="Lihat detail {{ $marker['label'] }} {{ $marker['judul'] }}"
                         >
-                            <p class="text-[10px] font-bold uppercase tracking-wide {{ $marker['jenis'] === 'deadline' ? 'text-agenda-terlambat' : 'text-agenda-uts' }}">{{ $marker['label'] }} · {{ $marker['tanggal_label'] }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wide {{ $markerTones[$marker['jenis']]['text'] ?? $markerTones['ujian']['text'] }}">{{ $marker['label'] }} · {{ $marker['tanggal_label'] }}</p>
                             <p class="mt-1 text-sm font-semibold text-text">{{ $marker['judul'] }}</p>
                             <p class="mt-0.5 text-[11px] text-muted">{{ $marker['mata_kuliah'] }}</p>
                         </article>

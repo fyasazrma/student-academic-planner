@@ -6,7 +6,7 @@
     $tones = [
         'tugas' => 'bg-agenda-tugas',
         'deadline' => 'bg-agenda-terlambat',
-        'ujian' => 'bg-agenda-uts',
+        'ujian' => 'bg-agenda-ujian',
         'uts' => 'bg-agenda-uts',
         'uas' => 'bg-agenda-uas',
         'kuliah' => 'bg-agenda-kuliah',
@@ -17,7 +17,7 @@
     $textTones = [
         'tugas' => 'text-agenda-tugas',
         'deadline' => 'text-agenda-terlambat',
-        'ujian' => 'text-agenda-uts',
+        'ujian' => 'text-agenda-ujian',
         'uts' => 'text-agenda-uts',
         'uas' => 'text-agenda-uas',
         'kuliah' => 'text-agenda-kuliah',

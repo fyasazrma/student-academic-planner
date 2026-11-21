@@ -4,14 +4,17 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
 use App\Services\Mahasiswa\DashboardDataService;
+use App\Services\Notifikasi\NotifikasiService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class NotifikasiController extends Controller
 {
-    public function __construct(private readonly DashboardDataService $dashboardData)
-    {
+    public function __construct(
+        private readonly DashboardDataService $dashboardData,
+        private readonly NotifikasiService $notifikasi,
+    ) {
     }
 
     /**
@@ -35,5 +38,18 @@ class NotifikasiController extends Controller
         return redirect()
             ->route('mahasiswa.notifikasi', $params)
             ->with('status', 'Notifikasi ditandai sudah dibaca.');
+    }
+
+    /**
+     * Mark all of the student's own notifications as read.
+     */
+    public function tandaiSemuaDibaca(Request $request): RedirectResponse
+    {
+        $jumlah = $this->notifikasi->tandaiSemuaDibaca((int) $request->user()->getAuthIdentifier());
+
+        return redirect()->route('mahasiswa.notifikasi')
+            ->with('status', $jumlah > 0
+                ? $jumlah.' notifikasi ditandai sudah dibaca.'
+                : 'Tidak ada notifikasi yang perlu ditandai dibaca.');
     }
 }

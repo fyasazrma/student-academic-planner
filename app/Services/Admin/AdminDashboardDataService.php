@@ -3,7 +3,6 @@
 namespace App\Services\Admin;
 
 use App\Enums\JenisAgenda;
-use App\Enums\JenisUjian;
 use App\Enums\UserRole;
 use App\Models\AgendaAkademik;
 use App\Models\JadwalKuliah;
@@ -68,7 +67,9 @@ class AdminDashboardDataService
             ->map(fn (AgendaAkademik $agenda): array => [
                 'id' => $agenda->id,
                 'judul' => $agenda->judul,
-                'jenis_label' => CalendarCategory::label($this->jenisKey($agenda->jenis, $agenda->jenis_ujian)),
+                'jenis_label' => CalendarCategory::label(
+                    $this->eventFactory->agendaCategory($agenda->jenis, $agenda->jenis_ujian)
+                ),
                 'tanggal_label' => $agenda->tanggal_mulai->translatedFormat('D, d M Y'),
                 'waktu_label' => $agenda->waktu_mulai
                     ? $this->timeLabel($agenda->waktu_mulai).($agenda->waktu_selesai ? ' – '.$this->timeLabel($agenda->waktu_selesai) : '')
@@ -96,7 +97,7 @@ class AdminDashboardDataService
             })
             ->dipublikasikan()
             ->where('tanggal_mulai', '<=', $end->toDateString())
-            ->with('kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik')
+            ->with(['tahunAkademik', 'kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik'])
             ->orderBy('tanggal_mulai')
             ->orderBy('waktu_mulai')
             ->get();
@@ -126,6 +127,7 @@ class AdminDashboardDataService
             'agendaMendatang' => $agendaMendatang,
             'perubahanTerbaru' => $this->perubahanTerbaru(),
             'calendar' => $this->viewBuilder->build($events, $view, $date, $filters),
+            'timeline' => $this->viewBuilder->timeline($events),
             'currentView' => $view,
             'activeFilters' => $filters,
             'filterOptions' => CalendarCategory::options(CalendarCategory::ADMIN),
@@ -204,22 +206,6 @@ class AdminDashboardDataService
             ->concat($this->eventFactory->schedules($schedules))
             ->concat($this->eventFactory->materials($materials))
             ->values();
-    }
-
-    private function jenisKey(JenisAgenda $jenis, ?JenisUjian $jenisUjian = null): string
-    {
-        if ($jenis === JenisAgenda::Ujian && $jenisUjian !== null) {
-            return match ($jenisUjian) {
-                JenisUjian::Uts => CalendarCategory::UTS,
-                JenisUjian::Uas => CalendarCategory::UAS,
-            };
-        }
-
-        return match ($jenis) {
-            JenisAgenda::Akademik => CalendarCategory::AKADEMIK,
-            JenisAgenda::Ujian => CalendarCategory::UJIAN,
-            JenisAgenda::Pengumuman => CalendarCategory::PENGUMUMAN,
-        };
     }
 
     private function timeLabel(mixed $value, string $format = 'H:i'): string

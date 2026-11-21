@@ -3,11 +3,14 @@
 namespace App\Services\Admin;
 
 use App\Enums\JenisAgenda;
+use App\Enums\JenisNotifikasi;
 use App\Enums\JenisUjian;
 use App\Enums\Semester;
 use App\Models\AgendaAkademik;
 use App\Models\TahunAkademik;
+use App\Services\Notifikasi\NotifikasiService;
 use Carbon\Carbon;
+use Illuminate\Database\Connection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -15,12 +18,16 @@ use Illuminate\Support\Facades\DB;
  * Pengelolaan jadwal UTS/UAS institusional administrator.
  *
  * Ujian disimpan sebagai satu baris agenda_akademik dengan jenis = ujian,
- * jenis_ujian = uts|uas, dan kelas_mata_kuliah_id = NULL. Kolom jenis_ujian
- * hanya menandai UTS/UAS agar tidak membuat tabel atau event kalender duplikat.
+ * jenis_ujian = uts|uas, kelas_mata_kuliah_id = NULL, dan tahun_akademik_id
+ * sebagai periode relasional. Tidak ada tabel atau event kalender duplikat.
  */
 class JadwalUjianService
 {
     private const JUDUL_MAKSIMAL = 200;
+
+    public function __construct(private readonly NotifikasiService $notifikasi)
+    {
+    }
 
     /**
      * @param  array<string, mixed>  $filters
@@ -30,6 +37,7 @@ class JadwalUjianService
         Carbon::setLocale('id');
 
         $query = AgendaAkademik::query()
+            ->with(['tahunAkademik', 'kelasMataKuliah.tahunAkademik'])
             ->where('jenis', JenisAgenda::Ujian->value)
             ->whereNotNull('jenis_ujian')
             ->whereNull('kelas_mata_kuliah_id');
@@ -47,12 +55,12 @@ class JadwalUjianService
         }
 
         if (($filters['tahun_akademik'] ?? '') !== '') {
-            $tahun = TahunAkademik::query()->whereKey((int) $filters['tahun_akademik'])->first();
+            $tahunId = (int) $filters['tahun_akademik'];
 
-            if ($tahun === null) {
+            if (TahunAkademik::query()->whereKey($tahunId)->doesntExist()) {
                 $query->whereRaw('1 = 0');
             } else {
-                $query->where('judul', 'like', '%'.$this->periodeLabel($tahun).'%');
+                $query->where('tahun_akademik_id', $tahunId);
             }
         }
 
@@ -62,7 +70,10 @@ class JadwalUjianService
             if ($semester === null) {
                 $query->whereRaw('1 = 0');
             } else {
-                $query->where('judul', 'like', '%— '.ucfirst($semester->value).' %');
+                $query->whereHas(
+                    'tahunAkademik',
+                    fn ($periode) => $periode->where('semester', $semester->value),
+                );
             }
         }
 
@@ -111,8 +122,9 @@ class JadwalUjianService
     }
 
     /**
-     * Nilai awal formulir. Periode tidak memiliki kolom khusus pada schema,
-     * sehingga dibaca dari akhir judul agenda institusional yang dibuat service ini.
+     * Nilai awal formulir. Periode dibaca dari relasi tahun akademik;
+     * parsing judul hanya dipakai sebagai fallback data legacy yang belum
+     * memiliki tahun_akademik_id.
      *
      * @return array{tahun_akademik_id: int|null, semester: string, judul: string}
      */
@@ -120,7 +132,7 @@ class JadwalUjianService
     {
         $tahun = $ujian === null
             ? TahunAkademik::aktif()->first()
-            : $this->tahunDariJudul((string) $ujian->judul);
+            : $this->periode($ujian);
         $tahun ??= TahunAkademik::aktif()->first();
         $jenisUjian = $ujian?->jenis_ujian ?? JenisUjian::Uts;
 
@@ -131,14 +143,20 @@ class JadwalUjianService
         ];
     }
 
-    public function temukan(mixed $id): AgendaAkademik
+    public function temukan(mixed $id, bool $kunci = false): AgendaAkademik
     {
-        return AgendaAkademik::query()
+        $query = AgendaAkademik::query()
+            ->with(['tahunAkademik', 'kelasMataKuliah.tahunAkademik'])
             ->whereKey(is_numeric($id) ? (int) $id : 0)
             ->where('jenis', JenisAgenda::Ujian->value)
             ->whereNotNull('jenis_ujian')
-            ->whereNull('kelas_mata_kuliah_id')
-            ->firstOrFail();
+            ->whereNull('kelas_mata_kuliah_id');
+
+        if ($kunci) {
+            $query->lockForUpdate();
+        }
+
+        return $query->firstOrFail();
     }
 
     /**
@@ -147,7 +165,7 @@ class JadwalUjianService
      */
     public function simpan(array $data, int $adminId): array
     {
-        return $this->tulis($data, $adminId, null);
+        return $this->tulis($data, $adminId, null, null);
     }
 
     /**
@@ -156,7 +174,7 @@ class JadwalUjianService
      */
     public function perbarui(mixed $id, array $data): array
     {
-        return $this->tulis($data, null, $this->temukan($id));
+        return $this->tulis($data, null, null, $id);
     }
 
     /**
@@ -165,7 +183,7 @@ class JadwalUjianService
     public function hapus(mixed $id): array
     {
         return DB::transaction(function () use ($id): array {
-            $ujian = $this->temukan($id);
+            $ujian = $this->temukan($id, true);
             $ujian->delete();
 
             return ['berhasil' => true, 'pesan' => 'Jadwal ujian berhasil dihapus.'];
@@ -176,98 +194,297 @@ class JadwalUjianService
      * @param  array<string, mixed>  $data
      * @return array{berhasil: bool, pesan: string, field: ?string}
      */
-    private function tulis(array $data, ?int $adminId, ?AgendaAkademik $ujian): array
+    private function tulis(array $data, ?int $adminId, ?AgendaAkademik $ujian, mixed $id): array
     {
         $jenisUjian = JenisUjian::tryFrom((string) $data['jenis_ujian']);
         if ($jenisUjian === null) {
-            return [
-                'berhasil' => false,
-                'pesan' => 'Jenis ujian hanya UTS atau UAS.',
-                'field' => 'jenis_ujian',
-            ];
+            return $this->gagal('Jenis ujian hanya UTS atau UAS.', 'jenis_ujian');
         }
 
-        $tahun = TahunAkademik::query()->whereKey((int) $data['tahun_akademik_id'])->first();
+        $tahun = TahunAkademik::query()->whereKey((int) ($data['tahun_akademik_id'] ?? 0))->first();
         if ($tahun === null) {
-            return [
-                'berhasil' => false,
-                'pesan' => 'Tahun akademik tidak valid.',
-                'field' => 'tahun_akademik_id',
-            ];
+            return $this->gagal('Tahun akademik tidak valid.', 'tahun_akademik_id');
         }
 
-        $semester = Semester::tryFrom((string) $data['semester']);
+        $semester = Semester::tryFrom((string) ($data['semester'] ?? ''));
         if ($semester === null || $tahun->semester !== $semester) {
-            return [
-                'berhasil' => false,
-                'pesan' => 'Semester harus sesuai dengan tahun akademik yang dipilih.',
-                'field' => 'semester',
-            ];
+            return $this->gagal('Semester harus sesuai dengan tahun akademik yang dipilih.', 'semester');
         }
 
-        $tanggalMulai = (string) $data['tanggal_mulai'];
-        $tanggalSelesai = (string) ($data['tanggal_selesai'] ?? $tanggalMulai);
-        if ($tanggalSelesai < $tanggalMulai) {
-            return [
-                'berhasil' => false,
-                'pesan' => 'Tanggal selesai tidak boleh sebelum tanggal mulai.',
-                'field' => 'tanggal_selesai',
-            ];
+        $tanggalMulai = Carbon::createFromFormat('!Y-m-d', (string) ($data['tanggal_mulai'] ?? ''));
+        $tanggalSelesai = Carbon::createFromFormat(
+            '!Y-m-d',
+            (string) ($data['tanggal_selesai'] ?? $data['tanggal_mulai'] ?? ''),
+        );
+
+        if (! $tanggalMulai instanceof Carbon || ! $tanggalSelesai instanceof Carbon) {
+            return $this->gagal('Format tanggal tidak valid.', 'tanggal_mulai');
+        }
+
+        if ($tanggalSelesai->lessThan($tanggalMulai)) {
+            return $this->gagal('Tanggal selesai tidak boleh sebelum tanggal mulai.', 'tanggal_selesai');
         }
 
         $mulai = $this->jam($data['waktu_mulai'] ?? null);
         $selesai = $this->jam($data['waktu_selesai'] ?? null);
         if (($mulai === null) !== ($selesai === null)) {
-            return [
-                'berhasil' => false,
-                'pesan' => 'Jam mulai dan jam selesai harus diisi berpasangan.',
-                'field' => 'waktu_mulai',
-            ];
+            return $this->gagal('Jam mulai dan jam selesai harus diisi berpasangan.', 'waktu_mulai');
         }
         if ($mulai !== null && $selesai !== null && $selesai <= $mulai) {
-            return [
-                'berhasil' => false,
-                'pesan' => 'Jam selesai harus lebih besar dari jam mulai.',
-                'field' => 'waktu_selesai',
-            ];
+            return $this->gagal('Jam selesai harus lebih besar dari jam mulai.', 'waktu_selesai');
         }
 
-        return DB::transaction(function () use (
+        $lokasi = $this->lokasi($data['lokasi'] ?? null);
+
+        $ujiLama = null;
+        if ($ujian === null && $id !== null) {
+            $ujiLama = AgendaAkademik::query()
+                ->whereKey(is_numeric($id) ? (int) $id : 0)
+                ->where('jenis', JenisAgenda::Ujian->value)
+                ->first();
+        } else {
+            $ujiLama = $ujian;
+        }
+
+        $hasil = DB::transaction(function () use (
             $data,
             $adminId,
             $ujian,
+            $id,
             $jenisUjian,
             $tahun,
             $tanggalMulai,
             $tanggalSelesai,
             $mulai,
             $selesai,
+            $lokasi,
+            $ujiLama,
         ): array {
-            $atribut = [
-                'kelas_mata_kuliah_id' => null,
-                'judul' => $this->judul($jenisUjian, $tahun, $data['judul'] ?? null),
-                'deskripsi' => $this->teks($data['deskripsi'] ?? null),
-                'jenis' => JenisAgenda::Ujian->value,
-                'jenis_ujian' => $jenisUjian->value,
-                'tanggal_mulai' => $tanggalMulai,
-                'tanggal_selesai' => $tanggalSelesai,
-                'waktu_mulai' => $mulai === null ? null : $mulai.':00',
-                'waktu_selesai' => $selesai === null ? null : $selesai.':00',
-                'lokasi' => $this->lokasi($data['lokasi'] ?? null),
-                'dipublikasikan_pada' => (bool) ($data['dipublikasikan'] ?? true) ? now() : null,
-            ];
-
-            if ($ujian === null) {
-                $baru = new AgendaAkademik();
-                $baru->forceFill($atribut + ['dibuat_oleh' => $adminId])->save();
-                $pesan = 'Jadwal '.strtolower($jenisUjian->label()).' berhasil ditambahkan.';
-            } else {
-                $ujian->fill($atribut)->save();
-                $pesan = 'Jadwal '.strtolower($jenisUjian->label()).' berhasil diperbarui.';
+            $record = $ujian;
+            if ($record === null && $id !== null) {
+                $record = $this->temukan($id, true);
             }
 
-            return ['berhasil' => true, 'pesan' => $pesan, 'field' => null];
+            $namaKunci = $this->namaKunciLokasi($lokasi);
+            $kunciDiperoleh = false;
+
+            if ($namaKunci !== null && DB::connection()->getDriverName() === 'mysql') {
+                $hasil = DB::connection()->selectOne('SELECT GET_LOCK(?, 10) AS acquired', [$namaKunci]);
+                $kunciDiperoleh = (bool) ($hasil?->acquired ?? 0);
+
+                if (! $kunciDiperoleh) {
+                    return $this->gagal(
+                        'Lokasi sedang diperiksa transaksi lain. Coba lagi sebentar.',
+                        'lokasi',
+                    );
+                }
+            }
+
+            try {
+                $bentrok = $this->cariBentrok(
+                    $tanggalMulai,
+                    $tanggalSelesai,
+                    $mulai,
+                    $selesai,
+                    $lokasi,
+                    $record?->getKey(),
+                );
+
+                if ($bentrok !== null) {
+                    return $this->gagal($bentrok, 'lokasi');
+                }
+
+                $atribut = [
+                    'kelas_mata_kuliah_id' => null,
+                    'tahun_akademik_id' => $tahun->getKey(),
+                    'judul' => $this->judul($jenisUjian, $tahun, $data['judul'] ?? null),
+                    'deskripsi' => $this->teks($data['deskripsi'] ?? null),
+                    'jenis' => JenisAgenda::Ujian->value,
+                    'jenis_ujian' => $jenisUjian->value,
+                    'tanggal_mulai' => $tanggalMulai->toDateString(),
+                    'tanggal_selesai' => $tanggalSelesai->toDateString(),
+                    'waktu_mulai' => $mulai === null ? null : $mulai.':00',
+                    'waktu_selesai' => $selesai === null ? null : $selesai.':00',
+                    'lokasi' => $lokasi,
+                    'dipublikasikan_pada' => (bool) ($data['dipublikasikan'] ?? true) ? now() : null,
+                ];
+
+                if ($record === null) {
+                    $baru = new AgendaAkademik();
+                    $baru->forceFill($atribut + ['dibuat_oleh' => $adminId])->save();
+                    $pesan = 'Jadwal '.strtolower($jenisUjian->label()).' berhasil ditambahkan.';
+                    $ujianTersimpan = $baru;
+                } else {
+                    $record->fill($atribut)->save();
+                    $pesan = 'Jadwal '.strtolower($jenisUjian->label()).' berhasil diperbarui.';
+                    $ujianTersimpan = $record;
+                }
+
+                if ($atribut['dipublikasikan_pada'] !== null && $this->perubahanJadwalRelevan($ujiLama, $atribut, $jenisUjian)) {
+                    $tanda = md5(implode('|', [
+                        $atribut['jenis_ujian'],
+                        $atribut['judul'],
+                        $atribut['tanggal_mulai'],
+                        $atribut['tanggal_selesai'],
+                        $atribut['waktu_mulai'] ?? '',
+                        $atribut['waktu_selesai'] ?? '',
+                        $atribut['lokasi'] ?? '',
+                    ]));
+                    $judulNotifikasi = $ujiLama === null
+                        ? 'Jadwal ujian ditambahkan: '.$atribut['judul']
+                        : 'Jadwal ujian diperbarui: '.$atribut['judul'];
+
+                    DB::afterCommit(fn (): int => $this->notifikasi->kirimKeSemuaMahasiswa(
+                        JenisNotifikasi::Ujian,
+                        $judulNotifikasi,
+                        'Jadwal '.$jenisUjian->label().' pada '.$atribut['tanggal_mulai'].'. Cek detail jadwal untuk informasi lengkap.',
+                        '/mahasiswa/jadwal-ujian',
+                        'ujian:'.$ujianTersimpan->getKey().':'.$tanda,
+                    ));
+                }
+
+                return ['berhasil' => true, 'pesan' => $pesan, 'field' => null];
+            } finally {
+                if ($kunciDiperoleh) {
+                    DB::connection()->selectOne('SELECT RELEASE_LOCK(?) AS released', [$namaKunci]);
+                }
+            }
         });
+
+        return $hasil;
+    }
+
+    /**
+     * @param  array<string, mixed>  $atribut
+     */
+    private function perubahanJadwalRelevan(?AgendaAkademik $lama, array $atribut, JenisUjian $jenis): bool
+    {
+        if ($lama === null) {
+            return true;
+        }
+
+        return $lama->jenis_ujian !== $jenis
+            || $lama->judul !== $atribut['judul']
+            || $lama->tanggal_mulai->toDateString() !== $atribut['tanggal_mulai']
+            || $lama->tanggal_selesai->toDateString() !== $atribut['tanggal_selesai']
+            || $lama->waktu_mulai !== ($atribut['waktu_mulai'] ?? null)
+            || $lama->waktu_selesai !== ($atribut['waktu_selesai'] ?? null)
+            || $lama->lokasi !== ($atribut['lokasi'] ?? null);
+    }
+
+    /**
+     * @return array{berhasil: false, pesan: string, field: string}
+     */
+    private function gagal(string $pesan, string $field): array
+    {
+        return ['berhasil' => false, 'pesan' => $pesan, 'field' => $field];
+    }
+
+    /**
+     * Kebijakan bentrok:
+     * - hanya ujian pada agenda_akademik yang diperiksa;
+     * - lokasi kosong tidak dapat dibuktikan sama, jadi tidak dianggap bentrok;
+     * - lokasi sama + tanggal tumpang tindih + jam tumpang tindih ditolak;
+     * - bila salah satu agenda tanpa jam, tanggal yang tumpang tindih pada
+     *   lokasi sama tetap dianggap bentrok (tidak dianggap bebas);
+     * - record yang sedang disunting dikecualikan.
+     *
+     * GET_LOCK dipakai hanya di MySQL/MariaDB dan dikunci per lokasi untuk
+     * mengurangi race condition antartransaksi. lockForUpdate() mengunci baris
+     * kandidat yang sudah ada. Ini bukan jaminan bebas race condition mutlak.
+     */
+    private function cariBentrok(
+        Carbon $tanggalMulai,
+        Carbon $tanggalSelesai,
+        ?string $mulai,
+        ?string $selesai,
+        ?string $lokasi,
+        mixed $idDikecualikan,
+    ): ?string {
+        if ($lokasi === null || $lokasi === '') {
+            return null;
+        }
+
+        $kandidat = AgendaAkademik::query()
+            ->where('jenis', JenisAgenda::Ujian->value)
+            ->whereDate('tanggal_mulai', '<=', $tanggalSelesai->toDateString())
+            ->where(function ($query) use ($tanggalMulai): void {
+                $query->whereNull('tanggal_selesai')
+                    ->orWhereDate('tanggal_selesai', '>=', $tanggalMulai->toDateString());
+            })
+            ->when($idDikecualikan !== null, fn ($query) => $query->where('id', '!=', $idDikecualikan))
+            ->orderBy('tanggal_mulai')
+            ->orderBy('waktu_mulai')
+            ->lockForUpdate()
+            ->get(['id', 'judul', 'tanggal_mulai', 'tanggal_selesai', 'waktu_mulai', 'waktu_selesai', 'lokasi']);
+
+        foreach ($kandidat as $item) {
+            if (! $this->lokasiSama($lokasi, $item->lokasi)) {
+                continue;
+            }
+
+            $itemMulai = $item->tanggal_mulai;
+            $itemSelesai = $item->tanggal_selesai ?? $item->tanggal_mulai;
+
+            if (! $itemMulai instanceof Carbon || ! $itemSelesai instanceof Carbon) {
+                continue;
+            }
+
+            if ($tanggalMulai->greaterThan($itemSelesai) || $itemMulai->greaterThan($tanggalSelesai)) {
+                continue;
+            }
+
+            $itemJamMulai = $this->jam($item->waktu_mulai);
+            $itemJamSelesai = $this->jam($item->waktu_selesai);
+
+            if (! $this->waktuBertumpang($mulai, $selesai, $itemJamMulai, $itemJamSelesai)) {
+                continue;
+            }
+
+            $waktu = $itemJamMulai !== null && $itemJamSelesai !== null
+                ? $itemJamMulai.'–'.$itemJamSelesai
+                : 'jam tidak ditentukan';
+
+            return sprintf(
+                'Bentrok jadwal: lokasi "%s" sudah dipakai untuk %s pada %s %s.',
+                $lokasi,
+                $item->judul,
+                $itemMulai->translatedFormat('d M Y'),
+                $waktu,
+            );
+        }
+
+        return null;
+    }
+
+    private function lokasiSama(?string $kiri, mixed $kanan): bool
+    {
+        $kanan = $this->lokasi($kanan);
+
+        return $kiri !== null && $kanan !== null
+            && mb_strtolower($kiri) === mb_strtolower($kanan);
+    }
+
+    private function waktuBertumpang(
+        ?string $mulaiA,
+        ?string $selesaiA,
+        ?string $mulaiB,
+        ?string $selesaiB,
+    ): bool {
+        if ($mulaiA === null || $selesaiA === null || $mulaiB === null || $selesaiB === null) {
+            return true;
+        }
+
+        return $mulaiA < $selesaiB && $mulaiB < $selesaiA;
+    }
+
+    private function namaKunciLokasi(?string $lokasi): ?string
+    {
+        if ($lokasi === null || $lokasi === '') {
+            return null;
+        }
+
+        return 'jadwal-ujian-'.substr(sha1(mb_strtolower($lokasi)), 0, 40);
     }
 
     private function judul(JenisUjian $jenisUjian, TahunAkademik $tahun, mixed $value): string
@@ -303,9 +520,20 @@ class JadwalUjianService
         return ucfirst($tahun->semester->value).' '.$tahun->tahun_mulai.'/'.$tahun->tahun_selesai;
     }
 
+    /**
+     * Fallback hanya untuk baris legacy tanpa tahun_akademik_id. Filter dan
+     * formulir tidak memakai metode ini.
+     */
+    private function periode(AgendaAkademik $agenda): ?TahunAkademik
+    {
+        return $agenda->tahunAkademik
+            ?? $agenda->kelasMataKuliah?->tahunAkademik
+            ?? $this->tahunDariJudul((string) $agenda->judul);
+    }
+
     private function tahunDariJudul(string $judul): ?TahunAkademik
     {
-        if (preg_match('/—\s+(Ganjil|Genap)\s+(\d{4})\/(\d{4})\s*$/u', $judul, $matches) !== 1) {
+        if (preg_match('/\b(Ganjil|Genap)\s+(\d{4})\/(\d{4})\b/iu', $judul, $matches) !== 1) {
             return null;
         }
 
@@ -327,7 +555,7 @@ class JadwalUjianService
             return null;
         }
 
-        return preg_match('/^\d{2}:\d{2}$/', $nilai) === 1 ? $nilai : substr($nilai, 0, 5);
+        return preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $nilai) === 1 ? substr($nilai, 0, 5) : null;
     }
 
     private function lokasi(mixed $nilai): ?string
@@ -358,7 +586,7 @@ class JadwalUjianService
     private function baris(AgendaAkademik $item): array
     {
         $jenisUjian = $item->jenis_ujian;
-        $tahun = $this->tahunDariJudul((string) $item->judul);
+        $tahun = $this->periode($item);
         $mulai = $item->tanggal_mulai;
         $selesai = $item->tanggal_selesai;
 
@@ -374,9 +602,7 @@ class JadwalUjianService
             'jenis_ujian' => $jenisUjian?->value ?? '',
             'jenis_label' => $jenisUjian?->label() ?? 'Ujian',
             'tahun' => $tahun?->label() ?? '-',
-            'semester' => $tahun?->semester
-                ? ucfirst($tahun->semester->value)
-                : '-',
+            'semester' => $tahun?->semester ? ucfirst($tahun->semester->value) : '-',
             'tanggal' => $mulai?->toDateString() ?? '',
             'tanggal_label' => $tanggalLabel,
             'waktu_mulai' => $this->jamLabel($item->waktu_mulai),

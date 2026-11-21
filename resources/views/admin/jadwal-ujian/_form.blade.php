@@ -183,6 +183,9 @@
         @error('lokasi')
             <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
         @enderror
+        <p class="mt-1.5 text-[11px] leading-4 text-muted">
+            Ujian pada lokasi yang sama tidak boleh bertabrakan dengan jadwal ujian lain. Lokasi boleh kosong bila belum ditentukan.
+        </p>
     </div>
 
     <div class="sm:col-span-2">

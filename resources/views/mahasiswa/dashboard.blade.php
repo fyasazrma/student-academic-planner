@@ -62,6 +62,64 @@
             />
         </section>
 
+        <section aria-label="Ringkasan belajar" class="grid gap-4 lg:grid-cols-2">
+            <article class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Target belajar</p>
+                        <p class="mt-2 text-sm font-bold text-text">{{ $targetRingkasan['aktif'] }} target aktif · {{ $targetRingkasan['selesai'] }} selesai</p>
+                        @if ($targetRingkasan['terlambat'] > 0)
+                            <p class="mt-1 text-[11px] font-semibold text-agenda-terlambat">{{ $targetRingkasan['terlambat'] }} target terlambat</p>
+                        @endif
+                    </div>
+                    <a href="{{ route('mahasiswa.target.index') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-soft px-2.5 py-1.5 text-[11px] font-semibold text-text transition hover:bg-border/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                        Kelola <x-icon name="chevron-right" class="h-3.5 w-3.5" />
+                    </a>
+                </div>
+                @if (count($targetRingkasan['terdekat']) > 0)
+                    <ul class="mt-4 space-y-2">
+                        @foreach ($targetRingkasan['terdekat'] as $target)
+                            <li class="flex items-center justify-between gap-2 text-xs">
+                                <a href="{{ route('mahasiswa.target.show', $target['id']) }}" class="min-w-0 truncate font-semibold text-text transition hover:text-agenda-tugas focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                                    {{ $target['judul'] }}
+                                </a>
+                                <span class="shrink-0 text-[11px] text-muted">{{ $target['deadline_label'] }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="mt-4 text-xs text-muted">Belum ada target dengan deadline dalam 7 hari ke depan.</p>
+                @endif
+            </article>
+
+            <article class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Progres materi otomatis</p>
+                        <p class="mt-2 text-sm font-bold text-text">{{ $progresOtomatis['selesai'] }}/{{ $progresOtomatis['total'] }} materi selesai</p>
+                        <p class="mt-1 text-[11px] font-semibold text-muted">{{ number_format($progresOtomatis['persentase'], 2, ',', '.') }}% dari seluruh kelas aktif</p>
+                    </div>
+                    <a href="{{ route('mahasiswa.progres-materi.index') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-soft px-2.5 py-1.5 text-[11px] font-semibold text-text transition hover:bg-border/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                        Detail <x-icon name="chevron-right" class="h-3.5 w-3.5" />
+                    </a>
+                </div>
+                @if (count($progresOtomatis['belum_selesai']) > 0)
+                    <ul class="mt-4 space-y-2">
+                        @foreach ($progresOtomatis['belum_selesai'] as $materi)
+                            <li>
+                                <a href="{{ route('mahasiswa.materi.show', [$materi['kelas_id'], $materi['id']]) }}" class="flex items-center gap-2 rounded-lg bg-surface px-2.5 py-1.5 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                                    <x-icon name="file" class="h-3.5 w-3.5 shrink-0 text-agenda-tugas" />
+                                    <span class="min-w-0 truncate">{{ $materi['judul'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="mt-4 text-xs text-muted">Belum ada materi yang perlu diselesaikan.</p>
+                @endif
+            </article>
+        </section>
+
         <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <x-mahasiswa.calendar-panel
                 :calendar="$calendar"

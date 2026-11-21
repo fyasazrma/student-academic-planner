@@ -47,6 +47,7 @@ Dosen hanya boleh mengelola kelas yang menjadi tanggung jawabnya.
 6. Tahun akademik dan semester.
 7. Penjadwalan kuliah.
 8. Kalender akademik institusi.
+9. Jadwal ujian UTS/UAS (CRUD penuh; satu-satunya role yang dapat menulis).
 
 Admin mengelola data dan agenda sesuai kewenangannya.
 
@@ -61,6 +62,11 @@ Admin mengelola data dan agenda sesuai kewenangannya.
 - Materi diunggah dosen untuk kelas tertentu; progres baca dicatat per mahasiswa.
 - Pengingat deadline tugas dan ujian dapat muncul di notifikasi aplikasi.
 - UTS (Ujian Tengah Semester) dan UAS (Ujian Akhir Semester) adalah dua kategori ujian yang berbeda dan harus ditampilkan dengan label yang jelas.
+- Jadwal UTS/UAS ditulis hanya oleh admin. Dosen dan mahasiswa bersifat **read-only** dan tidak memiliki route POST/PUT/PATCH/DELETE untuk jadwal ujian.
+- Jadwal ujian memakai satu sumber data: `agenda_akademik` dengan `jenis = ujian`, `jenis_ujian = uts|uas`, dan `kelas_mata_kuliah_id = NULL`. Tidak ada tabel/event kalender kedua atau penulisan agenda duplikat.
+- Periode jadwal ujian disimpan relasional lewat `tahun_akademik_id` (FK nullable). Filter tidak bergantung pada parsing suffix judul.
+- Validasi bentrok jadwal: lokasi yang sama (normalisasi case/trim) dengan tanggal yang tumpang tindih dan jam yang tumpang tindih ditolak. Jika salah satu agenda tanpa jam, tanggal yang tumpang tindih pada lokasi yang sama tetap ditolak. Lokasi berbeda, waktu berbeda, dan lokasi kosong tidak dianggap bentrok.
+- Pemeriksaan bentrok berjalan dalam transaksi dengan `GET_LOCK` per lokasi dan `lockForUpdate()` untuk mengurangi race condition; mekanisme ini bukan jaminan mutlak terhadap konkurensi.
 - Nilai UTS dan UAS ditulis oleh dosen; nilai tugas bersumber dari `pengumpulan_tugas.nilai` dan tidak ditulis lewat form nilai.
 - Nilai akhir dihitung dengan bobot UTS 35%, UAS 55%, dan tugas 10% bila komponen tugas dipakai. Bila tidak dipakai, UTS/UAS dinormalisasi dengan rasio eksak 35/90 dan 55/90.
 - Nilai akhir dibulatkan dua angka desimal. Nilai 0 valid bila memang diberikan; nilai di luar rentang 0–100 ditolak.
@@ -82,7 +88,7 @@ Rancangan yang sudah diimplementasikan dalam migration (periksa file migration a
 | 8 | `progres_materi` | Progres baca materi per mahasiswa |
 | 9 | `tugas` | Tugas dengan `dipublikasikan_pada` dan `deadline` |
 | 10 | `pengumpulan_tugas` | Pengumpulan tugas oleh mahasiswa |
-| 11 | `agenda_akademik` | Agenda: akademik, ujian (UTS/UAS), pengumuman |
+| 11 | `agenda_akademik` | Agenda: akademik, ujian (UTS/UAS lewat `jenis_ujian`, periode lewat `tahun_akademik_id`), pengumuman |
 | 12 | `target_belajar` | Target belajar mahasiswa |
 | 13 | `notifikasi` | Notifikasi in-app |
 | 14 | `nilai` | Nilai per mahasiswa per komponen |
@@ -90,21 +96,23 @@ Rancangan yang sudah diimplementasikan dalam migration (periksa file migration a
 | 16 | `absensi` | Catatan kehadiran mahasiswa per sesi |
 | 17 | `riwayat_perubahan_nilai` | Audit pembuatan/perubahan UTS/UAS dan konfigurasi komponen tugas |
 | 18 | `riwayat_perubahan_absensi` | Audit koreksi absensi (status lama, status baru, alasan, actor, waktu) |
+| 19 | `aktivitas_materi` | Catatan kejadian buka/unduh materi per peserta (terpisah dari penyelesaian) |
 
-Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu periksa file migration dan model aktual sebelum mengimplementasikan fitur. Tabel `riwayat_perubahan_absensi` masih berupa **migration file Pending** dan belum dijalankan ke database utama XAMPP; seluruh pengujian otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
+Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu periksa file migration dan model aktual sebelum mengimplementasikan fitur. Migration `2026_11_19_000004_create_riwayat_perubahan_absensi_table.php` sudah dijalankan (`Ran`, batch 5) ke database utama XAMPP pada tahap Batch B. Migration `2026_11_19_000005_add_batch_c_target_dan_progres_materi.php` sudah dijalankan (`Ran`, batch 6) ke database utama XAMPP pada tahap Batch C. Migration `2026_11_19_000006_add_tahun_akademik_id_to_agenda_akademik_table.php` sudah dijalankan (`Ran`, batch 7) ke database utama XAMPP; seluruh pengujian otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
 
 ## 7. Catatan schema aktual (gap yang perlu diperhatikan)
 
 ### UTS vs UAS di agenda_akademik
-- Enum `JenisAgenda` saat ini memiliki nilai: `akademik`, `ujian`, `pengumuman`.
-- UTS dan UAS **belum dibedakan secara eksplisit** di level enum — keduanya menggunakan `jenis = ujian`.
-- Implementasi UI saat ini menggunakan field `judul` untuk membedakan UTS dari UAS.
-- **Jika dibutuhkan pembedaan di level schema** (contoh: menambahkan nilai enum `uts` dan `uas`), laporkan kebutuhan ini sebelum mengubah migration atau enum. Jangan mengubah schema tanpa persetujuan eksplisit.
+- Enum `JenisAgenda` tetap memiliki nilai: `akademik`, `ujian`, `pengumuman` — **tidak diubah**.
+- Pembedaan UTS/UAS memakai enum terpisah `JenisUjian` (`uts|uas`) pada kolom `jenis_ujian`, yang ditambahkan migration `2026_11_19_000001_add_jenis_ujian_to_agenda_akademik_table.php` (sudah `Ran`).
+- Periode jadwal ujian disimpan lewat kolom `tahun_akademik_id` (FK nullable ke `tahun_akademik`, dengan index) dari migration `2026_11_19_000006_add_tahun_akademik_id_to_agenda_akademik_table.php` (sudah `Ran`, batch 7). Filter form dan query memakai relasi `tahunAkademik()`; suffix pada `judul` tidak lagi dijadikan sumber filter.
+- Label dan warna kategori dipusatkan di `CalendarEventFactory::agendaCategory()` agar konsisten di seluruh panel kalender. Token `UJIAN` (umum) berbeda dari `UTS`/`UAS`.
+- Tidak ada unique constraint pada jadwal ujian; bentrok dicegah oleh validasi service, bukan oleh schema.
 
 ### Jadwal kuliah dan ujian
 - Tabel `jadwal_kuliah` menyimpan jadwal reguler kuliah/praktikum.
-- Jadwal ujian (UTS/UAS) disimpan di `agenda_akademik` dengan `jenis = ujian`.
-- Pastikan implementasi UI tidak mencampur dua sumber data ini tanpa label yang jelas.
+- Jadwal ujian (UTS/UAS) disimpan di `agenda_akademik` dengan `jenis = ujian`, `jenis_ujian = uts|uas`, dan `kelas_mata_kuliah_id = NULL`.
+- Jadwal kuliah **bukan** sumber bentrok untuk pengumuman ujian institusional; keduanya diberi label yang jelas di UI dan tidak dicampur.
 
 ## 8. Data induk mata kuliah, kelas pengampu, dan kunci gabung
 
@@ -171,7 +179,7 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 ### Migration pendukung
 - `2026_11_17_000015_create_sesi_absensi_table.php`: sesi per kelas dengan `pertemuan_ke` unik per kelas, tanggal, topik, waktu mulai/selesai (WIB), dan status `dibuka`/`ditutup`.
 - `2026_11_17_000016_create_absensi_table.php`: satu catatan per peserta per sesi (`absensi_unik`), dengan status `hadir|izin|sakit|alfa`, keterangan, metode `mandiri|otomatis|manual`, `dicatat_pada`, dan `dicatat_oleh` nullable.
-- `2026_11_19_000004_create_riwayat_perubahan_absensi_table.php`: tabel audit koreksi. Status lama dan baru, alasan, actor, serta waktu perubahan disimpan permanen; relasi memakai `nullOnDelete` agar riwayat tetap terbaca. **Masih Pending** pada database utama XAMPP dan menunggu persetujuan untuk dijalankan.
+- `2026_11_19_000004_create_riwayat_perubahan_absensi_table.php`: tabel audit koreksi. Status lama dan baru, alasan, actor, serta waktu perubahan disimpan permanen; relasi memakai `nullOnDelete` agar riwayat tetap terbaca. Sudah dijalankan (`Ran`, batch 5) ke database utama XAMPP.
 
 ### Sesi
 - Zona waktu yang dipakai untuk tanggal, waktu mulai, waktu selesai, dan jendela pengisian adalah `Asia/Jakarta` (WIB), meski konfigurasi timezone aplikasi adalah `UTC`.
@@ -207,3 +215,145 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - Dosen: `dosen.absensi.index`, `dosen.absensi.kelas`, `dosen.absensi.sesi.create|store|show|edit|update|destroy|buka|tutup`, `dosen.absensi.koreksi.form|koreksi`, `dosen.absensi.riwayat`, `dosen.absensi.rekap`.
 - Mahasiswa: `mahasiswa.absensi.index|riwayat|rekap|simpan`.
 - Panel kanan dashboard dosen menampilkan ringkasan absensi yang bersumber dari query kelas milik dosen yang login.
+
+## 12. Sistem target belajar dan progres materi (Batch C)
+
+### Migration pendukung
+- `2026_11_19_000005_add_batch_c_target_dan_progres_materi.php`: migration **additive** pada tabel `target_belajar` (menambah `mata_kuliah_id` nullable dengan `nullOnDelete`, `satuan`, `target_nilai`, `capaian` default 0, `tanggal_mulai`, `deadline`, serta indeks `(mahasiswa_id, status)` dan `(mahasiswa_id, deadline)`) dan membuat tabel `aktivitas_materi` (`materi_pembelajaran_id` dan `peserta_mata_kuliah_id` dengan `cascadeOnDelete`, `jenis`, `timestamps`, indeks ringkas dan indeks waktu).
+- Tidak ada kolom lama yang dihapus atau diubah tipenya. Nilai enum lama `belum_selesai` tetap dipertahankan sebagai status "Belum dimulai" agar data existing tetap terbaca.
+- Sudah dijalankan (`Ran`, batch 6) ke database utama XAMPP. Seluruh pengujian otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
+- Semua nama constraint dan index sudah diaudit (maksimal 47 karakter, di bawah batas 64 karakter MySQL/MariaDB) dan DDL sudah dikompilasi dengan `php artisan migrate --pretend --no-interaction` tanpa dijalankan.
+
+### Target belajar (pribadi, manual)
+- Route: `mahasiswa.target.index|create|store|show|edit|update|destroy|capaian|selesai|batalkan-selesai|batalkan`.
+- Target bersifat pribadi: seluruh query dan aksi dibatasi oleh `mahasiswa_id` dari auth user. Target milik mahasiswa lain menghasilkan 404 (atau 403 pada FormRequest otorisasi).
+- `TargetBelajarRequest` dan turunannya menolak `status`, `progres`, `selesai_pada`, dan `mahasiswa_id` dari browser. Mata kuliah wajib berasal dari kelas aktif yang benar-benar diikuti mahasiswa.
+- Validasi: judul, satuan, dan nilai target wajib; nilai target harus positif; capaian tidak boleh negatif atau melebihi target; `deadline` tidak boleh mendahului `tanggal_mulai`.
+- Status efektif dihitung server-side di `TargetBelajarService`, bukan dipercaya dari request: `belum_selesai` (Belum dimulai), `berlangsung`, `selesai`, `terlambat`, dan `dibatalkan`. Capaian yang mencapai/melampaui target menghasilkan `selesai`; deadline terlewat dan belum selesai menghasilkan `terlambat`.
+- Persentase progres = `min(100, capaian / target_nilai × 100)` dibulatkan ke integer. Tanpa `target_nilai` yang valid, persentase bernilai 0.
+- `tandaiSelesai` adalah penanda manual dan **tidak mengubah capaian** (riwayat capaian tetap jujur). Pembatalan status selesai hanya tersedia untuk penyelesaian manual; status `selesai` yang tercapai otomatis dari capaian tidak dapat dibatalkan tanpa menurunkan capaian.
+- `batalkan` menandai target sebagai `dibatalkan` dan tidak dapat diaktifkan kembali; `destroy` menghapus baris secara permanen. Keduanya memerlukan konfirmasi di UI.
+- Semua penulisan target memakai transaksi database. Penyimpanan dan pembaruan menerapkan status efektif sebelum `save()`.
+
+### Target otomatis (progres materi)
+- Route: `mahasiswa.progres-materi.index`, `mahasiswa.materi.show`, `mahasiswa.materi.progres.selesai`, `mahasiswa.materi.progres.batalkan`.
+- Target otomatis **tidak disalin** ke tabel `target_belajar`. Angkanya dihitung langsung dari `materi_pembelajaran` yang sudah dipublikasikan pada kelas aktif yang diikuti mahasiswa dan `progres_materi`.
+- Materi draft (`dipublikasikan_pada = NULL`) dan materi yang dijadwalkan belum terbit tidak dihitung.
+- Ringkasan disajikan per mata kuliah/kelas (total materi, selesai, belum selesai, persentase) dan agregat global. Persentase = `selesai / total × 100`, dibulatkan 2 angka desimal; tanpa materi bernilai 0.
+- `ProgresMateriService` memvalidasi ulang Peserta aktif + kelas + publikasi lewat scoped lookup sebelum setiap aksi; pelanggaran menghasilkan 404.
+- Menandai selesai memakai satu baris `progres_materi` per `(materi_pembelajaran_id, peserta_mata_kuliah_id)` (kunci unik existing). Permintaan berulang idempotent dan tidak membuat baris ganda.
+- Pembatalan penyelesaian **mempertahankan baris progres** sebagai riwayat, mengembalikan status ke `belum_dimulai`, progres 0, dan `selesai_pada = NULL`.
+- Query daftar dan ringkasan memakai eager loading/agregasi untuk menghindari N+1.
+
+### Aktivitas baca/unduh
+- Tabel `aktivitas_materi` menyimpan satu baris per kejadian sukses dengan `jenis = dibuka|diunduh` (enum `JenisAktivitasMateri`).
+- Membuka detail materi dicatat di `ProgresMateriService::detail()` hanya setelah otorisasi, kecocokan kelas, dan publikasi lolos.
+- Mengunduh dicatat di `MateriPembelajaranService::unduh()` hanya setelah otorisasi, kecocokan kelas, publikasi, path, dan eksistensi file lolos.
+- Akses gagal (kelas salah, mahasiswa lain, materi draft, berkas tidak ada) **tidak** menghasilkan catatan aktivitas.
+- Aktivitas buka/unduh **tidak pernah menandai materi selesai** dan tidak mengubah `progres_materi`. Detail materi menampilkan jumlah dan waktu terakhir dibuka/diunduh.
+
+### Hak akses dan integritas data
+- Seluruh route Batch C berada di grup middleware `auth`, `active`, `role:mahasiswa`.
+- FormRequest (`TargetBelajar*Request`, `PerbaruiCapaianTargetRequest`, `ProgresMateriRequest`) memeriksa role dan kepemilikan; service melakukan scoped lookup ulang sebagai pertahanan kedua.
+- Identitas mahasiswa, status, capaian dari pihak browser tidak dipercaya. Nilai yang dikirim browser divalidasi, lalu status dan progres dihitung ulang oleh server.
+- Semua aksi tulis memakai transaksi. Tidak ada perubahan pada autentikasi, `.env`, `phpunit.xml`, dependency, atau `package.json`.
+
+### Tampilan dan dashboard
+- Menu sidebar `Target Belajar` dan `Progres Materi` diaktifkan; breadcrumb topbar diperbarui untuk route baru.
+- Halaman target: daftar dengan filter status + mata kuliah dan pagination, tambah, edit, detail dengan pembaruan capaian serta aksi status.
+- Halaman progres materi: ringkasan target otomatis per kelas, daftar materi belum selesai, dan tautan ke detail materi.
+- Detail materi menampilkan status/progres, aktivitas baca/unduh, tautan unduh, dan aksi tandai selesai/batalkan.
+- Dashboard mahasiswa menambah ringkasan Target Belajar dan Progres Materi Otomatis tanpa menggeser kalender akademik sebagai elemen dominan. Angka yang ditampilkan bersumber dari query nyata.
+- State yang tersedia: loading (progres bar), empty state, validasi, pesan sukses (`status`), dan pesan error (`error`).
+
+### Pengujian
+- `tests/Feature/MahasiswaTargetBelajarTest.php`: 15 test (CRUD, otorisasi, validasi, status, capaian, UI).
+- `tests/Feature/MahasiswaProgresMateriTest.php`: 13 test (aktivitas buka/unduh, akses gagal, publikasi, idempotensi, target otomatis, dashboard).
+- Helper bersama: `tests/Concerns/MembuatDataBatchC.php`.
+- Regresi: `MahasiswaMateriPembelajaranTest` dan `MahasiswaDashboardTest` tetap lolos setelah integrasi.
+- Pemeriksaan yang dijalankan: `php artisan test`, `php artisan route:list`, `php artisan view:cache`, `npm run build`, `git diff --check`, dan PHP lint untuk file PHP baru/diubah.
+
+## 13. Jadwal ujian UTS/UAS (kalender akademik)
+
+### Migration pendukung
+- `2026_11_19_000006_add_tahun_akademik_id_to_agenda_akademik_table.php`: migration **additive** yang menambah `tahun_akademik_id` (FK nullable ke `tahun_akademik`, `restrictOnDelete`) dan index pada `agenda_akademik`.
+- Backfill aman: baris lama dengan kelas terhubung mengambil periode dari relasi kelas bila pasti; baris institusional mengambil periode dari judul hanya bila cocok dengan data `tahun_akademik`; selain itu dibiarkan `NULL`. Suffix judul ganda hasil backfill dirapikan. Tidak ada kolom lama yang dihapus atau diubah tipenya, dan tidak ada unique constraint baru.
+- Sudah dijalankan (`Ran`, batch 7) ke database utama XAMPP. Seluruh pengujian otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
+
+### Alur admin (CRUD)
+- Route: `admin.jadwal-ujian.index|create|store|edit|update|destroy`.
+- `JadwalUjianService` menyimpan satu baris `agenda_akademik` per jadwal ujian dengan `jenis = ujian`, `jenis_ujian = uts|uas`, `kelas_mata_kuliah_id = NULL`, dan `tahun_akademik_id` dari relasi periode.
+- FormRequest memvalidasi enum ujian, tahun akademik, semester yang konsisten dengan tahun, tanggal, jam, lokasi, dan status publikasi. Identitas admin berasal dari auth, bukan dari browser.
+- Validasi bentrok memakai `whereDate()` agar perbandingan tanggal konsisten pada SQLite dan MySQL/MariaDB, mengecualikan record yang sedang diedit, dan berjalan di dalam transaksi dengan `GET_LOCK` per lokasi + `lockForUpdate()`.
+- Halaman admin menyediakan tab Kalender/Timeline, filter UTS/UAS dan periode, empty state, serta tautan kelola jadwal dari dashboard.
+
+### Alur dosen dan mahasiswa (read-only)
+- Route GET-only: `dosen.jadwal-ujian` dan `mahasiswa.jadwal-ujian`. Tidak ada route turunan store/update/destroy; method tulis menghasilkan 405, dan akses ke endpoint admin menghasilkan 403.
+- `JadwalUjianPageService` bersama membatasi data pada agenda institusional plus kelas yang diajar (dosen) atau diikuti (mahasiswa), lalu menerapkan filter `jenis_ujian` dan `tahun_akademik`.
+- Halaman memakai komponen kalender yang sudah ada, menampilkan empty state, label/warna UTS/UAS yang konsisten, breadcrumb dan sidebar aktif yang benar, serta tampilan responsif.
+
+### Pengujian
+- `tests/Feature/AdminJadwalUjianTest.php`: CRUD, otorisasi, validasi periode, dan matriks bentrok (lokasi sama/waktu berbeda, lokasi berbeda, overlap sebagian, multi-hari, case-insensitive, agenda tanpa jam, pengecualian record sendiri).
+- `tests/Feature/KalenderUjianTest.php`: scoping per role, filter, event ID kanonik `agenda-{id}`, label/warna, empty state, dan jalur read-only.
+- Regresi: `MahasiswaDashboardTest` tetap lolos setelah sidebar `Jadwal Ujian` diaktifkan.
+
+## 14. Pengumuman akademik dan notifikasi otomatis (Batch D)
+
+### Sumber data dan status
+- Pengumuman memakai **satu sumber data**: `agenda_akademik` dengan `jenis = pengumuman`. Tidak ada tabel pengumuman terpisah.
+- `kelas_mata_kuliah_id = NULL` berarti pengumuman akademik/global; nilai non-null berarti pengumuman kelas tertentu.
+- Status diturunkan dari `dipublikasikan_pada` lewat enum `StatusPublikasi` (`draft`, `terbit`, `terjadwal`):
+  - `NULL` = draft,
+  - waktu lampau = terbit,
+  - waktu depan = terjadwal.
+- Tidak ada kolom status baru dan tidak ada migration baru pada Batch D. Status migration `000006` adalah `Ran` (batch 7).
+- Pengumuman `terjadwal` belum memiliki scheduler aktif; notifikasi terjadi saat transaksi/status menjadi terbit oleh aksi pengguna.
+
+### Alur dan hak akses
+- Admin: `admin.pengumuman.index|create|store|show|edit|update|destroy` untuk pengumuman global maupun kelas.
+- Dosen: `dosen.pengumuman.index|create|store|show|edit|update|destroy`, dibatasi hanya pada kelas yang diajar. `PengumumanRequest` dosen memvalidasi `kelas_mata_kuliah_id` melalui `MataKuliahService::milikDosen()` sehingga kelas dosen lain menghasilkan 404, lalu service melakukan scoped lookup ulang.
+- Mahasiswa: `mahasiswa.pengumuman.index|show` bersifat read-only, hanya menampilkan pengumuman terbit yang global atau dari kelas yang diikuti dengan status peserta `aktif`. Draft, pengumuman terjadwal, dan pengumuman kelas lain menghasilkan 404 atau tidak ditampilkan.
+- `PengumumanService` menjadi penulis tunggal pengumuman; seluruh aksi tulis memakai transaksi dan `DB::afterCommit()` untuk efek notifikasi.
+- `FormRequest` (`App\Http\Requests\Admin\PengumumanRequest` dan `App\Http\Requests\Dosen\PengumumanRequest`) memvalidasi judul, isi, target kelas, status, tanggal publikasi, dan periode agenda.
+
+### Notifikasi in-app
+- Tabel kustom `notifikasi` tetap dipertahankan. Aplikasi **tidak** memakai Laravel Database Notifications / tabel `notifications` / event-listener duplikat. Trait `Notifiable` hanya untuk reset password dan notifikasi email bawaan.
+- `App\Enums\JenisNotifikasi`: `pengumuman`, `tugas`, `ujian`, `nilai`.
+- `App\Services\Notifikasi\NotifikasiService` adalah penulis tunggal notifikasi. Pemilik (`user_id`), status baca, dan tautan ditentukan server-side dengan `forceFill()`.
+- Penerima dibatasi pada mahasiswa aktif. Untuk notifikasi kelas, hanya peserta dengan status `aktif` yang dipilih; mahasiswa dengan status lain tidak menerima notifikasi.
+- Dedup berdasarkan pasangan `user_id` + `tipe` + `data->sumber`. Kunci sumber stabil untuk setiap peristiwa, misalnya `pengumuman:{id}`, `tugas:{id}:dipublikasikan`, `tugas:{id}:deadline:{waktu}`, `ujian:{id}:{tanda}`, dan `nilai:{id}:{komponen}:{waktu}`.
+- Tautan hanya path internal `/mahasiswa` atau `/mahasiswa/...` yang divalidasi `tautanAman()`; tautan eksternal, protocol-relative, traversal, dan obfuskasi ditolak saat penulisan.
+- Notifikasi ditulis setelah transaksi sumber berhasil di-commit. Karena itu draft, kegagalan transaksi, dan aksi yang tidak mengubah data tidak menghasilkan notifikasi.
+
+### Pemicu notifikasi
+- Pengumuman menjadi terbit (global atau kelas) → notifikasi `pengumuman`.
+- Tugas pertama kali dipublikasikan atau berubah dari draft menjadi terbit → notifikasi `tugas` ke peserta aktif kelas.
+- Deadline tugas berubah pada tugas yang sudah terbit → notifikasi `tugas` dengan kunci sumber baru.
+- Jadwal UTS/UAS institusional dibuat atau diubah secara relevan → notifikasi `ujian` ke seluruh mahasiswa aktif.
+- Nilai UTS/UAS baru atau berubah dipublikasikan → notifikasi `nilai` hanya kepada mahasiswa pemilik nilai.
+
+### Yang sengaja tidak memicu notifikasi
+- Pengumuman draft, pengumuman terjadwal yang belum terbit, dan pengumuman yang diubah tanpa transisi status terbit.
+- Simpan ulang tanpa perubahan data, perubahan judul tugas saja, serta perubahan jadwal ujian yang tidak relevan.
+- Submit tugas, tandai materi selesai/batalkan, aktivitas baca materi, dan unduh materi/lampiran.
+- Target belajar, progres materi, aktivitas administrasi bukan akademik, dan notifikasi untuk peran selain mahasiswa melalui writer ini.
+
+### Halaman notifikasi mahasiswa
+- Route: `mahasiswa.notifikasi`, `mahasiswa.notifikasi.baca`, `mahasiswa.notifikasi.baca-semua`.
+- Daftar memakai pagination (10 per halaman) dengan filter status dan tipe, serta empty state.
+- `NotifikasiController` hanya mengubah baris milik `user_id` yang sedang login; IDOR dicegah di backend.
+- Tombol “Tandai semua dibaca” memakai `NotifikasiService::tandaiSemuaDibaca()` pada transaksi terscoped.
+- `unreadCount` pada application shell dan dashboard dihitung dari query yang sama sehingga tetap konsisten setelah aksi baca.
+
+### Integrasi tampilan
+- Sidebar dan breadcrumb topbar menampilkan menu Pengumuman untuk ketiga role; mahasiswa juga memiliki tautan Notifikasi.
+- View baru: `admin/pengumuman/{index,form,show}`, `dosen/pengumuman/{index,form,show}`, `mahasiswa/pengumuman/{index,show}`.
+- Halaman notifikasi mahasiswa memakai komponen/view yang sudah ada dengan Label enum `JenisNotifikasi`, pagination, dan state kosong.
+- Dashboard tidak ditambahi kartu statistik baru; kalender tetap menjadi elemen dominan. Tema Light Lavender, Plus Jakarta Sans, dan komponen existing dipertahankan.
+
+### Pengujian
+- `tests/Feature/PengumumanBatchDTest.php`: matriks akses backend, scoped lookup dosen, draft/terbit, target aktif, dedup, filter, pagination, empty state, dan mark-read.
+- `tests/Feature/NotifikasiOtomatisBatchDTest.php`: pemicu tugas, deadline, UTS/UAS, nilai, dedup, serta negatif untuk baca/submit/unduh.
+- Helper bersama: `tests/Concerns/BatchDData.php`.
+- Regresi yang dijalankan: `AdminJadwalUjianTest`, `MahasiswaPengumpulanTugasTest`, `MahasiswaDashboardTest`, dan `ModelHardeningTest`.
+- Pemeriksaan akhir: `php artisan test` (473 test, 3270 assertion, semua lolos), `php artisan route:list` (164 route), `php artisan view:cache`, `php artisan view:clear`, `npm run build`, `git diff --check`, dan PHP lint untuk file PHP yang diubah tidak menemukan masalah.

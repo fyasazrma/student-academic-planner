@@ -159,7 +159,7 @@
                                     <td class="px-4 py-3">
                                         <x-status-badge
                                             :label="$item['jenis_label']"
-                                            :tone="$item['jenis_ujian'] === 'uas' ? 'akademik' : 'kuliah'"
+                                            :tone="$item['jenis_ujian'] === 'uas' ? 'uas' : 'uts'"
                                         />
                                     </td>
                                     <td class="px-4 py-3">
@@ -220,7 +220,7 @@
                                 </div>
                                 <x-status-badge
                                     :label="$item['jenis_label']"
-                                    :tone="$item['jenis_ujian'] === 'uas' ? 'akademik' : 'kuliah'"
+                                    :tone="$item['jenis_ujian'] === 'uas' ? 'uas' : 'uts'"
                                 />
                             </div>
                             <p class="mt-3 text-xs text-text">

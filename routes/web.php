@@ -4,25 +4,32 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\JadwalKuliahController as AdminJadwalKuliahController;
 use App\Http\Controllers\Admin\JadwalUjianController as AdminJadwalUjianController;
 use App\Http\Controllers\Admin\MataKuliahController as AdminMataKuliahController;
+use App\Http\Controllers\Admin\PengumumanController as AdminPengumumanController;
 use App\Http\Controllers\Admin\TahunAkademikController as AdminTahunAkademikController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Dosen\AbsensiController as DosenAbsensiController;
 use App\Http\Controllers\Dosen\DashboardController as DosenDashboardController;
 use App\Http\Controllers\Dosen\JadwalKuliahController as DosenJadwalKuliahController;
+use App\Http\Controllers\Dosen\JadwalUjianController as DosenJadwalUjianController;
 use App\Http\Controllers\Dosen\MataKuliahController as DosenMataKuliahController;
 use App\Http\Controllers\Dosen\MateriPembelajaranController as DosenMateriPembelajaranController;
 use App\Http\Controllers\Dosen\NilaiController as DosenNilaiController;
+use App\Http\Controllers\Dosen\PengumumanController as DosenPengumumanController;
 use App\Http\Controllers\Dosen\PengumpulanTugasController as DosenPengumpulanTugasController;
 use App\Http\Controllers\Dosen\TugasController as DosenTugasController;
 use App\Http\Controllers\Mahasiswa\AbsensiController as MahasiswaAbsensiController;
 use App\Http\Controllers\Mahasiswa\DashboardController as MahasiswaDashboardController;
+use App\Http\Controllers\Mahasiswa\JadwalUjianController as MahasiswaJadwalUjianController;
 use App\Http\Controllers\Mahasiswa\KalenderController;
 use App\Http\Controllers\Mahasiswa\MataKuliahController;
 use App\Http\Controllers\Mahasiswa\MateriPembelajaranController as MahasiswaMateriPembelajaranController;
 use App\Http\Controllers\Mahasiswa\NilaiController as MahasiswaNilaiController;
 use App\Http\Controllers\Mahasiswa\NotifikasiController;
+use App\Http\Controllers\Mahasiswa\PengumumanController as MahasiswaPengumumanController;
 use App\Http\Controllers\Mahasiswa\PengumpulanTugasController as MahasiswaPengumpulanTugasController;
+use App\Http\Controllers\Mahasiswa\ProgresMateriController as MahasiswaProgresMateriController;
+use App\Http\Controllers\Mahasiswa\TargetBelajarController as MahasiswaTargetBelajarController;
 use App\Http\Controllers\Mahasiswa\TugasController;
 use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
@@ -94,6 +101,22 @@ Route::middleware(['auth', 'active', 'role:admin'])->group(function (): void {
         ->whereNumber('ujian')
         ->name('admin.jadwal-ujian.destroy');
 
+    Route::get('/admin/pengumuman', [AdminPengumumanController::class, 'index'])->name('admin.pengumuman.index');
+    Route::get('/admin/pengumuman/create', [AdminPengumumanController::class, 'create'])->name('admin.pengumuman.create');
+    Route::post('/admin/pengumuman', [AdminPengumumanController::class, 'store'])->name('admin.pengumuman.store');
+    Route::get('/admin/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'show'])
+        ->whereNumber('pengumuman')
+        ->name('admin.pengumuman.show');
+    Route::get('/admin/pengumuman/{pengumuman}/edit', [AdminPengumumanController::class, 'edit'])
+        ->whereNumber('pengumuman')
+        ->name('admin.pengumuman.edit');
+    Route::match(['put', 'patch'], '/admin/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'update'])
+        ->whereNumber('pengumuman')
+        ->name('admin.pengumuman.update');
+    Route::delete('/admin/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])
+        ->whereNumber('pengumuman')
+        ->name('admin.pengumuman.destroy');
+
     foreach (['pengguna' => 'admin.pengguna', 'mahasiswa' => 'admin.mahasiswa', 'dosen' => 'admin.dosen'] as $segmen => $prefiks) {
         Route::get('/admin/'.$segmen, [AdminUserController::class, 'index'])->name($prefiks.'.index');
         Route::get('/admin/'.$segmen.'/create', [AdminUserController::class, 'create'])->name($prefiks.'.create');
@@ -115,6 +138,23 @@ Route::middleware(['auth', 'active', 'role:admin'])->group(function (): void {
 
 Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
     Route::get('/dosen/dashboard', [DosenDashboardController::class, 'index'])->name('dosen.dashboard');
+    Route::get('/dosen/jadwal-ujian', [DosenJadwalUjianController::class, 'index'])->name('dosen.jadwal-ujian');
+
+    Route::get('/dosen/pengumuman', [DosenPengumumanController::class, 'index'])->name('dosen.pengumuman.index');
+    Route::get('/dosen/pengumuman/create', [DosenPengumumanController::class, 'create'])->name('dosen.pengumuman.create');
+    Route::post('/dosen/pengumuman', [DosenPengumumanController::class, 'store'])->name('dosen.pengumuman.store');
+    Route::get('/dosen/pengumuman/{pengumuman}', [DosenPengumumanController::class, 'show'])
+        ->whereNumber('pengumuman')
+        ->name('dosen.pengumuman.show');
+    Route::get('/dosen/pengumuman/{pengumuman}/edit', [DosenPengumumanController::class, 'edit'])
+        ->whereNumber('pengumuman')
+        ->name('dosen.pengumuman.edit');
+    Route::match(['put', 'patch'], '/dosen/pengumuman/{pengumuman}', [DosenPengumumanController::class, 'update'])
+        ->whereNumber('pengumuman')
+        ->name('dosen.pengumuman.update');
+    Route::delete('/dosen/pengumuman/{pengumuman}', [DosenPengumumanController::class, 'destroy'])
+        ->whereNumber('pengumuman')
+        ->name('dosen.pengumuman.destroy');
 
     Route::get('/dosen/profil', [ProfilController::class, 'show'])->name('dosen.profil');
     Route::get('/dosen/profil/edit', [ProfilController::class, 'edit'])->name('dosen.profil.edit');
@@ -276,6 +316,7 @@ Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void
     Route::post('/mahasiswa/profil/password', [ProfilController::class, 'ubahPassword'])->name('mahasiswa.profil.password');
 
     Route::get('/mahasiswa/kalender', [KalenderController::class, 'index'])->name('mahasiswa.kalender');
+    Route::get('/mahasiswa/jadwal-ujian', [MahasiswaJadwalUjianController::class, 'index'])->name('mahasiswa.jadwal-ujian');
     Route::get('/mahasiswa/tugas', [TugasController::class, 'index'])->name('mahasiswa.tugas');
     Route::get('/mahasiswa/tugas/{tugas}/pengumpulan', [MahasiswaPengumpulanTugasController::class, 'form'])
         ->whereNumber('tugas')
@@ -293,13 +334,63 @@ Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void
         ->name('mahasiswa.mata-kuliah.gabung');
     Route::get('/mahasiswa/materi', [MahasiswaMateriPembelajaranController::class, 'index'])
         ->name('mahasiswa.materi.index');
+    Route::get('/mahasiswa/materi/{kelas}/{materi}', [MahasiswaProgresMateriController::class, 'show'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('mahasiswa.materi.show');
+    Route::post('/mahasiswa/materi/{kelas}/{materi}/selesai', [MahasiswaProgresMateriController::class, 'selesai'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('mahasiswa.materi.progres.selesai');
+    Route::post('/mahasiswa/materi/{kelas}/{materi}/batalkan', [MahasiswaProgresMateriController::class, 'batalkan'])
+        ->whereNumber(['kelas', 'materi'])
+        ->name('mahasiswa.materi.progres.batalkan');
     Route::get('/mahasiswa/materi/{kelas}/{materi}/unduh', [MahasiswaMateriPembelajaranController::class, 'download'])
         ->whereNumber(['kelas', 'materi'])
         ->name('mahasiswa.materi.unduh');
+
+    Route::get('/mahasiswa/progres-materi', [MahasiswaProgresMateriController::class, 'index'])
+        ->name('mahasiswa.progres-materi.index');
+
+    Route::get('/mahasiswa/target-belajar', [MahasiswaTargetBelajarController::class, 'index'])
+        ->name('mahasiswa.target.index');
+    Route::get('/mahasiswa/target-belajar/tambah', [MahasiswaTargetBelajarController::class, 'create'])
+        ->name('mahasiswa.target.create');
+    Route::post('/mahasiswa/target-belajar', [MahasiswaTargetBelajarController::class, 'store'])
+        ->name('mahasiswa.target.store');
+    Route::get('/mahasiswa/target-belajar/{target}', [MahasiswaTargetBelajarController::class, 'show'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.show');
+    Route::get('/mahasiswa/target-belajar/{target}/edit', [MahasiswaTargetBelajarController::class, 'edit'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.edit');
+    Route::match(['put', 'patch'], '/mahasiswa/target-belajar/{target}', [MahasiswaTargetBelajarController::class, 'update'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.update');
+    Route::delete('/mahasiswa/target-belajar/{target}', [MahasiswaTargetBelajarController::class, 'destroy'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.destroy');
+    Route::patch('/mahasiswa/target-belajar/{target}/capaian', [MahasiswaTargetBelajarController::class, 'capaian'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.capaian');
+    Route::post('/mahasiswa/target-belajar/{target}/selesai', [MahasiswaTargetBelajarController::class, 'selesai'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.selesai');
+    Route::post('/mahasiswa/target-belajar/{target}/batalkan-selesai', [MahasiswaTargetBelajarController::class, 'batalkanSelesai'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.batalkan-selesai');
+    Route::post('/mahasiswa/target-belajar/{target}/batalkan', [MahasiswaTargetBelajarController::class, 'batalkan'])
+        ->whereNumber('target')
+        ->name('mahasiswa.target.batalkan');
     Route::get('/mahasiswa/notifikasi', [NotifikasiController::class, 'index'])->name('mahasiswa.notifikasi');
+    Route::post('/mahasiswa/notifikasi/baca-semua', [NotifikasiController::class, 'tandaiSemuaDibaca'])
+        ->name('mahasiswa.notifikasi.baca-semua');
     Route::post('/mahasiswa/notifikasi/{notifikasi}/baca', [NotifikasiController::class, 'tandaiDibaca'])
         ->whereNumber('notifikasi')
         ->name('mahasiswa.notifikasi.baca');
+    Route::get('/mahasiswa/pengumuman', [MahasiswaPengumumanController::class, 'index'])
+        ->name('mahasiswa.pengumuman.index');
+    Route::get('/mahasiswa/pengumuman/{pengumuman}', [MahasiswaPengumumanController::class, 'show'])
+        ->whereNumber('pengumuman')
+        ->name('mahasiswa.pengumuman.show');
     Route::get('/mahasiswa/nilai', [MahasiswaNilaiController::class, 'index'])->name('mahasiswa.nilai');
     Route::get('/mahasiswa/nilai/{mata_kuliah}', [MahasiswaNilaiController::class, 'show'])
         ->whereNumber('mata_kuliah')

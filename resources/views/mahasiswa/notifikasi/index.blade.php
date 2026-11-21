@@ -9,6 +9,15 @@
                 <x-icon name="bell" class="h-4 w-4 text-agenda-tugas" />
                 {{ $unreadCount }} belum dibaca
             </span>
+            @if ($unreadCount > 0)
+                <form method="POST" action="{{ route('mahasiswa.notifikasi.baca-semua') }}">
+                    @csrf
+                    <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-sidebar px-4 py-2.5 text-xs font-bold text-white transition hover:bg-sidebar-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2">
+                        <x-icon name="check" class="h-4 w-4" />
+                        Tandai semua dibaca
+                    </button>
+                </form>
+            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -63,7 +72,7 @@
                                     :label="$notification->sudahDibaca() ? 'Sudah dibaca' : 'Belum dibaca'"
                                     :tone="$notification->sudahDibaca() ? 'netral' : 'tugas'"
                                 />
-                                <x-status-badge :label="$notification->tipe" tone="akademik" />
+                                <x-status-badge :label="\App\Enums\JenisNotifikasi::tryFrom((string) $notification->tipe)?->label() ?? $notification->tipe" tone="akademik" />
                             </div>
                             <p class="mt-2 text-sm leading-6 text-muted">{{ $notification->pesan }}</p>
                             <p class="mt-2 text-[11px] text-muted">{{ $notification->created_at->diffForHumans() }}</p>
@@ -87,5 +96,9 @@
                 </article>
             @endforeach
         </div>
+
+        @if ($notifications->hasPages())
+            <div class="mt-5 border-t border-border pt-4">{{ $notifications->links() }}</div>
+        @endif
     @endif
 </x-app-layout>

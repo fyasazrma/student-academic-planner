@@ -47,6 +47,14 @@ class MateriPembelajaran extends Model
         return $this->hasMany(ProgresMateri::class, 'materi_pembelajaran_id');
     }
 
+    /**
+     * @return HasMany<AktivitasMateri>
+     */
+    public function aktivitas(): HasMany
+    {
+        return $this->hasMany(AktivitasMateri::class, 'materi_pembelajaran_id');
+    }
+
     public function scopeDipublikasikan(Builder $query): Builder
     {
         return $query->whereNotNull('dipublikasikan_pada')

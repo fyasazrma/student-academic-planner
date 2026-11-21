@@ -2,6 +2,7 @@
 
 namespace App\Services\Mahasiswa;
 
+use App\Enums\JenisAktivitasMateri;
 use App\Enums\StatusPeserta;
 use App\Enums\StatusProgres;
 use App\Models\MateriPembelajaran;
@@ -9,6 +10,7 @@ use App\Models\PesertaMataKuliah;
 use App\Models\ProgresMateri;
 use App\Services\Dosen\MateriFileService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -24,6 +26,7 @@ class MateriPembelajaranService
 {
     public function __construct(
         private readonly MateriFileService $file,
+        private readonly AktivitasMateriService $aktivitas,
     ) {
     }
 
@@ -199,15 +202,12 @@ class MateriPembelajaranService
      */
     public function unduh(int $userId, int $kelasId, int $materiId): Response
     {
-        $isAktif = PesertaMataKuliah::query()
+        /** @var PesertaMataKuliah $pendaftaran */
+        $pendaftaran = PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
             ->where('kelas_mata_kuliah_id', $kelasId)
             ->where('status', StatusPeserta::Aktif->value)
-            ->exists();
-
-        if (! $isAktif) {
-            abort(404);
-        }
+            ->firstOrFail();
 
         $materi = MateriPembelajaran::query()
             ->whereKey($materiId)
@@ -218,6 +218,13 @@ class MateriPembelajaranService
         if (! $this->file->pathMilikKelas($materi->file_path, $kelasId)) {
             abort(404);
         }
+
+        if (! Storage::disk(MateriFileService::DISK)->exists($materi->file_path)) {
+            abort(404);
+        }
+
+        // Aktivitas hanya dicatat jika berkas benar-benar tersedia dan akses sah.
+        $this->aktivitas->catat($materi->id, $pendaftaran->id, JenisAktivitasMateri::Diunduh);
 
         return $this->file->unduh($materi->file_path, $materi->file_name, $materi->file_mime);
     }

@@ -10,7 +10,9 @@
     $tones = [
         'tugas' => 'bg-agenda-tugas/12 text-agenda-tugas',
         'deadline' => 'bg-agenda-terlambat/12 text-agenda-terlambat',
-        'ujian' => 'bg-agenda-uts/15 text-agenda-uts',
+        'ujian' => 'bg-agenda-ujian/15 text-agenda-ujian',
+        'uts' => 'bg-agenda-uts/15 text-agenda-uts',
+        'uas' => 'bg-agenda-uas/15 text-agenda-uas',
         'kuliah' => 'bg-agenda-kuliah/15 text-agenda-kuliah',
         'akademik' => 'bg-agenda-akademik/15 text-agenda-akademik',
         'pengumuman' => 'bg-agenda-pengumuman/15 text-agenda-pengumuman',

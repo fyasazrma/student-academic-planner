@@ -31,6 +31,19 @@ final class CalendarCategory
     ];
 
     /** @var array<int, string> */
+    public const DOSEN = [
+        self::TUGAS,
+        self::DEADLINE,
+        self::UJIAN,
+        self::UTS,
+        self::UAS,
+        self::KULIAH,
+        self::AKADEMIK,
+        self::PENGUMUMAN,
+        self::MATERI,
+    ];
+
+    /** @var array<int, string> */
     public const ADMIN = [
         self::AKADEMIK,
         self::UJIAN,
@@ -45,7 +58,7 @@ final class CalendarCategory
     private const DEFINITIONS = [
         self::TUGAS => ['label' => 'Tugas', 'token' => 'agenda-tugas', 'shape' => 'rentang'],
         self::DEADLINE => ['label' => 'Deadline', 'token' => 'agenda-terlambat', 'shape' => 'titik'],
-        self::UJIAN => ['label' => 'Ujian', 'token' => 'agenda-uts', 'shape' => 'titik'],
+        self::UJIAN => ['label' => 'Ujian', 'token' => 'agenda-ujian', 'shape' => 'titik'],
         self::UTS => ['label' => 'UTS', 'token' => 'agenda-uts', 'shape' => 'titik'],
         self::UAS => ['label' => 'UAS', 'token' => 'agenda-uas', 'shape' => 'titik'],
         self::KULIAH => ['label' => 'Jadwal kuliah', 'token' => 'agenda-kuliah', 'shape' => 'berulang'],

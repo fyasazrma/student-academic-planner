@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Table('agenda_akademik')]
 #[Fillable([
     'kelas_mata_kuliah_id',
+    'tahun_akademik_id',
     'judul',
     'deskripsi',
     'jenis',
@@ -31,6 +32,7 @@ class AgendaAkademik extends Model
         return [
             'jenis' => JenisAgenda::class,
             'jenis_ujian' => JenisUjian::class,
+            'tahun_akademik_id' => 'integer',
             'tanggal_mulai' => 'date',
             'tanggal_selesai' => 'date',
             'dipublikasikan_pada' => 'datetime',
@@ -45,6 +47,11 @@ class AgendaAkademik extends Model
     public function kelasMataKuliah(): BelongsTo
     {
         return $this->belongsTo(KelasMataKuliah::class, 'kelas_mata_kuliah_id');
+    }
+
+    public function tahunAkademik(): BelongsTo
+    {
+        return $this->belongsTo(TahunAkademik::class, 'tahun_akademik_id');
     }
 
     public function scopeDipublikasikan(Builder $query): Builder

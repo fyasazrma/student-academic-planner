@@ -1,5 +1,6 @@
 @props([
     'calendar' => [],
+    'timeline' => [],
     'currentView' => 'month',
     'activeFilters' => [],
     'filterOptions' => [],
@@ -9,35 +10,124 @@
 
 @php
     $today = $today ?? today();
+    $tab = request('tab') === 'timeline' ? 'timeline' : 'calendar';
+    $queryBase = array_filter(request()->except(['view', 'tab']) + [
+        'date' => request('date'),
+        'jenis' => request('jenis'),
+    ], fn ($value): bool => $value !== null && $value !== '');
+    $tabLink = fn (string $target): string => route($routeName, $queryBase + ['tab' => $target]);
+    $markerTones = [
+        'deadline' => ['bg' => 'bg-agenda-terlambat', 'text' => 'text-agenda-terlambat'],
+        'uts' => ['bg' => 'bg-agenda-uts', 'text' => 'text-agenda-uts'],
+        'uas' => ['bg' => 'bg-agenda-uas', 'text' => 'text-agenda-uas'],
+        'ujian' => ['bg' => 'bg-agenda-ujian', 'text' => 'text-agenda-ujian'],
+    ];
 @endphp
 
 <section id="kalender-akademik" class="min-w-0">
-    <div class="mb-4">
-        <h2 class="text-lg font-bold text-text">Kalender akademik institusi</h2>
-        <p class="mt-1 text-xs text-muted">Agenda institusi yang dipublikasikan dan jadwal kelas pada tahun akademik aktif.</p>
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-text">Kalender akademik institusi</h2>
+            <p class="mt-1 text-xs text-muted">Agenda institusi yang dipublikasikan dan jadwal kelas pada tahun akademik aktif.</p>
+        </div>
+        <div class="inline-flex w-fit rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Mode tampilan agenda">
+            <a
+                href="{{ $tabLink('calendar') }}"
+                role="tab"
+                @class([
+                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas',
+                    'bg-sidebar text-white' => $tab === 'calendar',
+                    'text-muted hover:text-text' => $tab !== 'calendar',
+                ])
+                @if ($tab === 'calendar') aria-selected="true" @endif
+            >
+                <x-icon name="calendar" class="h-4 w-4" /> Kalender
+            </a>
+            <a
+                href="{{ $tabLink('timeline') }}"
+                role="tab"
+                @class([
+                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas',
+                    'bg-sidebar text-white' => $tab === 'timeline',
+                    'text-muted hover:text-text' => $tab !== 'timeline',
+                ])
+                @if ($tab === 'timeline') aria-selected="true" @endif
+            >
+                <x-icon name="timeline" class="h-4 w-4" /> Timeline
+            </a>
+        </div>
     </div>
 
-    <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
-        <x-calendar-toolbar
-            :calendar="$calendar"
-            :current-view="$currentView"
-            :active-filters="$activeFilters"
-            :filter-options="$filterOptions"
-            :route-name="$routeName"
-        />
-
-        <div class="mt-5">
-            <x-calendar-grid :calendar="$calendar" :today="$today" />
-        </div>
-
-        <div class="mt-5 sm:hidden">
-            <p class="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Agenda periode ini</p>
-            <x-calendar-list
-                :events="$calendar['agendaList']"
-                empty-description="Tidak ada agenda institusi atau jadwal kelas pada periode ini."
+    @if ($tab === 'calendar')
+        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+            <x-calendar-toolbar
+                :calendar="$calendar"
+                :current-view="$currentView"
+                :active-filters="$activeFilters"
+                :filter-options="$filterOptions"
+                :route-name="$routeName"
             />
+
+            <div class="mt-5">
+                <x-calendar-grid :calendar="$calendar" :today="$today" />
+            </div>
+
+            <div class="mt-5 sm:hidden">
+                <p class="mb-3 text-xs font-bold uppercase tracking-wide text-muted">Agenda periode ini</p>
+                <x-calendar-list
+                    :events="$calendar['agendaList']"
+                    empty-description="Tidak ada agenda institusi atau jadwal kelas pada periode ini."
+                />
+            </div>
         </div>
-    </div>
+    @else
+        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-text">Timeline agenda institusi</h3>
+                    <p class="mt-1 text-xs text-muted">{{ $timeline['start_label'] }} – {{ $timeline['end_label'] }}</p>
+                </div>
+                <p class="text-[11px] text-muted"><span class="font-bold text-agenda-uts">◆</span> Titik ujian dan agenda</p>
+            </div>
+
+            @if ($timeline['bars'] === [] && $timeline['markers'] === [])
+                <x-empty-state
+                    class="mt-5"
+                    title="Belum ada timeline agenda"
+                    description="Penanda UTS, UAS, dan agenda akan tampil setelah jadwal diterbitkan."
+                    icon="timeline"
+                />
+            @else
+                <div class="mt-6 rounded-xl border border-border bg-soft p-4">
+                    <p class="text-xs font-bold text-text">Penanda penting</p>
+                    <div class="relative mt-5 h-8 border-b border-border">
+                        @foreach ($timeline['ticks'] as $tick)
+                            <span class="absolute -translate-x-1/2 text-[10px] text-muted" style="left: {{ $tick['posisi'] }}%;">{{ $tick['label'] }}</span>
+                        @endforeach
+                        @foreach ($timeline['markers'] as $marker)
+                            <span
+                                class="absolute -top-1 h-4 w-4 -translate-x-1/2 rotate-45 rounded-sm shadow {{ $markerTones[$marker['jenis']]['bg'] ?? $markerTones['ujian']['bg'] }}"
+                                style="left: {{ $marker['posisi'] }}%;"
+                                title="{{ $marker['label'] }}: {{ $marker['judul'] }} — {{ $marker['tanggal_label'] }}"
+                                role="button"
+                                tabindex="0"
+                                data-agenda-trigger="{{ $marker['event_id'] }}"
+                                aria-label="Lihat detail {{ $marker['label'] }} {{ $marker['judul'] }}"
+                            ></span>
+                        @endforeach
+                    </div>
+                    <div class="mt-3 space-y-1.5">
+                        @foreach ($timeline['markers'] as $marker)
+                            <p class="text-[11px] text-text">
+                                <span class="font-bold {{ $markerTones[$marker['jenis']]['text'] ?? $markerTones['ujian']['text'] }}">◆ {{ $marker['label'] }}</span>
+                                — {{ $marker['judul'] }} · {{ $marker['mata_kuliah'] }} · {{ $marker['tanggal_label'] }}
+                            </p>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
 </section>
 
 {{-- Dialog detail agenda memakai handler yang sama dengan panel mahasiswa, tanpa mengubah file mahasiswa. --}}

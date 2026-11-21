@@ -2,6 +2,7 @@
 
 namespace App\Services\Akademik;
 
+use App\Enums\JenisNotifikasi;
 use App\Enums\KomponenNilai;
 use App\Enums\StatusNilaiAkhir;
 use App\Enums\StatusPeserta;
@@ -12,6 +13,7 @@ use App\Models\PesertaMataKuliah;
 use App\Models\RiwayatPerubahanNilai;
 use App\Models\User;
 use App\Services\Dosen\TugasService;
+use App\Services\Notifikasi\NotifikasiService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -35,6 +37,7 @@ class PenilaianService
     public function __construct(
         private readonly NilaiAkhirService $akhir,
         private readonly TugasService $tugasService,
+        private readonly NotifikasiService $notifikasi,
     ) {
     }
 
@@ -77,7 +80,7 @@ class PenilaianService
         }
 
         try {
-            $model = DB::transaction(function () use ($peserta, $komponen, $nilai, $alasan, $actor): Nilai {
+            $model = DB::transaction(function () use ($peserta, $komponen, $nilai, $alasan, $actor, $kelas): Nilai {
                 $model = Nilai::query()
                     ->where('peserta_mata_kuliah_id', $peserta->getKey())
                     ->where('komponen', $komponen->value)
@@ -109,6 +112,19 @@ class PenilaianService
                     $actor,
                     $alasan,
                 );
+
+                if ($sebelum === null || (string) $sebelum !== (string) $model->nilai) {
+                    $mataKuliah = $kelas->mataKuliah?->nama ?? 'mata kuliah';
+                    $labelNilai = strtoupper($komponen->value);
+                    DB::afterCommit(fn (): int => $this->notifikasi->kirimKeMahasiswa(
+                        [$peserta->mahasiswa_id],
+                        JenisNotifikasi::Nilai,
+                        'Nilai '.$labelNilai.' tersedia',
+                        'Nilai '.$labelNilai.' untuk '.$mataKuliah.' telah dipublikasikan.',
+                        '/mahasiswa/nilai',
+                        'nilai:'.$model->getKey().':'.$komponen->value.':'.$model->dinilai_pada->timestamp,
+                    ));
+                }
 
                 return $model;
             });

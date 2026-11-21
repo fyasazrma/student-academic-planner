@@ -2,9 +2,11 @@
 
 namespace App\Services\Dosen;
 
+use App\Enums\JenisNotifikasi;
 use App\Models\KelasMataKuliah;
 use App\Models\Tugas;
 use App\Models\User;
+use App\Services\Notifikasi\NotifikasiService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +27,7 @@ class TugasService
     public function __construct(
         private readonly MataKuliahService $mataKuliah,
         private readonly TugasFileService $file,
+        private readonly NotifikasiService $notifikasi,
     ) {
     }
 
@@ -168,6 +171,17 @@ class TugasService
                 $tugas->pembuat()->associate($pembuat);
                 $tugas->save();
 
+                if ($tugas->sudahDipublikasikan()) {
+                    DB::afterCommit(fn (): int => $this->notifikasi->kirimKeKelas(
+                        $kelas->getKey(),
+                        JenisNotifikasi::Tugas,
+                        'Tugas baru: '.$tugas->judul,
+                        'Tugas baru telah dipublikasikan. Deadline: '.$tugas->deadline->translatedFormat('d M Y H:i').'.',
+                        '/mahasiswa/tugas',
+                        'tugas:'.$tugas->getKey().':dipublikasikan',
+                    ));
+                }
+
                 return $tugas;
             });
         } catch (Throwable $exception) {
@@ -202,6 +216,8 @@ class TugasService
     ): array {
         $kelas = $this->kelasMilikDosen($dosenId, $kelasId);
         $tugas = $this->tugasMilikKelas($kelas, $tugasId);
+        $deadlineLama = $tugas->deadline?->copy();
+        $duluDipublikasi = $tugas->dipublikasikan_pada !== null;
         $infoBaru = null;
 
         if ($file !== null) {
@@ -222,7 +238,7 @@ class TugasService
         $hapusLampiran = $infoBaru === null && (bool) ($data['hapus_lampiran'] ?? false);
 
         try {
-            DB::transaction(function () use ($tugas, $data, $infoBaru, $hapusLampiran): void {
+            DB::transaction(function () use ($tugas, $data, $infoBaru, $hapusLampiran, $kelas, $deadlineLama, $duluDipublikasi): void {
                 $atribut = [
                     'judul' => $data['judul'],
                     'deskripsi' => $data['deskripsi'] ?? null,
@@ -247,6 +263,29 @@ class TugasService
                 }
 
                 $tugas->fill($atribut)->save();
+
+                if ($tugas->sudahDipublikasikan() && ! $duluDipublikasi) {
+                    DB::afterCommit(fn (): int => $this->notifikasi->kirimKeKelas(
+                        $kelas->getKey(),
+                        JenisNotifikasi::Tugas,
+                        'Tugas baru: '.$tugas->judul,
+                        'Tugas baru telah dipublikasikan. Deadline: '.$tugas->deadline->translatedFormat('d M Y H:i').'.',
+                        '/mahasiswa/tugas',
+                        'tugas:'.$tugas->getKey().':dipublikasikan',
+                    ));
+                } elseif ($tugas->sudahDipublikasikan()
+                    && $deadlineLama !== null
+                    && ! $deadlineLama->equalTo($tugas->deadline)
+                ) {
+                    DB::afterCommit(fn (): int => $this->notifikasi->kirimKeKelas(
+                        $kelas->getKey(),
+                        JenisNotifikasi::Tugas,
+                        'Deadline tugas diubah: '.$tugas->judul,
+                        'Deadline baru: '.$tugas->deadline->translatedFormat('d M Y H:i').'.',
+                        '/mahasiswa/tugas',
+                        'tugas:'.$tugas->getKey().':deadline:'.$tugas->deadline->toDateTimeString(),
+                    ));
+                }
             });
         } catch (Throwable $exception) {
             Log::error('Gagal memperbarui data tugas', ['error' => $exception->getMessage()]);
