@@ -29,7 +29,59 @@ class AuthenticationTest extends TestCase
     {
         $this->get('/login')
             ->assertOk()
-            ->assertSee('Selamat datang kembali');
+            ->assertSee('Selamat datang kembali')
+            ->assertSee('Gunakan email akademik dan password yang diberikan administrator.')
+            ->assertSee('Kembali ke beranda')
+            ->assertSee(route('landing.index'), false);
+    }
+
+    public function test_login_page_preserves_form_integration_hooks(): void
+    {
+        $html = $this->get('/login')->assertOk()->getContent();
+
+        $this->assertStringContainsString('action="'.route('login.store').'"', $html);
+        $this->assertStringContainsString('name="_token"', $html);
+        $this->assertStringContainsString('data-auth-form', $html);
+        $this->assertStringContainsString('data-submit-button', $html);
+        $this->assertStringContainsString('data-submit-label', $html);
+        $this->assertStringContainsString('data-submit-spinner', $html);
+        $this->assertStringContainsString('data-submit-arrow', $html);
+        $this->assertStringContainsString('data-password-toggle="password"', $html);
+        $this->assertStringContainsString('data-eye-icon', $html);
+        $this->assertStringContainsString('data-eye-off-icon', $html);
+        $this->assertStringContainsString('aria-pressed="false"', $html);
+        $this->assertStringContainsString('autocomplete="username"', $html);
+        $this->assertStringContainsString('autocomplete="current-password"', $html);
+        $this->assertStringContainsString('name="email"', $html);
+        $this->assertStringContainsString('name="password"', $html);
+    }
+
+    public function test_login_page_has_no_registration_or_password_recovery_links(): void
+    {
+        $this->get('/login')
+            ->assertOk()
+            ->assertDontSee('Daftar Akun')
+            ->assertDontSee('Buat Akun')
+            ->assertDontSee('Lupa password')
+            ->assertDontSee('Masuk dengan Google');
+    }
+
+    public function test_login_validation_errors_are_accessible_and_keep_old_input(): void
+    {
+        $this->from('/login')->post('/login', [
+            'email' => 'bukan-email',
+            'password' => '',
+        ])->assertRedirect(route('login'));
+
+        $html = $this->get('/login')->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="email-error"', $html);
+        $this->assertStringContainsString('id="password-error"', $html);
+        $this->assertStringContainsString('role="alert"', $html);
+        $this->assertStringContainsString('aria-live="assertive"', $html);
+        $this->assertStringContainsString('aria-invalid="true"', $html);
+        $this->assertStringContainsString('aria-describedby="email-error"', $html);
+        $this->assertStringContainsString('value="bukan-email"', $html);
     }
 
     public function test_admin_can_login_with_valid_credentials(): void
