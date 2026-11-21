@@ -30,12 +30,12 @@
             <h2 class="text-lg font-bold text-text">Kalender akademik institusi</h2>
             <p class="mt-1 text-xs text-muted">Agenda institusi yang dipublikasikan dan jadwal kelas pada tahun akademik aktif.</p>
         </div>
-        <div class="inline-flex w-fit rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Mode tampilan agenda">
+        <div class="inline-flex w-fit rounded-full bg-soft p-1" role="tablist" aria-label="Mode tampilan agenda">
             <a
                 href="{{ $tabLink('calendar') }}"
                 role="tab"
                 @class([
-                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas',
+                    'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                     'bg-sidebar text-white' => $tab === 'calendar',
                     'text-muted hover:text-text' => $tab !== 'calendar',
                 ])
@@ -47,7 +47,7 @@
                 href="{{ $tabLink('timeline') }}"
                 role="tab"
                 @class([
-                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas',
+                    'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                     'bg-sidebar text-white' => $tab === 'timeline',
                     'text-muted hover:text-text' => $tab !== 'timeline',
                 ])
@@ -59,7 +59,7 @@
     </div>
 
     @if ($tab === 'calendar')
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div class="min-h-[520px] rounded-card bg-card p-5 shadow-card">
             <x-calendar-toolbar
                 :calendar="$calendar"
                 :current-view="$currentView"
@@ -81,7 +81,7 @@
             </div>
         </div>
     @else
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div class="min-h-[520px] rounded-card bg-card p-5 shadow-card">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h3 class="text-sm font-bold text-text">Timeline agenda institusi</h3>
@@ -98,7 +98,7 @@
                     icon="timeline"
                 />
             @else
-                <div class="mt-6 rounded-xl border border-border bg-soft p-4">
+                <div class="mt-6 rounded-control bg-soft p-4">
                     <p class="text-xs font-bold text-text">Penanda penting</p>
                     <div class="relative mt-5 h-8 border-b border-border">
                         @foreach ($timeline['ticks'] as $tick)
@@ -136,7 +136,7 @@
 
     <dialog
         id="agenda-detail"
-        class="w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+        class="ui-dialog max-w-lg"
         aria-labelledby="agenda-detail-title"
     >
         <div class="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
@@ -147,7 +147,7 @@
             <button
                 type="button"
                 data-agenda-close
-                class="rounded-lg border border-border p-1.5 text-muted transition hover:bg-soft hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                class="rounded-lg border border-border p-1.5 text-muted transition hover:bg-soft hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Tutup detail agenda"
             >
                 <x-icon name="close" class="h-4 w-4" />
@@ -197,7 +197,7 @@
             <button
                 type="button"
                 data-agenda-close
-                class="rounded-xl bg-sidebar px-4 py-2 text-xs font-semibold text-white transition hover:bg-sidebar-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                class="rounded-xl bg-sidebar px-4 py-2 text-xs font-semibold text-white transition hover:bg-sidebar-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >Tutup</button>
         </div>
     </dialog>

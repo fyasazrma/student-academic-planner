@@ -1,19 +1,19 @@
 <x-app-layout title="Dashboard Dosen" :user="$user" :unread-count="$unreadCount" role="dosen">
-    <div class="space-y-6">
+    <div class="space-y-5 ui-stagger">
         <x-page-header
-            title="Selamat datang, {{ $user->name ?? 'Dosen' }}"
+            title="Selamat datang, {{ $user->name ?? 'Dosen' }} 👋"
             eyebrow="Dashboard dosen"
             :description="'Ringkasan kelas yang Anda ampu. '.$today->translatedFormat('l, d F Y').'.'"
         >
             <x-slot:actions>
                 <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-semibold text-text">
-                        <x-icon name="calendar" class="h-4 w-4 text-agenda-tugas" />
+                    <span class="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-xs font-semibold text-text shadow-card">
+                        <x-icon name="calendar" class="size-4 text-agenda-tugas" />
                         {{ $tahunAkademikAktif?->label() ?? 'Tahun akademik belum ditetapkan' }}
                     </span>
                     @if ($user->nidn)
-                        <span class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-semibold text-text">
-                            <x-icon name="user" class="h-4 w-4 text-agenda-tugas" />
+                        <span class="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-xs font-semibold text-text shadow-card">
+                            <x-icon name="user" class="size-4 text-agenda-tugas" />
                             NIDN {{ $user->nidn }}
                         </span>
                     @endif
@@ -21,7 +21,7 @@
             </x-slot:actions>
         </x-page-header>
 
-        <section aria-label="Ringkasan kelas" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section aria-label="Ringkasan kelas" class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <x-stat-card
                 label="Kelas diampu"
                 :value="$stats['kelas_diampu']"
@@ -52,28 +52,17 @@
             />
         </section>
 
-        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <x-dosen.calendar-panel
-                :calendar="$calendar"
-                :timeline="$timeline"
-                :current-view="$currentView"
-                :active-filters="$activeFilters"
-                :filter-options="$filterOptions"
-                :today="$today"
-                route-name="dosen.dashboard"
-            />
+        <x-dosen.calendar-panel
+            :calendar="$calendar"
+            :timeline="$timeline"
+            :current-view="$currentView"
+            :active-filters="$activeFilters"
+            :filter-options="$filterOptions"
+            :today="$today"
+            route-name="dosen.dashboard"
+        />
 
-            <x-dosen.ringkasan-panel
-                :notifications="$notifications"
-                :deadlines="$deadlines"
-                :next-schedules="$nextSchedules"
-                :unread-count="$unreadCount"
-                :absensi-ringkasan="$absensiRingkasan"
-                :tugas-ringkasan="$tugasRingkasan"
-            />
-        </div>
-
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Kelas yang diampu">
+        <section class="rounded-card bg-card p-5 shadow-card" aria-label="Kelas yang diampu">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 class="text-base font-bold text-text">Kelas yang Anda ampu</h2>
@@ -81,7 +70,7 @@
                 </div>
                 <a
                     href="{{ route('dosen.mata-kuliah.index') }}"
-                    class="inline-flex w-fit items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                    class="inline-flex h-10 w-fit items-center gap-1.5 rounded-full bg-card px-4 text-xs font-semibold text-text shadow-card transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     Kelola kelas
                     <x-icon name="chevron-right" class="h-4 w-4" />
@@ -97,7 +86,7 @@
                     />
                 </div>
             @else
-                <div class="mt-5 overflow-x-auto rounded-xl border border-border">
+                <div class="mt-5 overflow-x-auto rounded-control bg-card shadow-card">
                     <table class="w-full min-w-[820px] border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
                             <tr>
@@ -149,4 +138,15 @@
             @endif
         </section>
     </div>
+
+    <x-slot:rightPanel>
+        <x-dosen.ringkasan-panel
+            :notifications="$notifications"
+            :deadlines="$deadlines"
+            :next-schedules="$nextSchedules"
+            :unread-count="$unreadCount"
+            :absensi-ringkasan="$absensiRingkasan"
+            :tugas-ringkasan="$tugasRingkasan"
+        />
+    </x-slot:rightPanel>
 </x-app-layout>

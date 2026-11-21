@@ -20,7 +20,7 @@
                 @if (! ($detail['role']->value === 'admin' && $detail['id'] !== $user->getKey()))
                     <a
                         href="{{ route($routePrefix.'.edit', $detail['id']) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         Ubah data
                     </a>
@@ -35,7 +35,7 @@
             <div role="alert" class="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-semibold text-text">{{ session('error') }}</div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <div class="flex flex-wrap items-center gap-3">
                 <h3 class="text-base font-bold text-text">Informasi akun</h3>
                 <x-status-badge :label="$detail['status_label']" :tone="$detail['is_active'] ? 'selesai' : 'netral'" />
@@ -60,7 +60,7 @@
             </dl>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <h3 class="text-base font-bold text-text">Informasi profil</h3>
             <dl class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 <div>
@@ -82,7 +82,7 @@
             </dl>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <h3 class="text-base font-bold text-text">Ringkasan keterkaitan akademik</h3>
             <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <x-stat-card label="Kelas diajar" :value="$detail['jumlah_kelas_diajar']" icon="book" tone="kuliah" />

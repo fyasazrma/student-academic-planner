@@ -22,7 +22,7 @@
             </x-slot:actions>
         </x-page-header>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Detail target">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Detail target">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Status</p>
@@ -71,7 +71,7 @@
         </section>
 
         <div class="grid gap-4 lg:grid-cols-2">
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm" aria-label="Perbarui capaian">
+            <section class="rounded-card bg-card p-5 shadow-card" aria-label="Perbarui capaian">
                 <h3 class="text-sm font-bold text-text">Perbarui capaian</h3>
                 <p class="mt-1 text-xs leading-5 text-muted">Capaian tidak boleh melebihi nilai target. Status selesai dihitung ulang otomatis.</p>
 
@@ -93,13 +93,13 @@
                         >
                         @error('capaian') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
                     </div>
-                    <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                    <button type="submit" class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                         Simpan Capaian
                     </button>
                 </form>
             </section>
 
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm" aria-label="Aksi target">
+            <section class="rounded-card bg-card p-5 shadow-card" aria-label="Aksi target">
                 <h3 class="text-sm font-bold text-text">Aksi target</h3>
                 <p class="mt-1 text-xs leading-5 text-muted">Status selesai dapat dibatalkan. Target yang dibatalkan tidak dapat diaktifkan kembali.</p>
 

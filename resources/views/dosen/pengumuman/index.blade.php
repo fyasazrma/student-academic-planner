@@ -20,7 +20,7 @@
         <x-slot:actions>
             <a
                 href="{{ route('dosen.pengumuman.create') }}"
-                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
                 <x-icon name="plus" class="h-4 w-4" />
                 Tambah pengumuman
@@ -34,7 +34,7 @@
         </div>
     @endif
 
-    <section class="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar pengumuman kelas">
+    <section class="mt-6 rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar pengumuman kelas">
         <form method="GET" action="{{ route('dosen.pengumuman.index') }}" role="search" class="grid gap-3 sm:grid-cols-3">
             <div class="sm:col-span-2">
                 <label for="q" class="block text-xs font-semibold text-text">Cari pengumuman</label>

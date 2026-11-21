@@ -12,168 +12,73 @@
     $dashboardLabel = $isAdmin ? 'Dashboard Admin' : ($isDosen ? 'Dashboard Dosen' : 'Dashboard Mahasiswa');
     $notifikasiRoute = $isAdmin ? 'admin.notifikasi' : ($isDosen ? 'dosen.notifikasi' : 'mahasiswa.notifikasi');
 
-    $breadcrumbLabels = $isAdmin
-        ? [
-            'admin.dashboard' => 'Dashboard Admin',
-            'admin.mata-kuliah.index' => 'Mata Kuliah',
-            'admin.mata-kuliah.create' => 'Tambah Mata Kuliah',
-            'admin.mata-kuliah.edit' => 'Edit Mata Kuliah',
-            'admin.tahun-akademik.index' => 'Tahun Akademik',
-            'admin.tahun-akademik.create' => 'Tambah Tahun Akademik',
-            'admin.tahun-akademik.edit' => 'Edit Tahun Akademik',
-            'admin.jadwal-kuliah.index' => 'Jadwal Kuliah',
-            'admin.jadwal-kuliah.create' => 'Tambah Jadwal Kuliah',
-            'admin.jadwal-kuliah.edit' => 'Ubah Jadwal Kuliah',
-            'admin.jadwal-ujian.index' => 'Jadwal Ujian',
-            'admin.jadwal-ujian.create' => 'Tambah Jadwal Ujian',
-            'admin.jadwal-ujian.edit' => 'Ubah Jadwal Ujian',
-            'admin.pengumuman.index' => 'Pengumuman Akademik',
-            'admin.pengumuman.create' => 'Tambah Pengumuman',
-            'admin.pengumuman.show' => 'Detail Pengumuman',
-            'admin.pengumuman.edit' => 'Ubah Pengumuman',
-            'admin.pengguna.index' => 'Manajemen Pengguna',
-            'admin.pengguna.create' => 'Tambah Pengguna',
-            'admin.pengguna.show' => 'Detail Pengguna',
-            'admin.pengguna.edit' => 'Ubah Pengguna',
-            'admin.mahasiswa.index' => 'Data Mahasiswa',
-            'admin.mahasiswa.create' => 'Tambah Mahasiswa',
-            'admin.mahasiswa.show' => 'Detail Mahasiswa',
-            'admin.mahasiswa.edit' => 'Ubah Mahasiswa',
-            'admin.dosen.index' => 'Data Dosen',
-            'admin.dosen.create' => 'Tambah Dosen',
-            'admin.dosen.show' => 'Detail Dosen',
-            'admin.dosen.edit' => 'Ubah Dosen',
-            'admin.notifikasi' => 'Notifikasi',
-        ]
-        : ($isDosen
-            ? [
-                'dosen.dashboard' => 'Dashboard Dosen',
-                'dosen.mata-kuliah.index' => 'Mata Kuliah Saya',
-                'dosen.mata-kuliah.create' => 'Buat Kelas',
-                'dosen.mata-kuliah.show' => 'Detail Kelas',
-                'dosen.mata-kuliah.tugas.index' => 'Manajemen Tugas',
-                'dosen.mata-kuliah.tugas.pengumpulan.index' => 'Pengumpulan Tugas',
-                'dosen.mata-kuliah.tugas.pengumpulan.show' => 'Detail Pengumpulan',
-                'dosen.mata-kuliah.edit' => 'Edit Kelas',
-                'dosen.nilai.index' => 'Nilai',
-                'dosen.nilai.kelas' => 'Rekap Nilai Kelas',
-                'dosen.nilai.riwayat' => 'Riwayat Perubahan Nilai',
-                'dosen.absensi.index' => 'Absensi',
-                'dosen.absensi.kelas' => 'Sesi Absensi Kelas',
-                'dosen.absensi.sesi.create' => 'Buat Sesi Absensi',
-                'dosen.absensi.sesi.show' => 'Detail Sesi Absensi',
-                'dosen.absensi.sesi.edit' => 'Ubah Sesi Absensi',
-                'dosen.absensi.koreksi.form' => 'Koreksi Absensi',
-                'dosen.absensi.riwayat' => 'Riwayat Koreksi Absensi',
-                'dosen.absensi.rekap' => 'Rekap Kehadiran',
-                'dosen.jadwal-ujian' => 'Jadwal Ujian',
-                'dosen.pengumuman.index' => 'Pengumuman Kelas',
-                'dosen.pengumuman.create' => 'Tambah Pengumuman Kelas',
-                'dosen.pengumuman.show' => 'Detail Pengumuman Kelas',
-                'dosen.pengumuman.edit' => 'Ubah Pengumuman Kelas',
-                'dosen.profil' => 'Profil Saya',
-                'dosen.profil.edit' => 'Edit Profil',
-                'dosen.notifikasi' => 'Notifikasi',
-            ]
-            : [
-                'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
-                'mahasiswa.kalender' => 'Kalender Akademik',
-                'mahasiswa.pengumuman.index' => 'Pengumuman',
-                'mahasiswa.pengumuman.show' => 'Detail Pengumuman',
-                'mahasiswa.jadwal-ujian' => 'Jadwal Ujian',
-                'mahasiswa.mata-kuliah' => 'Mata Kuliah',
-                'mahasiswa.mata-kuliah.cari' => 'Mata Kuliah',
-                'mahasiswa.materi.index' => 'Materi Pembelajaran',
-                'mahasiswa.materi.show' => 'Detail Materi',
-                'mahasiswa.progres-materi.index' => 'Progres Materi',
-                'mahasiswa.target.index' => 'Target Belajar',
-                'mahasiswa.target.create' => 'Tambah Target Belajar',
-                'mahasiswa.target.show' => 'Detail Target Belajar',
-                'mahasiswa.target.edit' => 'Edit Target Belajar',
-                'mahasiswa.tugas' => 'Tugas & Pengumpulan',
-                'mahasiswa.nilai' => 'Nilai',
-                'mahasiswa.nilai.show' => 'Riwayat Mata Kuliah',
-                'mahasiswa.absensi.index' => 'Absensi',
-                'mahasiswa.absensi.riwayat' => 'Riwayat Absensi',
-                'mahasiswa.absensi.rekap' => 'Rekap Kehadiran',
-                'mahasiswa.notifikasi' => 'Notifikasi',
-                'mahasiswa.profil' => 'Profil Saya',
-                'mahasiswa.profil.edit' => 'Edit Profil',
-            ]);
-
     $currentRoute = request()->route()?->getName();
-    $currentLabel = $breadcrumbLabels[$currentRoute] ?? $title;
     $isDashboard = $currentRoute === $dashboardRoute;
 @endphp
 
-<header class="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-sm">
-    <div class="mx-auto flex h-16 w-full max-w-[1600px] items-center gap-3 px-4 sm:px-6 lg:px-8">
-        <button
-            type="button"
-            class="rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas lg:hidden"
-            data-sidebar-open
-            aria-label="Buka menu navigasi"
-            aria-controls="sidebar-drawer"
-            aria-expanded="false"
-        >
-            <x-icon name="menu" class="h-5 w-5" />
-        </button>
+<header class="flex items-center gap-3 pt-1">
+    <button
+        type="button"
+        class="grid size-10 shrink-0 place-items-center rounded-full bg-card text-text shadow-card transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary lg:hidden"
+        data-sidebar-open
+        aria-label="Buka menu navigasi"
+        aria-controls="sidebar-drawer"
+        aria-expanded="false"
+    >
+        <x-icon name="menu" class="size-5" />
+    </button>
 
-        <div class="min-w-0">
+    <div class="min-w-0 flex-1">
+        @unless ($isDashboard)
             <nav aria-label="Breadcrumb" class="flex items-center gap-2 text-xs text-muted">
-                <span>Akademik</span>
+                <span class="shrink-0">Akademik</span>
                 <span aria-hidden="true">/</span>
-                @unless ($isDashboard)
-                    <a href="{{ route($dashboardRoute) }}" class="transition hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">{{ $dashboardLabel }}</a>
-                    <span aria-hidden="true">/</span>
-                @endunless
-                <span class="font-semibold text-text">{{ $currentLabel }}</span>
+                <a href="{{ route($dashboardRoute) }}" class="truncate transition hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">{{ $dashboardLabel }}</a>
             </nav>
-            <h1 class="truncate text-base font-bold text-text sm:text-lg">{{ $title }}</h1>
-        </div>
+        @endunless
+    </div>
 
-        <div class="ml-auto flex items-center gap-2 sm:gap-4">
-            <a
-                href="{{ route($notifikasiRoute) }}"
-                class="relative rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
-                aria-label="Lihat notifikasi{{ $unreadCount > 0 ? ', '.$unreadCount.' belum dibaca' : '' }}"
-            >
-                <x-icon name="bell" class="h-5 w-5" />
-                @if ($unreadCount > 0)
-                    <span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
-                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
-                    </span>
-                @endif
-            </a>
-
-            @php
-                $profilRoute = $isDosen ? 'dosen.profil' : ($isAdmin ? null : 'mahasiswa.profil');
-            @endphp
-            @if ($profilRoute !== null)
-                <a
-                    href="{{ route($profilRoute) }}"
-                    class="flex items-center gap-2.5 border-l border-border pl-3 transition hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas sm:pl-4"
-                    aria-label="Buka profil saya"
-                >
-                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-agenda-tugas/15 text-sm font-bold text-agenda-tugas">
-                        {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
-                    </span>
-                    <span class="hidden min-w-0 sm:block">
-                        <span class="block truncate text-sm font-semibold text-text">{{ $user?->name }}</span>
-                        <span class="block truncate text-[11px] text-muted">{{ $isDosen ? 'Dosen' : 'Mahasiswa' }}</span>
-                    </span>
-                </a>
-            @else
-                <div class="flex items-center gap-2.5 border-l border-border pl-3 sm:pl-4">
-                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-agenda-tugas/15 text-sm font-bold text-agenda-tugas">
-                        {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
-                    </div>
-                    <div class="hidden min-w-0 sm:block">
-                        <p class="truncate text-sm font-semibold text-text">{{ $user?->name }}</p>
-                        <p class="truncate text-[11px] text-muted">Administrator</p>
-                    </div>
-                </div>
+    <div class="flex shrink-0 items-center gap-2">
+        <a
+            href="{{ route($notifikasiRoute) }}"
+            class="relative grid size-10 place-items-center rounded-full bg-card text-text shadow-card transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Lihat notifikasi{{ $unreadCount > 0 ? ', '.$unreadCount.' belum dibaca' : '' }}"
+        >
+            <x-icon name="bell" class="size-5" />
+            @if ($unreadCount > 0)
+                <span class="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-badge px-1 py-0.5 text-center text-[10px] font-bold leading-none text-badge-text">
+                    {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                </span>
             @endif
-        </div>
+        </a>
+
+        @php
+            $profilRoute = $isDosen ? 'dosen.profil' : ($isAdmin ? null : 'mahasiswa.profil');
+        @endphp
+        @if ($profilRoute !== null)
+            <a
+                href="{{ route($profilRoute) }}"
+                class="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 transition hover:bg-card hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:pr-3"
+                aria-label="Buka profil saya"
+            >
+                <span class="grid size-10 shrink-0 place-items-center rounded-full bg-tile-lavender text-sm font-bold text-text">
+                    {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
+                </span>
+                <span class="hidden min-w-0 sm:block">
+                    <span class="block truncate text-sm font-semibold text-text">{{ $user?->name }}</span>
+                    <span class="block truncate text-[11px] text-muted">{{ $isDosen ? 'Dosen' : 'Mahasiswa' }}</span>
+                </span>
+            </a>
+        @else
+            <div class="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2 sm:pr-3">
+                <div class="grid size-10 shrink-0 place-items-center rounded-full bg-tile-lavender text-sm font-bold text-text">
+                    {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
+                </div>
+                <div class="hidden min-w-0 sm:block">
+                    <p class="truncate text-sm font-semibold text-text">{{ $user?->name }}</p>
+                    <p class="truncate text-[11px] text-muted">Administrator</p>
+                </div>
+            </div>
+        @endif
     </div>
 </header>

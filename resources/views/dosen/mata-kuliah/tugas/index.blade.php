@@ -22,7 +22,7 @@
                     </a>
                     <a
                         href="{{ route('dosen.mata-kuliah.tugas.create', $kelas->getKey()) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <x-icon name="clipboard" class="h-4 w-4" />
                         Tambah tugas
@@ -75,13 +75,13 @@
             >
                 <a
                     href="{{ route('dosen.mata-kuliah.tugas.create', $kelas->getKey()) }}"
-                    class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     Tambah tugas
                 </a>
             </x-empty-state>
         @else
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar tugas">
+            <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar tugas">
                 <div class="hidden overflow-x-auto md:block">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">

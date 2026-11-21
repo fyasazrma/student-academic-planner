@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Informasi tugas">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Informasi tugas">
             <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Tugas</p>
             <h3 class="mt-2 text-xl font-bold text-text">{{ $infoTugas['judul'] }}</h3>
 
@@ -48,7 +48,7 @@
             </div>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Detail pengumpulan mahasiswa">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Detail pengumpulan mahasiswa">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0">
                     <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Pengumpulan mahasiswa</p>

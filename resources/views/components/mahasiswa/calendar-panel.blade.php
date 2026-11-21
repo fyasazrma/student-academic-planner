@@ -6,10 +6,12 @@
     'filterOptions' => [],
     'today' => null,
     'routeName' => 'mahasiswa.dashboard',
+    'compact' => false,
 ])
 
 @php
     $tab = request('tab') === 'timeline' ? 'timeline' : 'calendar';
+    $isCompact = $compact || $routeName === 'mahasiswa.dashboard';
     $queryBase = array_filter(request()->except(['view', 'tab']) + [
         'date' => request('date'),
         'jenis' => request('jenis'),
@@ -27,21 +29,25 @@
 <section id="kalender-akademik" class="min-w-0">
     <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <h2 class="text-lg font-bold text-text">Kalender akademik</h2>
-            <p class="mt-1 text-xs text-muted">Semua agenda berasal dari kelas yang Anda ikuti dan agenda institusi.</p>
-            @if ($routeName === 'mahasiswa.dashboard')
-                <a
-                    href="{{ route('mahasiswa.kalender') }}"
-                    class="mt-2 inline-flex text-xs font-semibold text-agenda-tugas underline-offset-2 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
-                >Buka kalender penuh</a>
+            @if ($routeName === 'mahasiswa.kalender')
+                <h2 class="sr-only">Kalender akademik</h2>
+            @else
+                <h2 class="text-lg font-bold text-text">Kalender akademik</h2>
+                <p class="mt-1 text-xs text-muted">Semua agenda berasal dari kelas yang Anda ikuti dan agenda institusi.</p>
+                @if ($routeName === 'mahasiswa.dashboard')
+                    <a
+                        href="{{ route('mahasiswa.kalender') }}"
+                        class="mt-2 inline-flex text-xs font-semibold text-agenda-tugas underline-offset-2 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    >Buka kalender penuh</a>
+                @endif
             @endif
         </div>
-        <div class="inline-flex w-fit rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Mode tampilan agenda">
+        <div class="inline-flex w-fit rounded-full bg-soft p-1" role="tablist" aria-label="Mode tampilan agenda">
             <a
                 href="{{ $tabLink('calendar') }}"
                 role="tab"
                 @class([
-                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas',
+                    'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                     'bg-sidebar text-white' => $tab === 'calendar',
                     'text-muted hover:text-text' => $tab !== 'calendar',
                 ])
@@ -53,7 +59,7 @@
                 href="{{ $tabLink('timeline') }}"
                 role="tab"
                 @class([
-                    'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas',
+                    'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                     'bg-sidebar text-white' => $tab === 'timeline',
                     'text-muted hover:text-text' => $tab !== 'timeline',
                 ])
@@ -65,7 +71,7 @@
     </div>
 
     @if ($tab === 'calendar')
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div class="min-h-[520px] rounded-card bg-card p-5 shadow-card">
             <x-calendar-toolbar
                 :calendar="$calendar"
                 :current-view="$currentView"
@@ -75,7 +81,7 @@
             />
 
             <div class="mt-5">
-                <x-calendar-grid :calendar="$calendar" :today="$today" />
+                <x-calendar-grid :calendar="$calendar" :today="$today" :compact="$isCompact" />
             </div>
 
             <div class="mt-5 sm:hidden">
@@ -84,7 +90,7 @@
             </div>
         </div>
     @else
-        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <div class="min-h-[520px] rounded-card bg-card p-5 shadow-card">
             <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h3 class="text-sm font-bold text-text">Rentang pengerjaan tugas</h3>
@@ -115,7 +121,7 @@
                     </div>
 
                     @if ($timeline['markers'] !== [])
-                        <div class="mt-6 rounded-xl border border-border bg-soft p-4">
+                        <div class="mt-6 rounded-control bg-soft p-4">
                             <p class="text-xs font-bold text-text">Penanda penting</p>
                             <div class="relative mt-5 h-8 border-b border-border">
                                 @foreach ($timeline['ticks'] as $tick)
@@ -145,15 +151,15 @@
 
                 <div class="mt-5 space-y-2 sm:hidden">
                     @foreach ($timeline['bars'] as $bar)
-                        <article class="rounded-xl border border-border bg-soft p-3">
+                        <article class="rounded-control bg-soft p-3">
                             <p class="text-sm font-bold text-text">{{ $bar['judul'] }}</p>
                             <p class="mt-0.5 text-[11px] text-muted">{{ $bar['mata_kuliah'] }}</p>
                             <div class="mt-2 grid grid-cols-2 gap-2 text-[11px]">
-                                <div class="rounded-lg bg-card p-2">
+                                <div class="rounded-tile bg-card p-2">
                                     <p class="text-[10px] font-semibold uppercase text-muted">Dipublikasikan</p>
                                     <p class="mt-0.5 font-semibold text-text">{{ $bar['dipublikasikan_label'] }}</p>
                                 </div>
-                                <div class="rounded-lg bg-card p-2">
+                                <div class="rounded-tile bg-card p-2">
                                     <p class="text-[10px] font-semibold uppercase text-muted">Deadline</p>
                                     <p class="mt-0.5 font-semibold text-text">{{ $bar['deadline_label'] }}</p>
                                 </div>
@@ -163,7 +169,7 @@
                     @endforeach
                     @foreach ($timeline['markers'] as $marker)
                         <article
-                            class="rounded-xl border border-border bg-soft p-3"
+                            class="rounded-control bg-soft p-3"
                             role="button"
                             tabindex="0"
                             data-agenda-trigger="{{ $marker['event_id'] }}"
@@ -177,7 +183,7 @@
                 </div>
             @endif
 
-            <p class="mt-5 flex items-start gap-2 rounded-xl bg-soft p-3 text-[11px] leading-5 text-muted">
+            <p class="mt-5 flex items-start gap-2 rounded-control bg-soft p-3 text-[11px] leading-5 text-muted">
                 <x-icon name="info" class="mt-0.5 h-4 w-4 shrink-0 text-agenda-uts" />
                 <span>Schema saat ini menyimpan ujian sebagai <strong class="font-semibold text-text">jenis = ujian</strong>. UTS dan UAS dibedakan dari penanda <strong class="font-semibold text-text">jenis ujian</strong> pada agenda, bukan dari judul. Agenda ujian lama tanpa penanda tetap tampil sebagai “Ujian”.</span>
             </p>
@@ -190,7 +196,7 @@
 
     <dialog
         id="agenda-detail"
-        class="w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+        class="ui-dialog max-w-lg"
         aria-labelledby="agenda-detail-title"
     >
         <div class="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
@@ -201,7 +207,7 @@
             <button
                 type="button"
                 data-agenda-close
-                class="rounded-lg border border-border p-1.5 text-muted transition hover:bg-soft hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                class="rounded-lg border border-border p-1.5 text-muted transition hover:bg-soft hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 aria-label="Tutup detail agenda"
             >
                 <x-icon name="close" class="h-4 w-4" />
@@ -251,7 +257,7 @@
             <button
                 type="button"
                 data-agenda-close
-                class="rounded-xl bg-sidebar px-4 py-2 text-xs font-semibold text-white transition hover:bg-sidebar-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                class="rounded-xl bg-sidebar px-4 py-2 text-xs font-semibold text-white transition hover:bg-sidebar-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >Tutup</button>
         </div>
     </dialog>

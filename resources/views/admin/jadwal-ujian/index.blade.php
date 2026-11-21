@@ -8,7 +8,7 @@
             <x-slot:actions>
                 <a
                     href="{{ route('admin.jadwal-ujian.create') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="exam" class="h-4 w-4" />
                     Tambah jadwal ujian
@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar jadwal ujian institusional">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar jadwal ujian institusional">
             <form method="GET" action="{{ route('admin.jadwal-ujian.index') }}" role="search" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="sm:col-span-2 lg:col-span-1">
                     <label for="q" class="block text-xs font-semibold text-text">Cari</label>
@@ -91,7 +91,7 @@
                 <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-4">
                     <button
                         type="submit"
-                        class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        class="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         Terapkan filter
                     </button>
@@ -116,7 +116,7 @@
                         @if (array_filter($filters) === [])
                             <a
                                 href="{{ route('admin.jadwal-ujian.create') }}"
-                                class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             >
                                 Tambah jadwal ujian
                             </a>
@@ -212,7 +212,7 @@
                                 ? '-'
                                 : $item['waktu_mulai'].'–'.$item['waktu_selesai'];
                         @endphp
-                        <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                        <div class="rounded-card bg-card p-4 shadow-card">
                             <div class="flex items-start justify-between gap-3">
                                 <div>
                                     <p class="text-sm font-bold text-text">{{ $item['judul'] }}</p>

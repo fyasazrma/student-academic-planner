@@ -18,8 +18,10 @@
     ];
 @endphp
 
-<aside id="panel-notifikasi" class="space-y-4">
-    <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+<aside id="panel-notifikasi" class="space-y-5 ui-rise">
+    <x-mini-calendar :deadlines="$deadlines" :next-schedules="$nextSchedules" />
+
+    <section class="rounded-card bg-card p-5 shadow-card">
         <div class="flex items-center justify-between gap-3">
             <div class="flex items-center gap-2">
                 <x-icon name="bell" class="h-5 w-5 text-agenda-tugas" />
@@ -32,7 +34,7 @@
 
         <a
             href="{{ route('mahasiswa.notifikasi') }}"
-            class="mt-3 inline-flex text-[11px] font-semibold text-agenda-tugas underline-offset-2 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+            class="mt-3 inline-flex text-[11px] font-semibold text-agenda-tugas underline-offset-2 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >Lihat semua notifikasi</a>
 
         <div class="mt-4 space-y-3">
@@ -40,7 +42,7 @@
                 @php
                     $link = $notification->tautanInternal();
                 @endphp
-                <article class="rounded-xl border border-border bg-soft p-3">
+                <article class="rounded-control bg-soft p-3">
                     <div class="flex items-start gap-2">
                         <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full {{ $notification->sudahDibaca() ? 'bg-border' : 'bg-agenda-tugas' }}"></span>
                         <div class="min-w-0 flex-1">
@@ -63,7 +65,7 @@
         </div>
     </section>
 
-    <section id="tugas-terdekat" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <section id="tugas-terdekat" class="rounded-card bg-card p-5 shadow-card">
         <div class="flex items-center gap-2">
             <x-icon name="clipboard" class="h-5 w-5 text-agenda-terlambat" />
             <h3 class="text-sm font-bold text-text">Deadline terdekat</h3>
@@ -71,12 +73,12 @@
 
         <a
             href="{{ route('mahasiswa.tugas') }}"
-            class="mt-3 inline-flex text-[11px] font-semibold text-agenda-tugas underline-offset-2 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+            class="mt-3 inline-flex text-[11px] font-semibold text-agenda-tugas underline-offset-2 transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >Lihat semua tugas</a>
 
         <div class="mt-4 space-y-3">
             @forelse ($deadlines as $task)
-                <article class="rounded-xl border border-border p-3">
+                <article class="rounded-control bg-soft p-3">
                     <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">
                             <p class="truncate text-xs font-bold text-text">{{ $task['judul'] }}</p>
@@ -93,12 +95,12 @@
                     </p>
                 </article>
             @empty
-                <x-empty-state title="Tidak ada deadline aktif" description="Tugas dengan deadline mendatang akan ditampilkan di sini." icon="check" class="border-0 bg-transparent px-0 py-6" />
+                <x-empty-state title="Tidak ada deadline aktif" description="Tugas dengan deadline mendatang akan ditampilkan di sini." icon="check" :compact="true" class="border-0 bg-transparent" />
             @endforelse
         </div>
     </section>
 
-    <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+    <section class="rounded-card bg-card p-5 shadow-card">
         <div class="flex items-center gap-2">
             <x-icon name="calendar" class="h-5 w-5 text-agenda-kuliah" />
             <h3 class="text-sm font-bold text-text">Jadwal berikutnya</h3>
@@ -106,7 +108,7 @@
 
         <div class="mt-4 space-y-3">
             @forelse ($nextSchedules as $schedule)
-                <article class="flex gap-3 rounded-xl border border-border p-3">
+                <article class="flex gap-3 rounded-control bg-soft p-3">
                     <span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {{ $toneByType[$schedule['jenis']] ?? 'bg-muted' }}"></span>
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-2">

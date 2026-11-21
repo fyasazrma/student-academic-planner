@@ -30,7 +30,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ $action }}" class="space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <form method="POST" action="{{ $action }}" class="space-y-5 rounded-card bg-card p-5 shadow-card sm:p-6">
             @csrf
             @if ($mode === 'ubah')
                 @method('PUT')
@@ -118,7 +118,7 @@
 
             <div class="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-4">
                 <a href="{{ route('dosen.absensi.kelas', $kelas->getKey()) }}" class="rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">Batal</a>
-                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                     <x-icon name="save" class="h-4 w-4" />
                     {{ $mode === 'buat' ? 'Buat sesi' : 'Simpan perubahan' }}
                 </button>

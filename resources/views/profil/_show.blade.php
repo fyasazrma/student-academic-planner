@@ -12,7 +12,7 @@
             <x-slot:actions>
                 <a
                     href="{{ route($routePrefix.'.edit') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="user" class="h-4 w-4" />
                     Edit profil
@@ -24,7 +24,7 @@
             <div role="status" class="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm font-semibold text-text">{{ session('status') }}</div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-agenda-tugas/15 text-2xl font-bold text-agenda-tugas">
                     {{ strtoupper(mb_substr($profil['name'], 0, 1)) }}
@@ -40,7 +40,7 @@
             </div>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <h3 class="text-base font-bold text-text">Informasi akun</h3>
             <dl class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 <div>
@@ -62,7 +62,7 @@
             </dl>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <h3 class="text-base font-bold text-text">Informasi akademik</h3>
             <dl class="mt-5 grid gap-x-6 gap-y-4 sm:grid-cols-2">
                 <div>
@@ -86,7 +86,7 @@
             </dl>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             <h3 class="text-base font-bold text-text">Ringkasan akademik</h3>
             <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @if ($profil['nim'])

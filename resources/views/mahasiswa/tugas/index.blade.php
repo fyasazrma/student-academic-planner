@@ -57,7 +57,7 @@
     @else
         <div class="mt-5 space-y-4">
             @foreach ($tasks as $task)
-                <article class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <article class="rounded-card bg-card p-5 shadow-card">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
@@ -149,7 +149,7 @@
                             @if ($task['pengumpulan']['bisa_resubmit'])
                                 <a
                                     href="{{ route('mahasiswa.tugas.pengumpulan', $task['id']) }}"
-                                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                 >
                                     <x-icon name="repeat" class="h-4 w-4" />
                                     Kirim ulang
@@ -163,7 +163,7 @@
                         @elseif ($task['bisa_dikumpulkan'])
                             <a
                                 href="{{ route('mahasiswa.tugas.pengumpulan', $task['id']) }}"
-                                class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             >
                                 <x-icon name="clipboard" class="h-4 w-4" />
                                 Kumpulkan tugas

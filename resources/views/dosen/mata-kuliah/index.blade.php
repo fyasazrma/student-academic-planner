@@ -8,7 +8,7 @@
             <x-slot:actions>
                 <a
                     href="{{ route('dosen.mata-kuliah.create') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="book" class="h-4 w-4" />
                     Buat kelas
@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar kelas dosen">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar kelas dosen">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h3 class="text-base font-bold text-text">Daftar kelas</h3>
@@ -71,7 +71,7 @@
                         @if ($kataKunci === '')
                             <a
                                 href="{{ route('dosen.mata-kuliah.create') }}"
-                                class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             >
                                 Buat kelas
                             </a>

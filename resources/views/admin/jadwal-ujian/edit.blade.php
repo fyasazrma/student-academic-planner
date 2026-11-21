@@ -16,7 +16,7 @@
             </x-slot:actions>
         </x-page-header>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Formulir jadwal ujian">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Formulir jadwal ujian">
             <form method="POST" action="{{ route('admin.jadwal-ujian.update', $ujian->getKey()) }}" data-auth-form>
                 @csrf
                 @method('PUT')
@@ -32,7 +32,7 @@
                     <button
                         type="submit"
                         data-submit-button
-                        class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <span data-submit-label>Simpan perubahan</span>
                     </button>

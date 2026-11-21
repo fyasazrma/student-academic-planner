@@ -22,7 +22,7 @@
             <x-stat-card label="Persentase progres" :value="number_format($ringkasan['persentase'], 2, ',', '.').'%'" hint="Rata-rata seluruh kelas aktif" icon="chart" tone="akademik" />
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Progres per mata kuliah">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Progres per mata kuliah">
             <h3 class="text-sm font-bold text-text">Target otomatis per mata kuliah</h3>
             <p class="mt-1 text-xs leading-5 text-muted">Materi draft dan materi yang belum dipublikasikan tidak dihitung.</p>
 
@@ -72,7 +72,7 @@
                         description="Gabung kelas terlebih dahulu untuk melihat target otomatis penyelesaian materi."
                         icon="book"
                     >
-                        <a href="{{ route('mahasiswa.mata-kuliah') }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                        <a href="{{ route('mahasiswa.mata-kuliah') }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             Lihat Mata Kuliah
                         </a>
                     </x-empty-state>
@@ -80,7 +80,7 @@
             </div>
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Materi belum diselesaikan">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Materi belum diselesaikan">
             <h3 class="text-sm font-bold text-text">Materi yang belum diselesaikan</h3>
             @if (count($ringkasan['belum_selesai']) > 0)
                 <ul class="mt-4 grid gap-2 sm:grid-cols-2">

@@ -33,7 +33,7 @@
 
     <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div class="space-y-5">
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+            <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div class="min-w-0">
                         <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Detail tugas</p>
@@ -46,7 +46,7 @@
                         </p>
                     </div>
                     @if ($pengumpulan)
-                        <span class="rounded-lg bg-success/10 px-3 py-1.5 text-xs font-bold text-success">
+                        <span class="rounded-full bg-success/10 px-3 py-1.5 text-xs font-bold text-success">
                             {{ $pengumpulan->status === 'dinilai' ? 'Sudah dinilai' : 'Sudah dikumpulkan' }}
                         </span>
                     @endif
@@ -82,7 +82,7 @@
             </section>
 
             @if ($pengumpulan)
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+                <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
                     <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Pengumpulan Anda</p>
                     <dl class="mt-4 grid gap-4 text-sm sm:grid-cols-2">
                         <div>
@@ -140,7 +140,7 @@
             @endif
 
             @if ($bisa_dikumpulkan)
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+                <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
                     <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">
                         {{ $pengumpulan ? 'Kirim ulang jawaban' : 'Unggah jawaban' }}
                     </p>
@@ -193,7 +193,7 @@
                         <div class="flex flex-wrap items-center gap-3 border-t border-border pt-4">
                             <button
                                 type="submit"
-                                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             >
                                 <x-icon name="check" class="h-4 w-4" />
                                 {{ $pengumpulan ? 'Kirim ulang pengumpulan' : 'Kumpulkan tugas' }}
@@ -210,7 +210,7 @@
             @endif
         </div>
 
-        <aside class="h-fit rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <aside class="h-fit rounded-card bg-card p-5 shadow-card">
             <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Informasi pengumpulan</p>
             <ul class="mt-4 space-y-3 text-sm leading-6 text-muted">
                 <li class="flex gap-2">

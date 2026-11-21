@@ -40,7 +40,7 @@
             <div role="alert" class="rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-semibold text-text">{{ session('error') }}</div>
         @endif
 
-        <section class="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <section class="flex flex-wrap items-center gap-3 rounded-card bg-card p-5 shadow-card">
             <x-status-badge :label="$sesi->status?->value === 'dibuka' ? 'Dibuka' : 'Ditutup'" :tone="$sesi->status?->value === 'dibuka' ? 'dibuka' : 'ditutup'" />
             <p class="text-xs text-muted">
                 Waktu absensi mahasiswa mengikuti rentang sesi ini dalam zona waktu Asia/Jakarta.
@@ -54,7 +54,7 @@
                 icon="user"
             />
         @else
-            <section aria-label="Daftar peserta (tabel)" class="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:block">
+            <section aria-label="Daftar peserta (tabel)" class="hidden overflow-hidden rounded-card bg-card shadow-card md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -92,7 +92,7 @@
 
             <section aria-label="Daftar peserta (kartu)" class="space-y-3 md:hidden">
                 @foreach ($peserta as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">{{ $item['nama'] }}</p>

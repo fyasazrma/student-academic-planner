@@ -8,7 +8,7 @@
             <x-slot:actions>
                 <a
                     href="{{ route('admin.tahun-akademik.create') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="calendar" class="h-4 w-4" />
                     Tambah tahun akademik
@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar tahun akademik">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar tahun akademik">
             <div>
                 <h3 class="text-base font-bold text-text">Daftar periode akademik</h3>
                 <p class="mt-1 text-xs leading-5 text-muted">
@@ -45,7 +45,7 @@
                     >
                         <a
                             href="{{ route('admin.tahun-akademik.create') }}"
-                            class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                            class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         >
                             Tambah tahun akademik
                         </a>
@@ -149,7 +149,7 @@
     @push('modals')
         <dialog
             id="dialog-konfirmasi-ta"
-            class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+            class="ui-dialog max-w-md"
             aria-labelledby="dialog-konfirmasi-ta-judul"
         >
             <form id="form-konfirmasi-ta" method="POST" action="" class="p-5 sm:p-6">
@@ -189,7 +189,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <span data-ta-dialog-submit>Konfirmasi</span>
                     </button>

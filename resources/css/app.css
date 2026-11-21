@@ -8,31 +8,52 @@
     --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* Application surface */
-    --color-page-bg: #f0e9ff;
-    --color-surface: #fbfbfa;
+    /* Surface */
+    --color-surface: #f8f8f8;
     --color-card: #ffffff;
-    --color-soft: #f5f6fa;
-    --color-border: #e8e8ef;
+    --color-soft: #f4f4f4;
+    --color-border: #ececf2;
 
     /* Sidebar */
-    --color-sidebar: #242238;
-    --color-sidebar-hover: #34314b;
+    --color-sidebar: #201f31;
+    --color-sidebar-hover: #2e2c45;
+    --color-sidebar-text: #c9c8da;
 
-    /* Primary accent */
-    --color-primary: #d8f36a;
-    --color-primary-hover: #b9d94a;
+    /* Primary */
+    --color-primary: #daf17c;
+    --color-primary-hover: #c9e35f;
     --color-primary-text: #1a2200;
 
     /* Text */
-    --color-text: #242436;
-    --color-muted: #77788a;
+    --color-text: #201f31;
+    --color-muted: #686980;
 
     /* Semantic */
     --color-success: #42b883;
+    --color-success-text: #1f7a55;
+    --color-progress: #9ccb3b;
     --color-warning: #e9b94f;
     --color-danger: #d96c75;
     --color-info: #5d9cec;
+    --color-badge: #f9d3be;
+    --color-badge-text: #7a3512;
+
+    /* Pastel tiles & pills */
+    --color-tile-peach: #ffe5de;
+    --color-tile-lime: #f1f8cc;
+    --color-tile-lavender: #dfddf3;
+    --color-tile-sand: #fcf1d5;
+    --color-tile-sky: #dcebfb;
+    --color-tile-rose: #f7d9dc;
+
+    /* Chart */
+    --color-chart-navy: #201f31;
+    --color-chart-violet: #9a78e8;
+    --color-chart-lime: #daf17c;
+    --color-chart-sky: #76a9e8;
+    --color-chart-coral: #ffe5de;
+    --color-chart-rose: #f7d9dc;
+    --color-chart-track: #ececf2;
 
     /* Agenda */
     --color-agenda-tugas: #9a78e8;
@@ -44,4 +65,111 @@
     --color-agenda-pengumuman: #e9b94f;
     --color-agenda-terlambat: #d96c75;
     --color-agenda-materi: #0f766e;
+
+    /* Radius */
+    --radius-panel: 1.5rem;
+    --radius-card: 1.25rem;
+    --radius-tile: 0.875rem;
+    --radius-control: 0.75rem;
+
+    /* Shadow */
+    --shadow-card: 0 1px 2px rgb(32 31 49 / 0.04), 0 6px 20px rgb(32 31 49 / 0.05);
+    --shadow-card-hover: 0 2px 4px rgb(32 31 49 / 0.05), 0 12px 28px rgb(32 31 49 / 0.09);
+
+    /* Motion */
+    --animate-bar-grow: bar-grow 450ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+    @keyframes bar-grow {
+        from { transform: scaleY(0); }
+        to   { transform: scaleY(1); }
+    }
+
+    --animate-chart-bar: chart-bar 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+    @keyframes chart-bar {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+    }
+}
+
+@layer components {
+    .ui-dialog {
+        width: calc(100% - 2rem);
+        padding: 0;
+        border: 0;
+        border-radius: var(--radius-card);
+        background-color: var(--color-card);
+        color: var(--color-text);
+        box-shadow: var(--shadow-card);
+    }
+
+    .ui-dialog::backdrop {
+        background-color: rgb(32 31 49 / 0.4);
+    }
+
+    .ui-dialog[open] {
+        animation: dialog-in 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .ui-rise,
+    .ui-stagger > * {
+        animation: ui-rise 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .ui-stagger > *:nth-child(2) { animation-delay: 40ms; }
+    .ui-stagger > *:nth-child(3) { animation-delay: 80ms; }
+    .ui-stagger > *:nth-child(4) { animation-delay: 120ms; }
+    .ui-stagger > *:nth-child(5) { animation-delay: 160ms; }
+
+    .chart-bar {
+        transform-origin: left center;
+        animation: var(--animate-chart-bar);
+    }
+
+    .chart-ring {
+        transition: stroke-dashoffset 500ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+}
+
+.ui-dialog [class~="rounded-xl"],
+.ui-dialog [class~="rounded-lg"] {
+    border-radius: var(--radius-control);
+}
+
+.ui-dialog button[class~="border-border"] {
+    border-color: transparent;
+    background-color: var(--color-soft);
+}
+
+@keyframes ui-rise {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }

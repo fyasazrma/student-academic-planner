@@ -16,7 +16,7 @@
             </x-slot:actions>
         </x-page-header>
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Informasi materi">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Informasi materi">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2">
@@ -56,7 +56,7 @@
             <div class="mt-5 flex flex-wrap gap-2 border-t border-border pt-4">
                 <a
                     href="{{ route('mahasiswa.materi.unduh', [$materi['kelas_id'], $materi['id']]) }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="file" class="h-4 w-4" /> Unduh Berkas
                 </a>
@@ -80,7 +80,7 @@
         </section>
 
         <div class="grid gap-4 lg:grid-cols-2">
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm" aria-label="Status progres">
+            <section class="rounded-card bg-card p-5 shadow-card" aria-label="Status progres">
                 <h3 class="text-sm font-bold text-text">Status penyelesaian</h3>
                 <p class="mt-1 text-xs leading-5 text-muted">Membuka dan mengunduh materi tidak otomatis menandai materi selesai.</p>
                 <div class="mt-4 flex items-center justify-between text-[11px] font-semibold text-muted">
@@ -92,7 +92,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm" aria-label="Aktivitas materi">
+            <section class="rounded-card bg-card p-5 shadow-card" aria-label="Aktivitas materi">
                 <h3 class="text-sm font-bold text-text">Aktivitas Anda</h3>
                 <p class="mt-1 text-xs leading-5 text-muted">Aktivitas dicatat hanya jika akses atau unduhan berhasil.</p>
                 <dl class="mt-4 grid grid-cols-2 gap-3">

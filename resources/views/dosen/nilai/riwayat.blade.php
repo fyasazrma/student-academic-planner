@@ -32,7 +32,7 @@
                 icon="clock"
             />
         @else
-            <section aria-label="Riwayat perubahan nilai (tabel)" class="hidden rounded-2xl border border-border bg-card p-5 shadow-sm md:block">
+            <section aria-label="Riwayat perubahan nilai (tabel)" class="hidden rounded-card bg-card p-5 shadow-card md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -65,7 +65,7 @@
 
             <section aria-label="Riwayat perubahan nilai (kartu)" class="space-y-3 md:hidden">
                 @foreach ($riwayat as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="text-sm font-bold text-text">{{ $labelKomponen($item->komponen) }}</p>

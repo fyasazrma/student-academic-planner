@@ -37,7 +37,7 @@
     <form
         method="POST"
         action="{{ $pengumuman === null ? route('admin.pengumuman.store') : route('admin.pengumuman.update', $pengumuman) }}"
-        class="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6"
+        class="mt-6 rounded-card bg-card p-5 shadow-card sm:p-6"
         data-auth-form
     >
         @csrf
@@ -103,7 +103,7 @@
         </div>
 
         <div class="mt-6 flex flex-wrap justify-end gap-3">
-            <button type="submit" data-submit-button class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+            <button type="submit" data-submit-button class="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 {{ $pengumuman === null ? 'Simpan pengumuman' : 'Simpan perubahan' }}
             </button>
         </div>

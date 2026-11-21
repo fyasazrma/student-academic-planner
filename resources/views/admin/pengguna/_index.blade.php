@@ -13,7 +13,7 @@
             <x-slot:actions>
                 <a
                     href="{{ $aksiTambah }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="user" class="h-4 w-4" />
                     Tambah {{ strtolower($label) }}
@@ -33,7 +33,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar {{ strtolower($label) }}">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar {{ strtolower($label) }}">
             <form method="GET" action="{{ route($routePrefix.'.index') }}" role="search" class="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <div class="relative min-w-0 flex-1">
                     <label for="pencarian-pengguna" class="sr-only">Cari nama, email, NIM, atau NIDN</label>

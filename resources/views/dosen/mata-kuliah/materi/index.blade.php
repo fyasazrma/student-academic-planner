@@ -22,7 +22,7 @@
                     </a>
                     <a
                         href="{{ route('dosen.mata-kuliah.materi.create', $kelas->getKey()) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <x-icon name="file" class="h-4 w-4" />
                         Tambah materi
@@ -75,13 +75,13 @@
             >
                 <a
                     href="{{ route('dosen.mata-kuliah.materi.create', $kelas->getKey()) }}"
-                    class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     Tambah materi
                 </a>
             </x-empty-state>
         @else
-            <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar materi">
+            <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar materi">
                 <div class="hidden overflow-x-auto md:block">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -224,7 +224,7 @@
     @push('modals')
         <dialog
             id="dialog-detail-materi"
-            class="w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+            class="ui-dialog max-w-lg"
             aria-labelledby="dialog-detail-materi-judul"
         >
             <div class="p-5 sm:p-6">
@@ -293,7 +293,7 @@
                     <a
                         data-materi-action="edit"
                         href="{{ route('dosen.mata-kuliah.materi.index', $kelas->getKey()) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <x-icon name="clipboard" class="h-4 w-4" />
                         Ubah materi

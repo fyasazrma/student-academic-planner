@@ -10,7 +10,7 @@
     $adaFilter = ($filters['jenis_ujian'] ?? '') !== '' || ($filters['tahun_akademik'] ?? '') !== '';
 @endphp
 
-<section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar jadwal ujian">
+<section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar jadwal ujian">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
             <h2 class="text-lg font-bold text-text">Daftar jadwal ujian</h2>
@@ -51,7 +51,7 @@
         <div class="flex items-end gap-2">
             <button
                 type="submit"
-                class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                class="rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
                 Terapkan filter
             </button>
@@ -113,7 +113,7 @@
 
         <div class="mt-3 space-y-3 md:hidden">
             @foreach ($ujian as $item)
-                <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div class="rounded-card bg-card p-4 shadow-card">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <p class="text-sm font-bold text-text">{{ $item['judul'] }}</p>

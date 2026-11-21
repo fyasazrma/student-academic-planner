@@ -6,7 +6,7 @@
             description="Lihat nilai UTS, UAS, tugas, nilai akhir, huruf dan bobot mutu, serta IP dan IPK Anda."
         />
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Ringkasan indeks prestasi">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Ringkasan indeks prestasi">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Indeks prestasi</p>
@@ -45,7 +45,7 @@
         </section>
 
         @if ($periode->count() > 1)
-            <section class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5" aria-label="Filter semester">
+            <section class="rounded-card bg-card p-4 shadow-card sm:p-5" aria-label="Filter semester">
                 <form method="GET" action="{{ route('mahasiswa.nilai') }}" class="flex flex-wrap items-end gap-3">
                     <div class="min-w-0 flex-1">
                         <label for="tahun_akademik_id" class="block text-[11px] font-semibold text-muted">Semester</label>
@@ -64,7 +64,7 @@
                     </div>
                     <button
                         type="submit"
-                        class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         Tampilkan
                     </button>
@@ -79,7 +79,7 @@
                 icon="chart"
             />
         @else
-            <section aria-label="Daftar nilai (tabel)" class="hidden rounded-2xl border border-border bg-card p-5 shadow-sm lg:block">
+            <section aria-label="Daftar nilai (tabel)" class="hidden rounded-card bg-card p-5 shadow-card lg:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -132,7 +132,7 @@
 
             <section aria-label="Daftar nilai (kartu)" class="space-y-3 lg:hidden">
                 @foreach ($baris as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">{{ $item['nama'] }}</p>
@@ -163,7 +163,7 @@
             </section>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Konversi nilai">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Konversi nilai">
             <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Konversi nilai</p>
             <div class="mt-4 grid gap-2 sm:grid-cols-5">
                 @foreach ([['A', '80–100', '4.00'], ['B', '70–<80', '3.00'], ['C', '60–<70', '2.00'], ['D', '50–<60', '1.00'], ['E', '0–<50', '0.00']] as $skala)

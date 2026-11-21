@@ -7,23 +7,27 @@
             $jam < 18 => 'Selamat sore',
             default => 'Selamat malam',
         };
+
+        $persenProgres = max(0, min(100, (float) ($progresOtomatis['persentase'] ?? 0)));
+        $lingkaranProgres = 2 * pi() * 16;
+        $offsetProgres = $lingkaranProgres * (1 - $persenProgres / 100);
     @endphp
 
-    <div class="space-y-6">
+    <div class="space-y-5 ui-stagger">
         <x-page-header
-            :title="$sapaan.', '.($user->name ?? 'Mahasiswa')"
+            :title="$sapaan.', '.($user->name ?? 'Mahasiswa').' 👋'"
             eyebrow="Dashboard mahasiswa"
             :description="'Ringkasan aktivitas akademik Anda. '.$today->translatedFormat('l, d F Y').'.'"
         >
             <x-slot:actions>
                 <div class="flex flex-wrap items-center gap-2 text-xs">
-                    <span class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-semibold text-text">
-                        <x-icon name="calendar" class="h-4 w-4 text-agenda-tugas" />
+                    <span class="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-xs font-semibold text-text shadow-card">
+                        <x-icon name="calendar" class="size-4 text-agenda-tugas" />
                         {{ $tahunAkademikAktif?->label() ?? 'Tahun akademik belum ditetapkan' }}
                     </span>
                     @if ($user->nim)
-                        <span class="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 font-semibold text-text">
-                            <x-icon name="user" class="h-4 w-4 text-agenda-tugas" />
+                        <span class="inline-flex h-10 items-center gap-2 rounded-full bg-card px-4 text-xs font-semibold text-text shadow-card">
+                            <x-icon name="user" class="size-4 text-agenda-tugas" />
                             NIM {{ $user->nim }}
                         </span>
                     @endif
@@ -31,7 +35,7 @@
             </x-slot:actions>
         </x-page-header>
 
-        <section aria-label="Ringkasan akademik" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section aria-label="Ringkasan akademik" class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
             <x-stat-card
                 label="Tugas belum dikumpulkan"
                 :value="$stats['belum_dikumpulkan']"
@@ -59,30 +63,30 @@
                 hint="Materi selesai dari kelas Anda"
                 icon="book"
                 tone="kuliah"
-            />
+            >
+                <x-slot:visual>
+                    <x-chart.donut
+                        :value="$persenProgres"
+                        label="Progres materi"
+                        :size="36"
+                        :stroke="4"
+                    />
+                </x-slot:visual>
+            </x-stat-card>
         </section>
 
-        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <x-mahasiswa.calendar-panel
-                :calendar="$calendar"
-                :timeline="$timeline"
-                :current-view="$currentView"
-                :active-filters="$activeFilters"
-                :filter-options="$filterOptions"
-                :today="$today"
-                route-name="mahasiswa.dashboard"
-            />
+        <x-mahasiswa.calendar-panel
+            :calendar="$calendar"
+            :timeline="$timeline"
+            :current-view="$currentView"
+            :active-filters="$activeFilters"
+            :filter-options="$filterOptions"
+            :today="$today"
+            route-name="mahasiswa.dashboard"
+        />
 
-            <x-notification-panel
-                :notifications="$notifications"
-                :deadlines="$deadlines"
-                :next-schedules="$nextSchedules"
-                :unread-count="$unreadCount"
-            />
-        </div>
-
-        <section aria-label="Ringkasan belajar" class="grid gap-4 lg:grid-cols-2">
-            <article class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+        <section aria-label="Ringkasan belajar" class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <article class="rounded-card bg-card p-5 shadow-card">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Target belajar</p>
@@ -91,7 +95,7 @@
                             <p class="mt-1 text-[11px] font-semibold text-agenda-terlambat">{{ $targetRingkasan['terlambat'] }} target terlambat</p>
                         @endif
                     </div>
-                    <a href="{{ route('mahasiswa.target.index') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-soft px-2.5 py-1.5 text-[11px] font-semibold text-text transition hover:bg-border/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                    <a href="{{ route('mahasiswa.target.index') }}" class="inline-flex h-8 items-center gap-1.5 rounded-full bg-soft px-3 text-[11px] font-semibold text-text transition hover:bg-border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                         Kelola <x-icon name="chevron-right" class="h-3.5 w-3.5" />
                     </a>
                 </div>
@@ -111,22 +115,42 @@
                 @endif
             </article>
 
-            <article class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+            <article class="rounded-card bg-card p-5 shadow-card">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Progres materi otomatis</p>
                         <p class="mt-2 text-sm font-bold text-text">{{ $progresOtomatis['selesai'] }}/{{ $progresOtomatis['total'] }} materi selesai</p>
                         <p class="mt-1 text-[11px] font-semibold text-muted">{{ number_format($progresOtomatis['persentase'], 2, ',', '.') }}% dari seluruh kelas aktif</p>
                     </div>
-                    <a href="{{ route('mahasiswa.progres-materi.index') }}" class="inline-flex items-center gap-1.5 rounded-lg border border-border bg-soft px-2.5 py-1.5 text-[11px] font-semibold text-text transition hover:bg-border/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
-                        Detail <x-icon name="chevron-right" class="h-3.5 w-3.5" />
-                    </a>
+                    <div class="flex items-center gap-2">
+                        <div class="relative size-10 shrink-0">
+                            <svg class="size-10 -rotate-90" viewBox="0 0 40 40" aria-hidden="true">
+                                <circle cx="20" cy="20" r="16" fill="none" stroke="currentColor" class="text-border" stroke-width="4" />
+                                <circle
+                                    cx="20"
+                                    cy="20"
+                                    r="16"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    class="text-progress transition-[stroke-dashoffset] duration-500"
+                                    stroke-width="4"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="{{ $lingkaranProgres }}"
+                                    stroke-dashoffset="{{ $offsetProgres }}"
+                                />
+                            </svg>
+                            <span class="absolute inset-0 grid place-items-center text-[10px] font-bold text-text">{{ (int) round($persenProgres) }}%</span>
+                        </div>
+                        <a href="{{ route('mahasiswa.progres-materi.index') }}" class="inline-flex h-8 items-center gap-1.5 rounded-full bg-soft px-3 text-[11px] font-semibold text-text transition hover:bg-border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            Detail <x-icon name="chevron-right" class="h-3.5 w-3.5" />
+                        </a>
+                    </div>
                 </div>
                 @if (count($progresOtomatis['belum_selesai']) > 0)
                     <ul class="mt-4 space-y-2">
                         @foreach ($progresOtomatis['belum_selesai'] as $materi)
                             <li>
-                                <a href="{{ route('mahasiswa.materi.show', [$materi['kelas_id'], $materi['id']]) }}" class="flex items-center gap-2 rounded-lg bg-surface px-2.5 py-1.5 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                                <a href="{{ route('mahasiswa.materi.show', [$materi['kelas_id'], $materi['id']]) }}" class="flex items-center gap-2 rounded-control bg-surface px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                     <x-icon name="file" class="h-3.5 w-3.5 shrink-0 text-agenda-tugas" />
                                     <span class="min-w-0 truncate">{{ $materi['judul'] }}</span>
                                 </a>
@@ -139,4 +163,13 @@
             </article>
         </section>
     </div>
+
+    <x-slot:rightPanel>
+        <x-notification-panel
+            :notifications="$notifications"
+            :deadlines="$deadlines"
+            :next-schedules="$nextSchedules"
+            :unread-count="$unreadCount"
+        />
+    </x-slot:rightPanel>
 </x-app-layout>

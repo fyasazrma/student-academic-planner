@@ -55,7 +55,7 @@
                 @php
                     $link = $notification->tautanInternal();
                 @endphp
-                <article class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <article class="rounded-card bg-card p-5 shadow-card">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div class="min-w-0">
                             <div class="flex flex-wrap items-center gap-2">

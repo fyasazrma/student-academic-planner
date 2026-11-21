@@ -37,7 +37,7 @@
                     </a>
                     <a
                         href="{{ route('dosen.mata-kuliah.edit', $kelas->id) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                        class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         <x-icon name="check" class="h-4 w-4" />
                         Edit kelas
@@ -86,7 +86,7 @@
 
         <div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div class="space-y-6">
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Identitas kelas">
+                <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Identitas kelas">
                     <h2 class="text-sm font-bold text-text">Identitas kelas</h2>
                     <dl class="mt-4 grid gap-4 sm:grid-cols-2">
                         <div>
@@ -123,7 +123,7 @@
                     </dl>
                 </section>
 
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Ringkasan materi">
+                <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Ringkasan materi">
                     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <h2 class="text-sm font-bold text-text">Ringkasan materi</h2>
@@ -182,7 +182,7 @@
                     </p>
                 </section>
 
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Kelola pendaftaran dan kunci">
+                <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Kelola pendaftaran dan kunci">
                     <h2 class="text-sm font-bold text-text">Kelola pendaftaran</h2>
                     <p class="mt-1 text-xs leading-5 text-muted">
                         Pendaftaran hanya dapat dibuka jika kunci gabung sudah dibuat. Rotasi kunci langsung membatalkan kunci lama tanpa menghapus peserta.
@@ -254,7 +254,7 @@
             </div>
 
             <aside class="space-y-4">
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <section class="rounded-card bg-card p-5 shadow-card">
                     <h2 class="text-sm font-bold text-text">Ringkasan keamanan kelas</h2>
                     <ul class="mt-4 space-y-3 text-xs leading-5 text-muted">
                         <li class="flex items-start gap-2">
@@ -272,7 +272,7 @@
                     </ul>
                 </section>
 
-                <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <section class="rounded-card bg-card p-5 shadow-card">
                     <h2 class="text-sm font-bold text-text">Identitas terkunci</h2>
                     <p class="mt-2 text-xs leading-5 text-muted">
                         Mata kuliah, tahun akademik, dan kode kelas tidak dapat diubah setelah kelas dibuat.

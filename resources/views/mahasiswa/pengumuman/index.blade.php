@@ -9,7 +9,7 @@
         <div role="status" class="mt-5 rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm font-semibold text-text">{{ session('status') }}</div>
     @endif
 
-    <section class="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar pengumuman mahasiswa">
+    <section class="mt-6 rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar pengumuman mahasiswa">
         <form method="GET" action="{{ route('mahasiswa.pengumuman.index') }}" role="search" class="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div class="flex-1">
                 <label for="q" class="block text-xs font-semibold text-text">Cari pengumuman</label>

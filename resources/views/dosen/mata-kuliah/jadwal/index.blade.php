@@ -16,7 +16,7 @@
                     </a>
                     <a
                         href="{{ route('dosen.mata-kuliah.jadwal.create', $kelas) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <x-icon name="calendar" class="h-4 w-4" />
                         Tambah jadwal
@@ -39,7 +39,7 @@
             >
                 <a
                     href="{{ route('dosen.mata-kuliah.jadwal.create', $kelas) }}"
-                    class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                    class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     Tambah jadwal
                 </a>
@@ -49,7 +49,7 @@
                 Menampilkan {{ $jadwal->count() }} jadwal pada kelas ini.
             </p>
 
-            <div class="hidden overflow-x-auto rounded-2xl border border-border bg-card shadow-sm md:block">
+            <div class="hidden overflow-x-auto rounded-card bg-card shadow-card md:block">
                 <table class="w-full border-collapse text-left text-sm">
                     <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
                         <tr>
@@ -108,7 +108,7 @@
 
             <div class="space-y-3 md:hidden">
                 @foreach ($jadwal as $item)
-                    <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <div class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div>
                                 <p class="text-sm font-bold text-text">{{ $item['hari_label'] }}</p>

@@ -30,7 +30,7 @@
                 icon="clipboard"
             />
         @else
-            <section aria-label="Riwayat koreksi (tabel)" class="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:block">
+            <section aria-label="Riwayat koreksi (tabel)" class="hidden overflow-hidden rounded-card bg-card shadow-card md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -68,7 +68,7 @@
 
             <section aria-label="Riwayat koreksi (kartu)" class="space-y-3 md:hidden">
                 @foreach ($riwayat as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <p class="text-sm font-bold text-text">{{ $item->pesertaMataKuliah?->mahasiswa?->name ?? '-' }}</p>
                         <div class="mt-2 flex items-center gap-2">
                             <x-status-badge :label="$item->status_sebelum ?? 'Kosong'" :tone="$tone($item->status_sebelum)" />

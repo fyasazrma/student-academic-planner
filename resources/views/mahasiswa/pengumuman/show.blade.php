@@ -12,7 +12,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    <section class="mt-6 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+    <section class="mt-6 rounded-card bg-card p-5 shadow-card sm:p-6">
         <div class="flex flex-wrap items-center gap-2">
             <x-status-badge label="Pengumuman" tone="pengumuman" />
             @if ($pengumuman->kelas_mata_kuliah_id !== null)

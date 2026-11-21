@@ -26,11 +26,11 @@
             <button
                 type="button"
                 data-agenda-trigger="{{ $event['id'] }}"
-                class="flex w-full items-start gap-3 rounded-xl border border-border bg-soft p-3 text-left transition hover:bg-card focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                class="flex w-full items-start gap-3 rounded-control bg-soft p-3 text-left transition hover:bg-card hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-                <span class="mt-1 flex h-4 w-4 shrink-0 items-center justify-center {{ $toneByJenis[$event['jenis']] ?? 'bg-muted' }} rounded-full">
+                <span class="mt-1 grid size-4 shrink-0 place-items-center {{ $toneByJenis[$event['jenis']] ?? 'bg-muted' }} rounded-full">
                     @if (($event['kind'] ?? 'point') === 'recurring')
-                        <x-icon name="repeat" class="h-3 w-3 text-white" />
+                        <x-icon name="repeat" class="size-3 text-white" />
                     @elseif (($event['kind'] ?? 'point') === 'range')
                         <span class="h-0.5 w-2 rounded-full bg-white"></span>
                     @endif

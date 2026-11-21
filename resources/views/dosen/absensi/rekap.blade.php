@@ -14,27 +14,27 @@
         </x-page-header>
 
         <section class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6" aria-label="Ringkasan rekap">
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Peserta</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $jumlah_peserta }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Sesi ditutup</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $total_sesi_ditutup }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Hadir</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $hadir }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Izin</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $izin }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Sakit</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $sakit }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Alfa</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $alfa }}</p>
             </div>
@@ -47,7 +47,7 @@
                 icon="user"
             />
         @else
-            <section aria-label="Rekap per peserta (tabel)" class="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:block">
+            <section aria-label="Rekap per peserta (tabel)" class="hidden overflow-hidden rounded-card bg-card shadow-card md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -85,7 +85,7 @@
 
             <section aria-label="Rekap per peserta (kartu)" class="space-y-3 md:hidden">
                 @foreach ($baris as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">{{ $item['nama'] }}</p>

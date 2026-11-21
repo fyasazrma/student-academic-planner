@@ -8,7 +8,7 @@
             <x-slot:actions>
                 <a
                     href="{{ route('admin.mata-kuliah.create') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="book" class="h-4 w-4" />
                     Tambah mata kuliah
@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Daftar mata kuliah">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Daftar mata kuliah">
             <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h3 class="text-base font-bold text-text">Daftar mata kuliah</h3>
@@ -73,7 +73,7 @@
                         @if ($kataKunci === '')
                             <a
                                 href="{{ route('admin.mata-kuliah.create') }}"
-                                class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                             >
                                 Tambah mata kuliah
                             </a>
@@ -189,7 +189,7 @@
     @push('modals')
         <dialog
             id="dialog-konfirmasi-mk"
-            class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+            class="ui-dialog max-w-md"
             aria-labelledby="dialog-konfirmasi-mk-judul"
         >
             <form id="form-konfirmasi-mk" method="POST" action="" class="p-5 sm:p-6">
@@ -229,7 +229,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <span data-mk-dialog-submit>Konfirmasi</span>
                     </button>

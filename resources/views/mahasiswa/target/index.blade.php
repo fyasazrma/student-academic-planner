@@ -15,7 +15,7 @@
             <x-slot:actions>
                 <a
                     href="{{ route('mahasiswa.target.create') }}"
-                    class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="plus" class="h-4 w-4" />
                     Tambah Target
@@ -30,7 +30,7 @@
             <x-stat-card label="Dibatalkan" :value="$ringkasan['dibatalkan']" hint="Tidak dihitung sebagai target aktif" icon="info" tone="akademik" />
         </section>
 
-        <section class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5" aria-label="Daftar target belajar">
+        <section class="rounded-card bg-card p-4 shadow-card sm:p-5" aria-label="Daftar target belajar">
             <form method="GET" action="{{ route('mahasiswa.target.index') }}" class="flex flex-wrap items-end gap-3">
                 <div class="min-w-[180px] flex-1">
                     <label for="status" class="mb-1.5 block text-[11px] font-semibold text-muted">Status</label>
@@ -92,7 +92,7 @@
                         description="Buat target pertama Anda untuk memantau capaian belajar."
                         icon="target"
                     >
-                        <a href="{{ route('mahasiswa.target.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                        <a href="{{ route('mahasiswa.target.create') }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             <x-icon name="plus" class="h-4 w-4" /> Tambah Target
                         </a>
                     </x-empty-state>

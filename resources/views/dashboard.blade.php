@@ -9,9 +9,9 @@
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-full bg-page-bg font-sans text-text antialiased">
+    <body class="min-h-full bg-surface font-sans text-text antialiased">
         <div class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
-            <main class="w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+            <main class="w-full max-w-lg rounded-card bg-card p-6 shadow-card sm:p-8">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-agenda-tugas">Dashboard</p>

@@ -22,7 +22,7 @@
         @else
             <section aria-label="Rekap kehadiran per mata kuliah" class="grid gap-4 lg:grid-cols-2">
                 @foreach ($rekap as $item)
-                    <article class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <article class="rounded-card bg-card p-5 shadow-card">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">{{ $item['mata_kuliah'] }}</p>

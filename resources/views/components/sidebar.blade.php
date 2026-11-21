@@ -53,32 +53,39 @@
     $navigasiLabel = $isAdmin ? 'Navigasi utama admin' : ($isDosen ? 'Navigasi utama dosen' : 'Navigasi utama mahasiswa');
     $menuLabel = $isAdmin ? 'Menu admin' : ($isDosen ? 'Menu dosen' : 'Menu mahasiswa');
     $peranLabel = $isAdmin ? 'Administrator' : ($isDosen ? 'Dosen' : ($user?->nim ? 'NIM '.$user->nim : 'Mahasiswa'));
+
+    // Pintasan memakai route yang sudah ada; tidak ada tombol palsu.
+    $shortcut = $isAdmin
+        ? ['label' => 'Kelola jadwal ujian', 'icon' => 'calendar', 'routeName' => 'admin.jadwal-ujian.index']
+        : ($isDosen
+            ? ['label' => 'Kelola absensi kelas', 'icon' => 'check', 'routeName' => 'dosen.absensi.index']
+            : ['label' => 'Target belajar aktif', 'icon' => 'target', 'routeName' => 'mahasiswa.target.index']);
 @endphp
 
 <aside
     @class([
-        'flex h-full flex-col bg-sidebar text-white',
-        'rounded-r-2xl' => $mobile,
+        'flex h-full min-h-0 flex-col rounded-panel bg-sidebar p-4 text-white',
+        'rounded-r-panel' => $mobile,
     ])
     aria-label="{{ $navigasiLabel }}"
 >
-    <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-text">
-            <x-icon name="book" class="h-5 w-5" />
+    <div class="flex items-center gap-3 px-1 pb-4 pt-1">
+        <div class="grid size-10 shrink-0 place-items-center rounded-tile bg-primary text-primary-text">
+            <x-icon name="book" class="size-5" />
         </div>
         <div class="min-w-0">
             <p class="truncate text-sm font-bold leading-tight">Student Academic Planner</p>
-            <p class="mt-0.5 text-[11px] text-white/60">Perencanaan akademik</p>
+            <p class="mt-0.5 text-[11px] text-sidebar-text">Perencanaan akademik</p>
         </div>
         @if ($mobile)
-            <button type="button" class="ml-auto rounded-lg p-1.5 text-white/70 hover:bg-sidebar-hover hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" data-sidebar-close aria-label="Tutup menu">
-                <x-icon name="close" class="h-5 w-5" />
+            <button type="button" class="ml-auto grid size-9 shrink-0 place-items-center rounded-full text-sidebar-text transition hover:bg-sidebar-hover hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" data-sidebar-close aria-label="Tutup menu">
+                <x-icon name="close" class="size-5" />
             </button>
         @endif
     </div>
 
-    <nav class="flex-1 overflow-y-auto px-3 py-5">
-        <p class="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">{{ $menuLabel }}</p>
+    <nav class="min-h-0 flex-1 overflow-y-auto pr-1">
+        <p class="mb-3 px-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-sidebar-text/70">{{ $menuLabel }}</p>
         <ul class="space-y-1">
             @foreach ($items as $item)
                 <li>
@@ -90,31 +97,29 @@
                         <a
                             href="{{ $href }}"
                             @class([
-                                'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                                'bg-primary text-primary-text shadow-sm' => $active,
-                                'text-white/80 hover:bg-sidebar-hover hover:text-white' => ! $active,
+                                'flex h-11 items-center gap-3 rounded-full px-4 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                                'bg-primary font-semibold text-primary-text hover:bg-primary-hover' => $active,
+                                'text-sidebar-text hover:bg-sidebar-hover hover:text-white' => ! $active,
                             ])
                             @if ($active) aria-current="page" @endif
                         >
-                            <x-icon :name="$item['icon']" class="h-[18px] w-[18px] shrink-0" />
-                            <span>{{ $item['label'] }}</span>
+                            <x-icon :name="$item['icon']" class="size-5 shrink-0" />
+                            <span class="min-w-0 truncate">{{ $item['label'] }}</span>
                             @if ($item['label'] === 'Notifikasi' && $unreadCount > 0)
-                                <span @class([
-                                    'ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold text-white',
-                                    'bg-sidebar' => $active,
-                                    'bg-danger' => ! $active,
-                                ])>{{ $unreadCount }}</span>
+                                <span class="ml-auto grid min-w-5 shrink-0 place-items-center rounded-full bg-badge px-1 py-0.5 text-[10px] font-bold leading-none text-badge-text">
+                                    {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                                </span>
                             @endif
                         </a>
                     @else
                         <span
-                            class="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/45"
+                            class="flex h-11 cursor-not-allowed items-center gap-3 rounded-full px-4 text-sm font-medium text-sidebar-text/60"
                             aria-disabled="true"
                             title="Halaman belum tersedia"
                         >
-                            <x-icon :name="$item['icon']" class="h-[18px] w-[18px] shrink-0" />
-                            <span>{{ $item['label'] }}</span>
-                            <span class="ml-auto rounded-md bg-white/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide">Segera</span>
+                            <x-icon :name="$item['icon']" class="size-5 shrink-0" />
+                            <span class="min-w-0 truncate">{{ $item['label'] }}</span>
+                            <span class="ml-auto rounded-full bg-white/10 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide">Segera</span>
                         </span>
                     @endif
                 </li>
@@ -122,16 +127,29 @@
         </ul>
     </nav>
 
-    <div class="border-t border-white/10 p-4">
-        <div class="mb-3 flex items-center gap-3 rounded-xl bg-white/5 p-3">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-text">
+    <div class="mt-4 space-y-3">
+        <a
+            href="{{ route($shortcut['routeName']) }}"
+            class="relative block rounded-card bg-primary p-4 pt-7 text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+            <span class="absolute -top-5 left-4 grid size-11 place-items-center rounded-full bg-white text-primary-text shadow-card">
+                <x-icon :name="$shortcut['icon']" class="size-5" />
+            </span>
+            <span class="block text-sm font-bold">{{ $shortcut['label'] }}</span>
+            <span class="mt-1 block text-xs font-medium text-primary-text/75">Pintasan cepat</span>
+            <span class="mt-3 inline-flex items-center gap-1 rounded-full bg-white/75 px-3 py-1.5 text-xs font-bold">
+                Buka
+                <x-icon name="chevron-right" class="size-3.5" />
+            </span>
+        </a>
+
+        <div class="flex items-center gap-3 rounded-card bg-white/5 p-3">
+            <div class="grid size-9 shrink-0 place-items-center rounded-full bg-tile-lavender text-xs font-bold text-text">
                 {{ strtoupper(mb_substr($user?->name ?? 'M', 0, 1)) }}
             </div>
             <div class="min-w-0">
                 <p class="truncate text-sm font-semibold">{{ $user?->name }}</p>
-                <p class="truncate text-[11px] text-white/60">
-                    {{ $peranLabel }}
-                </p>
+                <p class="truncate text-[11px] text-sidebar-text">{{ $peranLabel }}</p>
             </div>
         </div>
 
@@ -139,9 +157,9 @@
             @csrf
             <button
                 type="submit"
-                class="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2.5 text-sm font-semibold text-white/80 transition hover:border-danger/60 hover:bg-danger/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                class="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-white/15 px-3 text-sm font-semibold text-sidebar-text transition hover:border-danger/60 hover:bg-danger/10 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-                <x-icon name="logout" class="h-4 w-4" />
+                <x-icon name="logout" class="size-4" />
                 Keluar
             </button>
         </form>

@@ -28,7 +28,7 @@
             </div>
         @endif
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" aria-label="Informasi tugas">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6" aria-label="Informasi tugas">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="min-w-0">
                     <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-agenda-tugas">Tugas</p>
@@ -110,7 +110,7 @@
                 icon="user"
             />
         @else
-            <section aria-label="Daftar pengumpulan (tabel)" class="hidden rounded-2xl border border-border bg-card p-5 shadow-sm md:block">
+            <section aria-label="Daftar pengumpulan (tabel)" class="hidden rounded-card bg-card p-5 shadow-card md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -171,7 +171,7 @@
 
             <section aria-label="Daftar pengumpulan (kartu)" class="space-y-3 md:hidden">
                 @foreach ($peserta as $baris)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">{{ $baris['nama'] }}</p>

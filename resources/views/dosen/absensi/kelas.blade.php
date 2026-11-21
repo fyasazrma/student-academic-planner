@@ -12,7 +12,7 @@
                         Daftar kelas
                     </a>
                     <a href="{{ route('dosen.absensi.rekap', $kelas->getKey()) }}" class="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">Lihat rekap</a>
-                    <a href="{{ route('dosen.absensi.sesi.create', $kelas->getKey()) }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <a href="{{ route('dosen.absensi.sesi.create', $kelas->getKey()) }}" class="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                         <x-icon name="plus" class="h-4 w-4" />
                         Buat sesi
                     </a>
@@ -28,19 +28,19 @@
         @endif
 
         <section class="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label="Ringkasan sesi">
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Total sesi</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $sesi->count() }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Dibuka</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $sesi->where('status', 'dibuka')->count() }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Ditutup</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $ringkasan['total_sesi_ditutup'] }}</p>
             </div>
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-card bg-card p-4 shadow-card">
                 <p class="text-[11px] font-semibold text-muted">Peserta rekap</p>
                 <p class="mt-2 text-xl font-bold text-text">{{ $ringkasan['jumlah_peserta'] }}</p>
             </div>
@@ -53,7 +53,7 @@
                 icon="calendar"
             />
         @else
-            <section aria-label="Daftar sesi (tabel)" class="hidden overflow-hidden rounded-2xl border border-border bg-card shadow-sm md:block">
+            <section aria-label="Daftar sesi (tabel)" class="hidden overflow-hidden rounded-card bg-card shadow-card md:block">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse text-left text-sm">
                         <thead class="bg-soft text-[11px] font-bold uppercase tracking-wide text-muted">
@@ -110,7 +110,7 @@
 
             <section aria-label="Daftar sesi (kartu)" class="space-y-3 md:hidden">
                 @foreach ($sesi as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">Pertemuan ke-{{ $item['pertemuan_ke'] }}</p>

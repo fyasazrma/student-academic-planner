@@ -6,7 +6,7 @@
             description="Tentukan target yang terukur, satuan capaian, dan batas waktunya."
         />
 
-        <section class="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+        <section class="rounded-card bg-card p-5 shadow-card sm:p-6">
             @include('mahasiswa.target._form', [
                 'action' => route('mahasiswa.target.store'),
                 'method' => 'POST',

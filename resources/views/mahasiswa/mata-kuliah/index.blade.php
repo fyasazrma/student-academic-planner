@@ -46,7 +46,7 @@
             @else
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     @foreach ($kelasSaya as $pendaftaran)
-                        <article class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                        <article class="rounded-card bg-card p-5 shadow-card">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
                                     <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-agenda-tugas">
@@ -129,7 +129,7 @@
                 </div>
                 <button
                     type="submit"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <x-icon name="search" class="h-4 w-4" />
                     Cari kelas
@@ -159,7 +159,7 @@
 
                     <div class="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         @foreach ($kelas as $kandidat)
-                            <article class="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm">
+                            <article class="flex flex-col rounded-card bg-card p-5 shadow-card">
                                 <div class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-agenda-tugas">
@@ -215,7 +215,7 @@
                                             type="button"
                                             data-gabung-trigger
                                             data-gabung-label="{{ $kandidat['kode_mata_kuliah'] }} — {{ $kandidat['nama_kelas'] }}"
-                                            class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                                            class="inline-flex items-center justify-center rounded-full bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                         >
                                             Gabung
                                         </button>
@@ -248,7 +248,7 @@
         <dialog
             id="dialog-gabung"
             @error('kode_gabung') data-gabung-error @enderror
-            class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+            class="ui-dialog max-w-md"
             aria-labelledby="dialog-gabung-judul"
         >
             <form method="POST" action="{{ route('mahasiswa.mata-kuliah.gabung') }}" class="p-5 sm:p-6">
@@ -302,7 +302,7 @@
                     </button>
                     <button
                         type="submit"
-                        class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                        class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         Gabung kelas
                     </button>

@@ -33,7 +33,7 @@
         @if ($rekap->isNotEmpty())
             <section class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Ringkasan kehadiran per mata kuliah">
                 @foreach ($rekap as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <article class="rounded-card bg-card p-4 shadow-card">
                         <p class="truncate text-xs font-bold text-text">{{ $item['mata_kuliah'] }}</p>
                         <p class="mt-1 text-[11px] text-muted">{{ $item['kode_kelas'] }} · {{ $item['total_sesi_ditutup'] }} sesi ditutup</p>
                         <div class="mt-3 flex items-center justify-between gap-2">
@@ -54,7 +54,7 @@
         @else
             <section aria-label="Daftar sesi absensi" class="space-y-3">
                 @foreach ($sesi as $item)
-                    <article class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+                    <article class="rounded-card bg-card p-4 shadow-card sm:p-5">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="text-sm font-bold text-text">{{ $item['mata_kuliah'] }}</p>
@@ -76,7 +76,7 @@
                         @if ($item['boleh_isi'])
                             <form method="POST" action="{{ $item['url'] }}" class="mt-4 border-t border-border pt-4">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                     <x-icon name="check" class="h-4 w-4" />
                                     Isi absensi hadir
                                 </button>

@@ -1,7 +1,7 @@
 @push('modals')
     <dialog
         id="dialog-konfirmasi-jadwal"
-        class="w-[calc(100%-2rem)] max-w-md rounded-2xl border border-border bg-card p-0 text-text shadow-xl backdrop:bg-sidebar/50"
+        class="ui-dialog max-w-md"
         aria-labelledby="dialog-konfirmasi-jadwal-judul"
     >
         <form id="form-konfirmasi-jadwal" method="POST" action="" class="p-5 sm:p-6" data-auth-form>
@@ -41,7 +41,7 @@
                 <button
                     type="submit"
                     data-submit-button
-                    class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    class="rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <span data-jadwal-dialog-submit data-submit-label>Hapus</span>
                 </button>

@@ -30,15 +30,15 @@
 <button
     type="button"
     data-agenda-trigger="{{ $event['id'] }}"
-    class="flex w-full items-center gap-1.5 rounded-md bg-soft px-1.5 py-1 text-left text-[10px] font-semibold leading-tight text-text transition hover:bg-card hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas sm:text-[11px]"
+    class="flex w-full items-center gap-1.5 rounded-full bg-soft px-2 py-1 text-left text-[10px] font-semibold leading-tight text-text transition hover:bg-card hover:shadow-card focus:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:text-[11px]"
     title="{{ $event['label'] }}: {{ $event['judul'] }} ({{ $event['tanggal_label'] }})"
 >
     @if (($event['kind'] ?? 'point') === 'recurring')
-        <x-icon name="repeat" class="h-3 w-3 shrink-0 {{ $textTones[$event['jenis']] ?? 'text-muted' }}" />
+        <x-icon name="repeat" class="size-3 shrink-0 {{ $textTones[$event['jenis']] ?? 'text-muted' }}" />
     @elseif (($event['kind'] ?? 'point') === 'range')
         <span class="h-1 w-3 shrink-0 rounded-full {{ $tones[$event['jenis']] ?? 'bg-muted' }}"></span>
     @else
-        <span class="h-1.5 w-1.5 shrink-0 rounded-full {{ $tones[$event['jenis']] ?? 'bg-muted' }}"></span>
+        <span class="size-1.5 shrink-0 rounded-full {{ $tones[$event['jenis']] ?? 'bg-muted' }}"></span>
     @endif
     <span class="truncate">
         <span class="sr-only">{{ $event['label'] }}: </span>{{ $event['judul'] }}

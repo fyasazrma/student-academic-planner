@@ -9,11 +9,11 @@
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-full bg-page-bg font-sans text-text antialiased">
+    <body class="min-h-full bg-surface font-sans text-text antialiased">
         <div class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
             <main class="w-full max-w-md">
                 <div class="mb-8 flex items-center justify-center gap-3">
-                    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-text shadow-sm">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-tile bg-primary text-primary-text shadow-card">
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3 2.75 7.5 12 12l9.25-4.5L12 3Z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 10.25v4.2c0 1.1 2.9 3.05 6.75 3.05s6.75-1.95 6.75-3.05v-4.2" />
@@ -26,7 +26,7 @@
                     </div>
                 </div>
 
-                <section class="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+                <section class="rounded-card bg-card p-6 shadow-card sm:p-8">
                     <div class="mb-7">
                         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-agenda-tugas">Masuk</p>
                         <h1 class="mt-2 text-2xl font-bold tracking-tight text-text">Selamat datang kembali</h1>
@@ -118,7 +118,7 @@
                         <button
                             type="submit"
                             data-submit-button
-                            class="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-70"
+                            class="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             <svg data-submit-spinner class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                 <circle class="opacity-25" cx="12" cy="12" r="9" stroke="currentColor" stroke-width="3" />
