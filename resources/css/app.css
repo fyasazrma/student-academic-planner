@@ -163,6 +163,122 @@
     }
 }
 
+/* --------------------------------------------------------------------------
+   Landing motion foundation.
+   Semua aturan memakai data attribute khusus motion agar tidak terikat pada
+   warna, ilustrasi, atau struktur visual landing tertentu.
+   -------------------------------------------------------------------------- */
+
+[data-landing] {
+    --landing-duration-micro: 200ms;
+    --landing-duration-hover: 240ms;
+    --landing-duration-reveal: 600ms;
+    --landing-duration-panel: 420ms;
+    --landing-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --landing-reveal-distance: 18px;
+    --landing-stagger-step: 80ms;
+}
+
+@media (max-width: 767px) {
+    [data-landing] {
+        --landing-reveal-distance: 10px;
+    }
+}
+
+[data-landing] [data-progress] {
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
+}
+
+[data-landing] [data-reveal],
+[data-landing] [data-reveal-item] {
+    transition:
+        opacity var(--landing-duration-reveal) var(--landing-ease) var(--landing-delay, 0ms),
+        transform var(--landing-duration-reveal) var(--landing-ease) var(--landing-delay, 0ms);
+}
+
+[data-landing][data-motion-ready] [data-reveal]:not(.is-revealed),
+[data-landing][data-motion-ready] [data-reveal-item]:not(.is-revealed) {
+    opacity: 0;
+    transform: translate3d(0, var(--landing-reveal-distance), 0);
+}
+
+[data-landing] [data-landing-hover] {
+    transition:
+        color var(--landing-duration-hover) var(--landing-ease),
+        background-color var(--landing-duration-hover) var(--landing-ease),
+        box-shadow var(--landing-duration-hover) var(--landing-ease),
+        opacity var(--landing-duration-micro) var(--landing-ease),
+        transform var(--landing-duration-hover) var(--landing-ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    [data-landing] [data-landing-hover="card"]:hover,
+    [data-landing] [data-landing-hover="button"]:hover {
+        transform: translate3d(0, -2px, 0);
+        box-shadow: var(--shadow-card-hover);
+    }
+
+    [data-landing] .landing-cal-tabs label:hover,
+    [data-landing] .landing-role-tabs label:hover {
+        transform: translate3d(0, -1px, 0);
+    }
+}
+
+[data-landing] [data-landing-hover="card"]:active,
+[data-landing] [data-landing-hover="button"]:active {
+    transform: translate3d(0, 0, 0);
+    transition-duration: var(--landing-duration-micro);
+}
+
+[data-landing] .landing-cal-tabs label,
+[data-landing] .landing-role-tabs label {
+    transition:
+        background-color var(--landing-duration-hover) var(--landing-ease),
+        color var(--landing-duration-hover) var(--landing-ease),
+        transform var(--landing-duration-micro) var(--landing-ease);
+}
+
+@keyframes landing-panel-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 8px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+[data-landing][data-motion-ready] .landing-panel {
+    animation: landing-panel-in var(--landing-duration-panel) var(--landing-ease) both;
+}
+
+[data-landing][data-motion-ready] .landing-disclosure[open] > p {
+    animation: landing-panel-in var(--landing-duration-hover) var(--landing-ease) both;
+}
+
+@keyframes landing-float {
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+    50% {
+        transform: translate3d(0, -4px, 0);
+    }
+}
+
+@media (min-width: 768px) {
+    [data-landing] [data-landing-float] {
+        animation: landing-float 7s ease-in-out infinite;
+    }
+}
+
+[data-landing] [data-parallax] {
+    transform: translate3d(0, var(--landing-parallax-y, 0px), 0);
+}
+
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -171,5 +287,18 @@
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
         scroll-behavior: auto !important;
+    }
+
+    [data-landing] [data-progress] {
+        display: none;
+    }
+
+    [data-landing] [data-reveal],
+    [data-landing] [data-reveal-item],
+    [data-landing] [data-parallax],
+    [data-landing] [data-landing-float] {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
     }
 }

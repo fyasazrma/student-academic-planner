@@ -39,7 +39,7 @@ Route::get('/', function () {
     $user = auth()->user();
 
     if ($user === null) {
-        return redirect()->route('login');
+        return view('landing.index');
     }
 
     $rute = match (true) {
@@ -49,7 +49,7 @@ Route::get('/', function () {
     };
 
     return redirect()->route($rute);
-});
+})->name('landing.index');
 
 require __DIR__.'/auth.php';
 

@@ -634,3 +634,126 @@ onReady(() => {
         setDrawer(false);
     });
 });
+
+/**
+ * Sistem motion landing page.
+ *
+ * Berjalan hanya ketika elemen [data-landing] tersedia. Konten tetap terlihat
+ * tanpa JavaScript, ketika IntersectionObserver tidak ada, dan ketika
+ * prefers-reduced-motion aktif: status motion hanya diaktifkan dari sini.
+ */
+const initLandingMotion = () => {
+    const root = document.querySelector('[data-landing]');
+
+    if (! root || typeof window.IntersectionObserver !== 'function') {
+        return;
+    }
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+
+    const revealTargets = Array.from(root.querySelectorAll('[data-reveal], [data-reveal-item]'));
+
+    if (! revealTargets.length) {
+        return;
+    }
+
+    root.querySelectorAll('[data-reveal-group]').forEach((group) => {
+        const items = Array.from(group.children).filter((child) => child.matches('[data-reveal], [data-reveal-item]'));
+
+        items.forEach((item, index) => {
+            if (index > 0) {
+                item.style.setProperty('--landing-delay', `${Math.min(index, 5) * 80}ms`);
+            }
+        });
+    });
+
+    let observer;
+
+    const markRevealed = (element) => {
+        element.classList.add('is-revealed');
+        observer?.unobserve(element);
+    };
+
+    observer = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    markRevealed(entry.target);
+                }
+            });
+        },
+        { threshold: 0.08, rootMargin: '0px 0px -32px 0px' },
+    );
+
+    // Status motion dipasang paling akhir: bila inisialisasi gagal, tidak ada
+    // konten yang disembunyikan.
+    root.setAttribute('data-motion-ready', '');
+
+    revealTargets.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+
+        if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+            markRevealed(element);
+            return;
+        }
+
+        observer.observe(element);
+    });
+
+    const progressBar = root.querySelector('[data-progress]');
+    const parallaxItems = Array.from(root.querySelectorAll('[data-parallax]'));
+    const canParallax = window.innerWidth >= 768 && parallaxItems.length > 0;
+
+    if (! progressBar && ! canParallax) {
+        return;
+    }
+
+    let frame = 0;
+
+    const updateScrollMotion = () => {
+        frame = 0;
+
+        if (progressBar) {
+            const scrollable = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+            const ratio = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+
+            progressBar.style.transform = `scaleX(${ratio.toFixed(4)})`;
+        }
+
+        if (! canParallax) {
+            return;
+        }
+
+        const viewportHeight = window.innerHeight;
+
+        parallaxItems.forEach((item) => {
+            const rect = item.getBoundingClientRect();
+
+            if (rect.bottom < -120 || rect.top > viewportHeight + 120) {
+                return;
+            }
+
+            const amplitude = Number.parseFloat(item.dataset.parallax) || 10;
+            const position = (rect.top + rect.height / 2 - viewportHeight / 2) / viewportHeight;
+            const shift = Math.max(-1, Math.min(1, position)) * amplitude;
+
+            item.style.setProperty('--landing-parallax-y', `${shift.toFixed(1)}px`);
+        });
+    };
+
+    const requestScrollUpdate = () => {
+        if (frame) {
+            return;
+        }
+
+        frame = window.requestAnimationFrame(updateScrollMotion);
+    };
+
+    window.addEventListener('scroll', requestScrollUpdate, { passive: true });
+    window.addEventListener('resize', requestScrollUpdate, { passive: true });
+    updateScrollMotion();
+};
+
+onReady(initLandingMotion);
