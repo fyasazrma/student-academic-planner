@@ -3,6 +3,7 @@
 namespace App\Services\Mahasiswa;
 
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Models\PengumpulanTugas;
 use App\Models\PesertaMataKuliah;
 use App\Models\Tugas;
@@ -28,8 +29,10 @@ class PengumpulanTugasService
 {
     private const MAX_PERCOBAAN = 3;
 
-    public function __construct(private readonly PengumpulanFileService $file)
-    {
+    public function __construct(
+        private readonly PengumpulanFileService $file,
+        private readonly ?\App\Services\Notifikasi\NotifikasiService $notifikasi = null,
+    ) {
     }
 
     /**
@@ -213,6 +216,17 @@ class PengumpulanTugasService
             ->where('peserta_mata_kuliah_id', $pesertaId)
             ->firstOrFail();
 
+        $notifikasi = $this->notifikasi ?? app(\App\Services\Notifikasi\NotifikasiService::class);
+        DB::afterCommit(fn (): int => $notifikasi->kirimKeDosenPengampu(
+            (int) $kelasId,
+            \App\Enums\JenisNotifikasi::Tugas,
+            'Pengumpulan tugas baru: '.$final->tugas?->judul,
+            trim(($final->pesertaMataKuliah?->mahasiswa?->name ?? 'Mahasiswa').' mengumpulkan tugas'
+                .($final->terlambat ? ' setelah deadline.' : '.')),
+            route('dosen.mata-kuliah.tugas.pengumpulan.show', [$kelasId, $tugasId, $final->getKey()], false),
+            'pengumpulan-dosen:'.$final->getKey().':'.($final->dikumpulkan_pada?->timestamp ?? 0),
+        ));
+
         if ($baruPath !== null
             && $final->file_path === $baruPath
             && Storage::disk(PengumpulanFileService::DISK)->exists($baruPath)) {
@@ -395,6 +409,6 @@ class PengumpulanTugasService
         return PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
             ->where('kelas_mata_kuliah_id', $kelasId)
-            ->where('status', StatusPeserta::Aktif->value);
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak());
     }
 }

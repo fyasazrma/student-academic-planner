@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +25,16 @@ class PesertaMataKuliah extends Model
             'status' => StatusPeserta::class,
             'tanggal_daftar' => 'date',
         ];
+    }
+
+    public function scopeBerhak(Builder $query): Builder
+    {
+        return KelayakanPeserta::scopeBerhak($query);
+    }
+
+    public function berhak(): bool
+    {
+        return KelayakanPeserta::berhak($this->status);
     }
 
     public function kelasMataKuliah(): BelongsTo

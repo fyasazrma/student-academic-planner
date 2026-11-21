@@ -334,12 +334,24 @@ class JadwalUjianService
                         ? 'Jadwal ujian ditambahkan: '.$atribut['judul']
                         : 'Jadwal ujian diperbarui: '.$atribut['judul'];
 
+                    $sumber = 'ujian:'.$ujianTersimpan->getKey().':'.$tanda;
+                    $isi = 'Jadwal '.$jenisUjian->label().' pada '.$atribut['tanggal_mulai'].'. Cek detail jadwal untuk informasi lengkap.';
+
                     DB::afterCommit(fn (): int => $this->notifikasi->kirimKeSemuaMahasiswa(
                         JenisNotifikasi::Ujian,
                         $judulNotifikasi,
-                        'Jadwal '.$jenisUjian->label().' pada '.$atribut['tanggal_mulai'].'. Cek detail jadwal untuk informasi lengkap.',
+                        $isi,
                         '/mahasiswa/jadwal-ujian',
-                        'ujian:'.$ujianTersimpan->getKey().':'.$tanda,
+                        $sumber,
+                        $adminId,
+                    ));
+                    DB::afterCommit(fn (): int => $this->notifikasi->kirimKeSemuaDosen(
+                        JenisNotifikasi::Ujian,
+                        $judulNotifikasi,
+                        $isi,
+                        '/dosen/jadwal-ujian',
+                        $sumber,
+                        $adminId,
                     ));
                 }
 

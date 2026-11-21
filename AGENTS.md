@@ -45,7 +45,7 @@ Jangan menganggap contoh atau rancangan sebagai bukti bahwa fitur sudah tersedia
 - Utamakan Laravel conventions, Blade components, named routes, Form Request validation, middleware/policies, Eloquent relationships, dan migration.
 - Gunakan komponen Blade reusable untuk elemen yang berulang: sidebar, topbar, breadcrumb, page header, stat card, button, form field, modal, table, badge, empty state, calendar event, dan timeline bar.
 - Gunakan Tailwind CSS sesuai versi yang sudah terpasang (Tailwind v4 dengan @tailwindcss/vite). Jangan mengasumsikan konfigurasi versi lain.
-- Gunakan ikon dari satu library yang sudah terpasang. Jangan mencampur emoji, SVG acak, dan beberapa library ikon tanpa alasan.
+- Gunakan ikon dari satu library yang sudah terpasang. Jangan mencampur emoji, SVG acak, dan beberapa library ikon tanpa alasan. Satu-satunya pengecualian emoji: 👋 pada sapaan dashboard.
 - Pertahankan Plus Jakarta Sans; font ini sudah dikonfigurasi via Bunny Fonts di vite.config.js. Jangan menambah font eksternal baru tanpa kebutuhan.
 - Gunakan nama route, variabel, dan komponen yang jelas dan konsisten.
 - Hindari duplikasi markup dan inline style yang tidak perlu.
@@ -178,20 +178,23 @@ Semua item harus bersumber dari data aktual. Jangan menampilkan notifikasi conto
 
 ## 9. Aturan UI/UX
 - Ikuti `docs/UI_UX_GUIDELINES.md` dan `docs/DESIGN_SYSTEM.md`.
-- **Arah visual: Light Lavender Academic Dashboard.**
-  - Latar halaman luar: lavender (`#F0E9FF`).
-  - Permukaan aplikasi utama: putih/off-white (`#FBFBFA`).
-  - Sidebar: navy gelap (`#242238`).
-  - Menu aktif sidebar: lime (`#D8F36A`).
-  - Card: putih (`#FFFFFF`).
-  - Teks utama: charcoal gelap (`#242436`).
-- Gunakan satu application shell untuk ketiga role. Sidebar kiri, topbar, area konten utama, dan panel kanan.
-- Kalender harus menjadi elemen dominan dashboard, bukan kartu kecil yang tenggelam.
-- Gunakan spacing, radius, ukuran heading, warna, dan state komponen secara konsisten sesuai `docs/DESIGN_SYSTEM.md`.
-- Hindari gradient berlebihan, glow, glassmorphism berat, dekorasi yang tidak membantu, dan terlalu banyak kartu statistik.
-- Utamakan kontras teks, keterbacaan, fokus keyboard, label form, dan feedback aksi.
-- Jangan menyalin mentah gambar referensi; adaptasikan ke kebutuhan dan data aplikasi.
-- Jangan mengubah tema, struktur navigasi, atau pola komponen yang sudah disetujui tanpa menjelaskan alasan dan meminta persetujuan.
+- **Arah visual: Lavender Floating Dashboard, mengikuti gambar referensi `docs/reference/eduplex-dashboard.png`.** Revisi ini disetujui eksplisit oleh pengguna (21 Nov 2026) dan menggantikan tema "Light Lavender" sebelumnya. Ringkasan:
+  - Latar luar lavender jenuh (`#C2A5F9`); bingkai aplikasi off-white (`#F8F8F8`) mengambang, `rounded-frame` (32px), bayangan lembut.
+  - Sidebar navy (`#201F31`) mengambang di dalam bingkai; item aktif pil lime (`#DAF17C`) dengan teks gelap (`#1A2200`).
+  - Tanpa topbar berlatar; sapaan besar di kiri, pencarian (bila nyata)/notifikasi/avatar di kanan.
+  - Card putih tanpa border, radius 20px, bayangan halus; ubin ikon dan pil status pastel; tombol/pil/tab/avatar `rounded-full`.
+  - Grafik batang navy dengan satu batang lime dan tooltip gelap; cincin progres; mini kalender dengan hari ini lime.
+  - Font Plus Jakarta Sans (tidak berubah).
+- **Kemiripan dengan referensi adalah target utama visual.** Tiru warna, bentuk, radius, bayangan, tipografi, spasi, dan pola komponen sedekat mungkin, lalu verifikasi dengan daftar periksa di `DESIGN_SYSTEM.md` §9 (bandingkan pada 1440 px dan 390 px).
+- **Tiru gaya, bukan konten.** Jangan menampilkan rating, "Go Premium", "Download mobile app", angka jam, atau nama kursus dari gambar sebagai data. Ganti dengan padanan data nyata sesuai `DESIGN_SYSTEM.md` §7; jika tidak ada data nyata, widget tidak ditampilkan.
+- Widget referensi yang membutuhkan query/service baru (mis. Aktivitas Belajar dari `aktivitas_materi` + `pengumpulan_tugas`) hanya dibuat setelah rencana singkat disampaikan dan disetujui. Jangan mengubah skema database demi widget visual.
+- Gunakan satu application shell untuk ketiga role. Sidebar kiri, area utama dengan header (tanpa latar), dan panel kanan khusus dashboard.
+- Kalender harus tetap menjadi elemen dominan dashboard: card terbesar di area utama. Mini kalender di panel kanan berfungsi sebagai navigator kalender utama, bukan kalender kedua.
+- **Interaktif tapi ringan:** CSS dulu (hover, tooltip chart, animasi masuk), JavaScript seperlunya (Alpine.js hanya bila sudah terpasang, atau satu modul vanilla kecil). Dilarang menambah library animasi/grafik/UI tanpa persetujuan. Hormati `prefers-reduced-motion`. Ikuti anggaran performa di `DESIGN_SYSTEM.md` §8 dan laporkan ukuran bundle hasil `npm run build`.
+- Hindari gradient berlebihan, glow, glassmorphism/blur, animasi `infinite` dekoratif, dan terlalu banyak kartu statistik.
+- Utamakan kontras teks (WCAG AA), keterbacaan, fokus keyboard, label form, dan feedback aksi. Jangan menjadikan lime di atas putih sebagai satu-satunya penanda; sertakan label/tooltip.
+- Gunakan spacing, radius, ukuran heading, warna, dan state komponen secara konsisten sesuai token di `DESIGN_SYSTEM.md`.
+- Jangan mengubah tema, struktur navigasi, atau pola komponen yang sudah disetujui di luar revisi ini tanpa menjelaskan alasan dan meminta persetujuan.
 
 ## 10. Proses implementasi halaman
 Untuk setiap halaman:

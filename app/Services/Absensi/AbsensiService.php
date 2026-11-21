@@ -5,6 +5,7 @@ namespace App\Services\Absensi;
 use App\Enums\MetodeAbsensi;
 use App\Enums\StatusAbsensi;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Enums\StatusSesiAbsensi;
 use App\Models\Absensi;
 use App\Models\KelasMataKuliah;
@@ -236,10 +237,7 @@ class AbsensiService
 
                 $peserta = PesertaMataKuliah::query()
                     ->where('kelas_mata_kuliah_id', $kunci->kelas_mata_kuliah_id)
-                    ->whereIn('status', [
-                        StatusPeserta::Aktif->value,
-                        StatusPeserta::Mengulang->value,
-                    ])
+                    ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
                     ->orderBy('id')
                     ->get();
 
@@ -409,7 +407,7 @@ class AbsensiService
                     fn (Absensi $record): bool => (int) $record->sesi_absensi_id === (int) $sesi->getKey(),
                 );
 
-                $bolehIsi = $item->status !== StatusPeserta::Nonaktif
+                $bolehIsi = KelayakanPeserta::berhak($item->status)
                     && $sesi->status === StatusSesiAbsensi::Dibuka
                     && $absensi === null
                     && $this->dalamWaktu($sesi);
@@ -475,7 +473,7 @@ class AbsensiService
 
     public function pesertaBerhak(PesertaMataKuliah $peserta): bool
     {
-        return in_array($peserta->status, [StatusPeserta::Aktif, StatusPeserta::Mengulang], true);
+        return KelayakanPeserta::berhak($peserta->status);
     }
 
     public function dalamWaktu(SesiAbsensi $sesi, ?Carbon $now = null): bool

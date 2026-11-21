@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Mahasiswa\PerbaruiCapaianTargetRequest;
 use App\Http\Requests\Mahasiswa\PerbaruiTargetBelajarRequest;
 use App\Http\Requests\Mahasiswa\SimpanTargetBelajarRequest;
-use App\Models\Notifikasi;
 use App\Services\Mahasiswa\TargetBelajarService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,7 +34,7 @@ class TargetBelajarController extends Controller
 
         return view('mahasiswa.target.index', array_merge($data, [
             'user' => $user,
-            'unreadCount' => $this->unreadCount((int) $user->getAuthIdentifier()),
+            'unreadCount' => $this->unreadCount(),
             'selectedStatus' => $status,
             'selectedMataKuliahId' => $mataKuliahId,
         ]));
@@ -47,7 +46,7 @@ class TargetBelajarController extends Controller
 
         return view('mahasiswa.target.create', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount((int) $user->getAuthIdentifier()),
+            'unreadCount' => $this->unreadCount(),
             'mataKuliah' => $this->service->mataKuliahOptions((int) $user->getAuthIdentifier()),
             'target' => null,
         ]);
@@ -72,7 +71,7 @@ class TargetBelajarController extends Controller
 
         return view('mahasiswa.target.show', array_merge($data, [
             'user' => $user,
-            'unreadCount' => $this->unreadCount((int) $user->getAuthIdentifier()),
+            'unreadCount' => $this->unreadCount(),
         ]));
     }
 
@@ -82,7 +81,7 @@ class TargetBelajarController extends Controller
 
         return view('mahasiswa.target.edit', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount((int) $user->getAuthIdentifier()),
+            'unreadCount' => $this->unreadCount(),
             'mataKuliah' => $this->service->mataKuliahOptions((int) $user->getAuthIdentifier()),
             'target' => $this->service->targetMilik((int) $user->getAuthIdentifier(), (int) $target),
         ]);
@@ -150,8 +149,4 @@ class TargetBelajarController extends Controller
         return back()->with('status', 'Target dibatalkan.');
     }
 
-    private function unreadCount(int $userId): int
-    {
-        return Notifikasi::untukUser($userId)->belumDibaca()->count();
-    }
 }

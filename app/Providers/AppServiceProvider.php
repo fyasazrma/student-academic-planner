@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\Notifikasi;
+use App\Policies\NotifikasiPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Policy menjadi lapisan tambahan; middleware role dan query scoped
+        // tetap menjadi gerbang utama agar respons 403/404 tidak berubah.
+        Gate::policy(Notifikasi::class, NotifikasiPolicy::class);
+
         // Pembatasan khusus penggabungan kelas. Kunci memakai user yang sudah
         // terautentikasi dan IP, bukan kode gabung maupun data request lain.
         RateLimiter::for('gabung-kelas', function (Request $request): Limit {

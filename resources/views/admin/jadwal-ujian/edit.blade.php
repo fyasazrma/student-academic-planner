@@ -32,7 +32,7 @@
                     <button
                         type="submit"
                         data-submit-button
-                        class="rounded-xl bg-agenda-uts px-4 py-2.5 text-xs font-bold text-white transition hover:bg-agenda-uts/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-uts focus-visible:ring-offset-2"
+                        class="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <span data-submit-label>Simpan perubahan</span>
                     </button>

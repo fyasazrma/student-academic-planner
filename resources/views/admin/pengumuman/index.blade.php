@@ -20,7 +20,7 @@
         <x-slot:actions>
             <a
                 href="{{ route('admin.pengumuman.create') }}"
-                class="inline-flex items-center gap-2 rounded-xl bg-agenda-pengumuman px-4 py-2.5 text-sm font-bold text-white transition hover:bg-agenda-pengumuman/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-pengumuman focus-visible:ring-offset-2"
+                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
                 <x-icon name="plus" class="h-4 w-4" />
                 Tambah pengumuman

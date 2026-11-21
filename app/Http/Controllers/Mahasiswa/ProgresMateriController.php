@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Mahasiswa\ProgresMateriRequest;
-use App\Models\Notifikasi;
 use App\Services\Mahasiswa\MateriPembelajaranService;
 use App\Services\Mahasiswa\ProgresMateriService;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +28,7 @@ class ProgresMateriController extends Controller
 
         return view('mahasiswa.progres.index', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount($userId),
+            'unreadCount' => $this->unreadCount(),
             'ringkasan' => $this->service->ringkasanOtomatis($userId),
             'daftarMateri' => $this->materi->daftarMateri($userId),
         ]);
@@ -44,7 +43,7 @@ class ProgresMateriController extends Controller
             (int) $materi,
         );
         $data['user'] = $user;
-        $data['unreadCount'] = $this->unreadCount((int) $user->getAuthIdentifier());
+        $data['unreadCount'] = $this->unreadCount();
 
         return view('mahasiswa.materi.show', $data);
     }
@@ -71,8 +70,4 @@ class ProgresMateriController extends Controller
         return back()->with('status', 'Status penyelesaian materi dibatalkan.');
     }
 
-    private function unreadCount(int $userId): int
-    {
-        return Notifikasi::untukUser($userId)->belumDibaca()->count();
-    }
 }

@@ -264,6 +264,11 @@ class MataKuliahServiceTest extends TestCase
 
     public function test_riwayat_nonaktif_atau_mengulang_tidak_diaktifkan_kembali(): void
     {
+        $kode = [
+            StatusPeserta::Nonaktif->value => MataKuliahService::HASIL_RIWAYAT_NONAKTIF,
+            StatusPeserta::Mengulang->value => MataKuliahService::HASIL_SUDAH_TERDAFTAR,
+        ];
+
         foreach ([StatusPeserta::Nonaktif, StatusPeserta::Mengulang] as $status) {
             [$kelas, $kunci] = $this->buatKelas();
             $mahasiswa = User::factory()->mahasiswa()->create();
@@ -272,8 +277,8 @@ class MataKuliahServiceTest extends TestCase
             $hasil = $this->service->gabung($mahasiswa->id, $kunci);
 
             $this->assertFalse($hasil['berhasil']);
-            $this->assertSame(MataKuliahService::HASIL_RIWAYAT_NONAKTIF, $hasil['kode']);
-            $this->assertStringContainsString('Hubungi dosen', $hasil['pesan']);
+            $this->assertSame($kode[$status->value], $hasil['kode']);
+            $this->assertSame($status === StatusPeserta::Nonaktif, str_contains($hasil['pesan'], 'Hubungi dosen'));
             $this->assertSame($status->value, $lama->fresh()->status->value);
             $this->assertSame(
                 1,

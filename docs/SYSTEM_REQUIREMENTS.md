@@ -182,7 +182,7 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - `2026_11_19_000004_create_riwayat_perubahan_absensi_table.php`: tabel audit koreksi. Status lama dan baru, alasan, actor, serta waktu perubahan disimpan permanen; relasi memakai `nullOnDelete` agar riwayat tetap terbaca. Sudah dijalankan (`Ran`, batch 5) ke database utama XAMPP.
 
 ### Sesi
-- Zona waktu yang dipakai untuk tanggal, waktu mulai, waktu selesai, dan jendela pengisian adalah `Asia/Jakarta` (WIB), meski konfigurasi timezone aplikasi adalah `UTC`.
+- Zona waktu aplikasi, input, tampilan, perbandingan, dan scheduler adalah `Asia/Jakarta` (WIB). Kolom database tetap `DATETIME` naive tanpa suffix timezone; jangan mengklaim penyimpanan WIB dilakukan oleh database.
 - Tanggal, waktu mulai, dan waktu selesai wajib diisi; waktu selesai harus lebih besar dari waktu mulai.
 - Status sesi hanya `dibuka` atau `ditutup`. Sesi yang sudah ditutup **tidak dapat dibuka kembali**.
 - Sesi yang sudah memiliki catatan absensi tidak dihapus sembarangan; hapus hanya untuk sesi tanpa catatan.
@@ -307,12 +307,12 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
   - waktu lampau = terbit,
   - waktu depan = terjadwal.
 - Tidak ada kolom status baru dan tidak ada migration baru pada Batch D. Status migration `000006` adalah `Ran` (batch 7).
-- Pengumuman `terjadwal` belum memiliki scheduler aktif; notifikasi terjadi saat transaksi/status menjadi terbit oleh aksi pengguna.
+- Pengumuman `terjadwal` tidak ditampilkan kepada mahasiswa. Publikasi otomatis sudah diintegrasikan dengan Laravel Scheduler pada Batch E (lihat Bagian 15). Notifikasi juga tetap terjadi saat status menjadi terbit oleh aksi pengguna.
 
 ### Alur dan hak akses
 - Admin: `admin.pengumuman.index|create|store|show|edit|update|destroy` untuk pengumuman global maupun kelas.
 - Dosen: `dosen.pengumuman.index|create|store|show|edit|update|destroy`, dibatasi hanya pada kelas yang diajar. `PengumumanRequest` dosen memvalidasi `kelas_mata_kuliah_id` melalui `MataKuliahService::milikDosen()` sehingga kelas dosen lain menghasilkan 404, lalu service melakukan scoped lookup ulang.
-- Mahasiswa: `mahasiswa.pengumuman.index|show` bersifat read-only, hanya menampilkan pengumuman terbit yang global atau dari kelas yang diikuti dengan status peserta `aktif`. Draft, pengumuman terjadwal, dan pengumuman kelas lain menghasilkan 404 atau tidak ditampilkan.
+- Mahasiswa: `mahasiswa.pengumuman.index|show` bersifat read-only, hanya menampilkan pengumuman terbit yang global atau dari kelas yang diikuti dengan status peserta `aktif` atau `mengulang`. Draft, pengumuman terjadwal, dan pengumuman kelas lain menghasilkan 404 atau tidak ditampilkan.
 - `PengumumanService` menjadi penulis tunggal pengumuman; seluruh aksi tulis memakai transaksi dan `DB::afterCommit()` untuk efek notifikasi.
 - `FormRequest` (`App\Http\Requests\Admin\PengumumanRequest` dan `App\Http\Requests\Dosen\PengumumanRequest`) memvalidasi judul, isi, target kelas, status, tanggal publikasi, dan periode agenda.
 
@@ -320,35 +320,40 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - Tabel kustom `notifikasi` tetap dipertahankan. Aplikasi **tidak** memakai Laravel Database Notifications / tabel `notifications` / event-listener duplikat. Trait `Notifiable` hanya untuk reset password dan notifikasi email bawaan.
 - `App\Enums\JenisNotifikasi`: `pengumuman`, `tugas`, `ujian`, `nilai`.
 - `App\Services\Notifikasi\NotifikasiService` adalah penulis tunggal notifikasi. Pemilik (`user_id`), status baca, dan tautan ditentukan server-side dengan `forceFill()`.
-- Penerima dibatasi pada mahasiswa aktif. Untuk notifikasi kelas, hanya peserta dengan status `aktif` yang dipilih; mahasiswa dengan status lain tidak menerima notifikasi.
-- Dedup berdasarkan pasangan `user_id` + `tipe` + `data->sumber`. Kunci sumber stabil untuk setiap peristiwa, misalnya `pengumuman:{id}`, `tugas:{id}:dipublikasikan`, `tugas:{id}:deadline:{waktu}`, `ujian:{id}:{tanda}`, dan `nilai:{id}:{komponen}:{waktu}`.
-- Tautan hanya path internal `/mahasiswa` atau `/mahasiswa/...` yang divalidasi `tautanAman()`; tautan eksternal, protocol-relative, traversal, dan obfuskasi ditolak saat penulisan.
+- Penerima ditentukan server-side per peran. Mahasiswa penerima adalah user aktif dengan status peserta `aktif` atau `mengulang`; `nonaktif` hanya memiliki riwayat. Admin dan dosen aktif menerima notifikasi institusional/administratif atau notifikasi kelas yang menjadi tanggung jawabnya.
+- Dedup berdasarkan pasangan `user_id` + `tipe` + `data->sumber`. Kunci sumber stabil untuk setiap peristiwa, misalnya `pengumuman:{id}`, `tugas:{id}:dipublikasikan`, `tugas:{id}:deadline:{waktu}`, `ujian:{id}:{tanda}`, `nilai:{id}:{komponen}:{waktu}`, dan `pengumpulan-dosen:{id}:{waktu}`.
+- Tautan hanya path internal yang sesuai peran penerima (`/mahasiswa/...`, `/dosen/...`, `/admin/...`) dan divalidasi `App\Support\TautanNotifikasi`; tautan eksternal, protocol-relative, traversal, obfuskasi, dan tautan lintas area peran ditolak saat penulisan maupun pembacaan.
 - Notifikasi ditulis setelah transaksi sumber berhasil di-commit. Karena itu draft, kegagalan transaksi, dan aksi yang tidak mengubah data tidak menghasilkan notifikasi.
 
 ### Pemicu notifikasi
-- Pengumuman menjadi terbit (global atau kelas) → notifikasi `pengumuman`.
-- Tugas pertama kali dipublikasikan atau berubah dari draft menjadi terbit → notifikasi `tugas` ke peserta aktif kelas.
+- Pengumuman global menjadi terbit → notifikasi `pengumuman` ke seluruh mahasiswa, admin, dan dosen aktif; pembuatnya dilewati.
+- Pengumuman kelas menjadi terbit → notifikasi `pengumuman` hanya ke peserta kelas yang berhak (`aktif`/`mengulang`) dan dosen pengampu; pembuatnya dilewati.
+- Tugas pertama kali dipublikasikan atau berubah dari draft menjadi terbit → notifikasi `tugas` ke peserta kelas yang berhak.
 - Deadline tugas berubah pada tugas yang sudah terbit → notifikasi `tugas` dengan kunci sumber baru.
-- Jadwal UTS/UAS institusional dibuat atau diubah secara relevan → notifikasi `ujian` ke seluruh mahasiswa aktif.
+- Pengumpulan tugas mahasiswa masuk → notifikasi `tugas` kepada dosen pengampu kelas.
+- Jadwal UTS/UAS institusional dibuat atau diubah secara relevan → notifikasi `ujian` ke seluruh mahasiswa dan dosen aktif; admin pembuat dilewati.
 - Nilai UTS/UAS baru atau berubah dipublikasikan → notifikasi `nilai` hanya kepada mahasiswa pemilik nilai.
+- Nilai akhir menjadi lengkap (transisi `BelumLengkap` → `Lengkap`) → notifikasi `nilai` dengan sumber `nilai-akhir:{peserta_id}` hanya kepada mahasiswa pemilik nilai (lihat Bagian 15).
 
 ### Yang sengaja tidak memicu notifikasi
 - Pengumuman draft, pengumuman terjadwal yang belum terbit, dan pengumuman yang diubah tanpa transisi status terbit.
 - Simpan ulang tanpa perubahan data, perubahan judul tugas saja, serta perubahan jadwal ujian yang tidak relevan.
-- Submit tugas, tandai materi selesai/batalkan, aktivitas baca materi, dan unduh materi/lampiran.
-- Target belajar, progres materi, aktivitas administrasi bukan akademik, dan notifikasi untuk peran selain mahasiswa melalui writer ini.
+- Tandai materi selesai/batalkan, aktivitas baca materi, dan unduh materi/lampiran.
+- Koreksi nilai setelah status akhir `Lengkap` (dedup mencegah notifikasi ganda).
+- Target belajar, progres materi, dan aktivitas administrasi bukan akademik.
 
-### Halaman notifikasi mahasiswa
-- Route: `mahasiswa.notifikasi`, `mahasiswa.notifikasi.baca`, `mahasiswa.notifikasi.baca-semua`.
-- Daftar memakai pagination (10 per halaman) dengan filter status dan tipe, serta empty state.
-- `NotifikasiController` hanya mengubah baris milik `user_id` yang sedang login; IDOR dicegah di backend.
+### Halaman notifikasi seluruh peran
+- Route: `mahasiswa.notifikasi`, `dosen.notifikasi`, dan `admin.notifikasi`, masing-masing dengan aksi `baca` dan `baca-semua`.
+- Daftar memakai pagination (10 per halaman) dengan filter status dan empty state; tautan dibatasi sesuai area peran.
+- Admin dan dosen memakai `App\Http\Controllers\NotifikasiController`; mahasiswa memakai controller dengan nama route tersendiri. Keduanya memakai query `Notifikasi::untukUser()`, Policy, dan middleware role.
+- IDOR dicegah dua lapis: scoped lookup menghasilkan 404 dan `NotifikasiPolicy::tandaiDibaca()` menolak resource orang lain dengan `denyAsNotFound()`.
 - Tombol “Tandai semua dibaca” memakai `NotifikasiService::tandaiSemuaDibaca()` pada transaksi terscoped.
 - `unreadCount` pada application shell dan dashboard dihitung dari query yang sama sehingga tetap konsisten setelah aksi baca.
 
 ### Integrasi tampilan
-- Sidebar dan breadcrumb topbar menampilkan menu Pengumuman untuk ketiga role; mahasiswa juga memiliki tautan Notifikasi.
-- View baru: `admin/pengumuman/{index,form,show}`, `dosen/pengumuman/{index,form,show}`, `mahasiswa/pengumuman/{index,show}`.
-- Halaman notifikasi mahasiswa memakai komponen/view yang sudah ada dengan Label enum `JenisNotifikasi`, pagination, dan state kosong.
+- Sidebar dan breadcrumb topbar menampilkan menu Pengumuman dan Notifikasi untuk ketiga role; ikon lonceng topbar juga menuju halaman notifikasi sesuai role.
+- View baru: `admin/pengumuman/{index,form,show}`, `dosen/pengumuman/{index,form,show}`, `mahasiswa/pengumuman/{index,show}`, dan `notifikasi/index` yang dipakai bersama.
+- Halaman notifikasi memakai komponen/view yang sudah ada dengan Label enum `JenisNotifikasi`, pagination, filter status, dan state kosong.
 - Dashboard tidak ditambahi kartu statistik baru; kalender tetap menjadi elemen dominan. Tema Light Lavender, Plus Jakarta Sans, dan komponen existing dipertahankan.
 
 ### Pengujian
@@ -356,4 +361,91 @@ Ini adalah rancangan yang sudah diimplementasikan dalam migration. Namun, selalu
 - `tests/Feature/NotifikasiOtomatisBatchDTest.php`: pemicu tugas, deadline, UTS/UAS, nilai, dedup, serta negatif untuk baca/submit/unduh.
 - Helper bersama: `tests/Concerns/BatchDData.php`.
 - Regresi yang dijalankan: `AdminJadwalUjianTest`, `MahasiswaPengumpulanTugasTest`, `MahasiswaDashboardTest`, dan `ModelHardeningTest`.
-- Pemeriksaan akhir: `php artisan test` (473 test, 3270 assertion, semua lolos), `php artisan route:list` (164 route), `php artisan view:cache`, `php artisan view:clear`, `npm run build`, `git diff --check`, dan PHP lint untuk file PHP yang diubah tidak menemukan masalah.
+- Pemeriksaan akhir Batch D: `php artisan test` (473 test, 3270 assertion, semua lolos), `php artisan route:list` (164 route), `php artisan view:cache`, `php artisan view:clear`, `npm run build`, `git diff --check`, dan PHP lint untuk file PHP yang diubah tidak menemukan masalah.
+
+## 15. Integrasi, keamanan, dan pengujian akhir (Batch E)
+
+### Ruang lingkup
+Batch E menyatukan fitur Batch A–D, menutup dua gap Batch D (notifikasi nilai akhir dan publikasi otomatis pengumuman terjadwal), merapikan temuan audit, serta menyelaraskan UI/UX. Tidak ada migration baru, tidak ada perubahan dependency/package, `.env`, `phpunit.xml`, atau autentikasi. Database utama XAMPP tidak disentuh; seluruh pengujian otomatis memakai SQLite `:memory:` melalui `RefreshDatabase`.
+
+### Notifikasi nilai akhir
+- `PenilaianService` mengirim notifikasi ketika status perhitungan nilai bertransisi dari `BelumLengkap` ke `Lengkap`; transisi sebaliknya tidak mengirim notifikasi.
+- Jenis notifikasi: `JenisNotifikasi::Nilai`; judul: `Nilai akhir tersedia`; tautan internal: `/mahasiswa/nilai`.
+- Kunci sumber dedup: `nilai-akhir:{peserta_id}`. Koreksi nilai setelah status `Lengkap` tidak membuat notifikasi duplikat. Alur `aturGunakanTugas()` juga ikut memeriksa transisi ini.
+- Efek notifikasi tetap ditulis oleh `NotifikasiService` melalui `DB::afterCommit()` di dalam transaksi sumber. Tabel kustom `notifikasi` tetap menjadi satu-satunya sumber notifikasi in-app.
+
+### Publikasi pengumuman terjadwal
+- `PengumumanService::terbitkanYangJatuhTempo()` memproses hanya `agenda_akademik` dengan `jenis = pengumuman` dan `dipublikasikan_pada <= now()`.
+- Pemrosesan memakai `lockForUpdate()` di dalam transaksi; notifikasi ditulis setelah commit dengan kunci dedup `pengumuman:{id}`. Menjalankan proses berulang kali aman dan tidak menghasilkan notifikasi ganda.
+- Pengumuman dengan `dipublikasikan_pada > now()` tetap tidak terlihat oleh mahasiswa sampai waktunya tiba.
+- Command: `php artisan pengumuman:terbitkan-terjadwal`; terdaftar di `routes/console.php` dengan `everyMinute()` dan `withoutOverlapping()`, berdampingan dengan `absensi:tutup-otomatis`.
+- `php artisan schedule:list` menampilkan kedua task setiap menit. Menjalankan `schedule:run` (atau `schedule:work` di lingkungan pengembangan) tetap menjadi tanggung jawab lingkungan hosting. Untuk XAMPP/Windows, perlu penjadwal sistem operasi seperti Windows Task Scheduler; konfigurasi tersebut **belum** dilakukan oleh agent dan hanya didokumentasikan sebagai kebutuhan.
+
+### Audit dan perbaikan backend
+- Audit keamanan: 0 temuan Kritis, 0 Tinggi, 0 Sedang, 2 Rendah. R-1 (`unreadCount` hardcode `0`) sudah diperbaiki; R-2 ditutup pada Batch E.1 dengan Policy sebagai lapisan tambahan, bukan pengganti middleware/query scoped (lihat Bagian 16).
+- Helper bersama `Controller::unreadCount()` berbasis `Auth::id()` dan `Notifikasi` digunakan seluruh controller. Hardcode `'unreadCount' => 0` sudah dihapus; konflik visibilitas method `unreadCount()` di lima controller diperbaiki dengan memakai helper base.
+- T3: saat tugas kembali ke draft, notifikasi publikasi `tugas:{id}:dipublikasikan` dihapus.
+- T5: perubahan `konfigurasi_tugas` dicatat per peserta dan tampil di riwayat nilai dosen.
+- T6: `belum_mengisi` pada ringkasan absensi dosen hanya menghitung peserta dengan status `aktif` atau `mengulang`.
+- T11: filter status pengumuman memisahkan `terbit` (`dipublikasikan_pada <= now()`) dan `terjadwal` (`> now()`); opsi tersedia di admin dan dosen.
+- T15: `Dosen\DashboardDataService::parseFilters()` memakai `CalendarCategory::DOSEN`.
+- Ringkasan tugas dosen dan agregasi progres mahasiswa kini memakai query/agregasi yang sama dengan halaman detail terkait.
+
+### Integrasi dan UI/UX
+- Rute `/` mengarahkan guest ke `login`, serta admin/dosen/mahasiswa ke dashboard masing-masing.
+- CTA diseragamkan di 43 file Blade ke token `bg-primary`, `text-primary-text`, `hover:bg-primary-hover`, dan focus ring primary. Seluruh view menggunakan LF.
+- Timeline kalender membedakan titik publikasi (lingkaran hollow) dan titik deadline (diamond `rotate-45`); label teks tetap disertakan.
+- Dashboard mahasiswa: kalender dan panel notifikasi berada di area utama, diikuti ringkasan Target Belajar dan Progres Materi Otomatis. Angka progres memakai `$progresOtomatis` yang sama dengan halaman progres.
+- Pesan validasi memakai `text-danger`, `role="alert"`, dan `aria-live="assertive"`; ringkasan error memakai `border-danger/30 bg-danger/10`; `aria-invalid`/`aria-describedby` dipertahankan pada field terkait.
+
+### Pengujian dan verifikasi
+- Test baru: `NotifikasiNilaiAkhirBatchETest`, `PengumumanTerjadwalBatchETest`, serta penambahan regresi di `DosenTugasTest`, `PenilaianDosenTest`, `DosenDashboardTest`, `PengumumanBatchDTest`, dan `ExampleTest`.
+- `php artisan test`: **488 test, 3388 assertion, semua lolos** pada verifikasi Batch E sebelum keputusan E.1; angka terbaru ada di Bagian 16.
+- PHP lint: 97 file PHP yang berubah/baru lolos.
+- `php artisan route:list --path=pengumuman`: 16 route pengumuman terdaftar.
+- `php artisan schedule:list`: `absensi:tutup-otomatis` dan `pengumuman:terbitkan-terjadwal` terjadwal setiap menit.
+- `php artisan view:cache` dan `php artisan view:clear` berhasil; `npm run build` berhasil; `git diff --check` tanpa output.
+
+### Batasan dan keputusan yang masih menunggu
+- T2, T4, T7/T12, T9, T13, dan R-2 sudah diputuskan serta diimplementasikan pada Batch E.1 (lihat Bagian 16).
+- Pengujian SQLite `:memory:` tidak membuktikan perilaku locking, foreign key, dan konkurensi MySQL/MariaDB secara langsung.
+- Windows Task Scheduler/XAMPP belum dikonfigurasi; hanya kebutuhannya yang didokumentasikan. Migration baru tidak diperlukan dan tidak dijalankan.
+
+## 16. Konsistensi aturan bisnis, notifikasi lintas role, dan Policy (Batch E.1)
+
+### Ruang lingkup dan keputusan bisnis
+Batch E.1 menutup enam keputusan yang sebelumnya tercatat sebagai T2, T4, T7/T12, T9, T13, dan R-2. Tidak ada migration baru, perubahan `.env`, dependency/package, `phpunit.xml`, autentikasi, middleware role, pola 404 IDOR/403 role, maupun perubahan ke database utama XAMPP.
+
+1. **Kelayakan peserta:** `Aktif` dan `Mengulang` memiliki hak yang sama untuk aktivitas kelas; `Nonaktif` hanya memiliki riwayat. Satu aturan bersama dipakai pengumuman, materi, progres, pengumpulan, penilaian, absensi, rekap, dashboard, target, dan notifikasi. Kapasitas pendaftaran sengaja tidak diubah.
+2. **Zona waktu:** `Asia/Jakarta` menjadi acuan konfigurasi aplikasi, input, tampilan, perbandingan, dan scheduler. Kolom database tetap `DATETIME` naive; database tidak diklaim menyimpan suffix WIB.
+3. **Status tugas:** status minimum `BelumDikumpulkan`, `Terlambat`, `Dikumpulkan`, dan `SudahDinilai` dihitung dinamis, bukan dipercaya dari request. Tepat pada deadline tidak terlambat; status ditampilkan dan dipakai filter pada dashboard, daftar tugas, panel deadline, ringkasan dosen, dan daftar pengumpulan.
+4. **Status target:** status efektif dihitung dengan prioritas `Dibatalkan → Selesai → Belum Dimulai → Terlambat → Berlangsung`. Filter daftar memakai status efektif melalui paginasi manual; halaman detail memakai `bisa_tandai_selesai`.
+5. **Notifikasi lintas role:** Admin menerima notifikasi institusional/administratif, Dosen menerima notifikasi kelas yang dia ampu, Mahasiswa menerima notifikasi yang relevan. `NotifikasiService` menjadi penulis tunggal dengan dedup, `DB::afterCommit()`, `data.peran`, dan tautan internal per role. Halaman notifikasi tersedia untuk ketiga role dengan filter status, pagination, empty state, dan aksi baca yang terscoped.
+6. **Policy Laravel:** `NotifikasiPolicy` ditambahkan sebagai lapisan tambahan. Middleware role tetap menjadi gerbang kasar; pelanggaran kepemilikan tetap `404` dan pelanggaran peran tetap `403`.
+
+### File utama
+- Aturan bersama: `app/Support/KelayakanPeserta.php`, `app/Support/StatusTugasResolver.php`, `app/Support/StatusTargetResolver.php`, `app/Support/TautanNotifikasi.php`, dan `app/Enums/StatusTugasMahasiswa.php`.
+- Notifikasi dan otorisasi: `app/Services/Notifikasi/NotifikasiService.php`, `app/Services/Notifikasi/NotifikasiHalamanService.php`, `app/Models/Notifikasi.php`, `app/Policies/NotifikasiPolicy.php`, `app/Providers/AppServiceProvider.php`, `app/Http/Controllers/NotifikasiController.php`, `app/Http/Controllers/Mahasiswa/NotifikasiController.php`, dan `resources/views/notifikasi/index.blade.php`.
+- Waktu dan scheduler: `config/app.php` dan `routes/console.php`.
+- Integrasi: `app/Services/Pengumuman/PengumumanService.php`, `app/Services/Admin/JadwalUjianService.php`, `app/Services/Mahasiswa/PengumpulanTugasService.php`, serta service dashboard, pengumpulan, absensi, nilai, materi, progres, dan target yang terkait.
+- Route, shell, dan pengujian: `routes/web.php`, `resources/views/components/sidebar.blade.php`, `resources/views/components/topbar.blade.php`, `tests/Feature/BatchE1KonsistensiTest.php`, dan test lama yang diselaraskan dengan keputusan E.1.
+
+### Pemicu notifikasi yang ditambahkan
+- Pengumuman institusional/global → seluruh Mahasiswa, Admin, dan Dosen aktif; pembuat notifikasi dilewati.
+- Pengumuman kelas → peserta kelas yang berhak (`aktif`/`mengulang`) dan Dosen pengampu; pembuat notifikasi dilewati.
+- Pengumpulan tugas mahasiswa → Dosen pengampu kelas.
+- Jadwal ujian institusional → seluruh Dosen aktif; admin pembuat dilewati dan dedup mencegah pengiriman ulang.
+
+### Verifikasi aktual
+- `php artisan test`: **495 test, 495 lolos, 3444 assertion** (103210 ms), termasuk 7 regression test E.1 dengan 56 assertion.
+- `php artisan route:list`: **170 route**.
+- `php artisan schedule:list`: `absensi:tutup-otomatis` dan `pengumuman:terbitkan-terjadwal` setiap menit dengan timezone `Asia/Jakarta`.
+- PHP lint seluruh file PHP yang diubah/baru: tidak ada syntax error.
+- `php artisan view:cache`, `php artisan view:clear`, dan `npm run build`: berhasil; build hanya memberi peringatan opsional `fontaine` untuk optimized font fallbacks.
+- `git diff --check`: tanpa output.
+
+### Batasan yang tetap berlaku
+- Windows Task Scheduler/XAMPP belum dikonfigurasi atau diverifikasi; scheduler baru terdaftar di aplikasi, bukan berarti proses OS sudah aktif.
+- Database utama XAMPP tidak disentuh dan tidak ada migrasi E.1.
+- Pengujian SQLite `:memory:` tidak membuktikan locking, foreign key, atau konkurensi MySQL/MariaDB.
+- Semua perubahan masih uncommitted; commit dan push tidak dilakukan.

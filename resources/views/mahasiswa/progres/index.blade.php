@@ -72,7 +72,7 @@
                         description="Gabung kelas terlebih dahulu untuk melihat target otomatis penyelesaian materi."
                         icon="book"
                     >
-                        <a href="{{ route('mahasiswa.mata-kuliah') }}" class="inline-flex items-center gap-2 rounded-xl bg-agenda-tugas px-4 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2">
+                        <a href="{{ route('mahasiswa.mata-kuliah') }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                             Lihat Mata Kuliah
                         </a>
                     </x-empty-state>

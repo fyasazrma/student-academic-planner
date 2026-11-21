@@ -25,7 +25,7 @@ class TahunAkademikController extends Controller
     {
         return view('admin.tahun-akademik.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'tahunAkademik' => $this->service->daftar(),
         ]);
     }
@@ -37,7 +37,7 @@ class TahunAkademikController extends Controller
     {
         return view('admin.tahun-akademik.create', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'data' => $this->service->dataFormulir(),
             'tahunAkademikId' => null,
             'mode' => 'create',
@@ -73,7 +73,7 @@ class TahunAkademikController extends Controller
     {
         return view('admin.tahun-akademik.edit', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'data' => $this->service->dataFormulir($tahunAkademik),
             'tahunAkademikId' => $tahunAkademik->getKey(),
             'mode' => 'edit',

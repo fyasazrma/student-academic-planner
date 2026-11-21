@@ -13,7 +13,7 @@
 @endphp
 
 @if ($errors->any())
-    <div role="alert" class="mb-6 rounded-xl border border-agenda-terlambat/30 bg-agenda-terlambat/10 px-4 py-3 text-xs leading-5 text-text">
+    <div role="alert" class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-xs leading-5 text-text">
         <p class="font-bold">Periksa kembali formulir jadwal ujian.</p>
         <ul class="mt-2 list-disc space-y-1 pl-5">
             @foreach ($errors->all() as $error)
@@ -46,7 +46,7 @@
             @endforeach
         </div>
         @error('jenis_ujian')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -64,7 +64,7 @@
             @endforeach
         </select>
         @error('tahun_akademik_id')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -82,7 +82,7 @@
             @endforeach
         </select>
         @error('semester')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -99,7 +99,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition placeholder:text-muted focus:border-agenda-uts focus:outline-none focus:ring-2 focus:ring-agenda-uts/25"
         >
         @error('judul')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
         <p class="mt-1.5 text-[11px] leading-4 text-muted">
             Gunakan judul yang sesuai dengan jenis ujian. Periode akan disertakan otomatis pada akhir judul.
@@ -117,7 +117,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition focus:border-agenda-uts focus:outline-none focus:ring-2 focus:ring-agenda-uts/25"
         >
         @error('tanggal_mulai')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -132,7 +132,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition focus:border-agenda-uts focus:outline-none focus:ring-2 focus:ring-agenda-uts/25"
         >
         @error('tanggal_selesai')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -149,7 +149,7 @@
                     class="mt-1.5 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition focus:border-agenda-uts focus:outline-none focus:ring-2 focus:ring-agenda-uts/25"
                 >
                 @error('waktu_mulai')
-                    <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+                    <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
                 @enderror
             </div>
             <div>
@@ -162,7 +162,7 @@
                     class="mt-1.5 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition focus:border-agenda-uts focus:outline-none focus:ring-2 focus:ring-agenda-uts/25"
                 >
                 @error('waktu_selesai')
-                    <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+                    <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
                 @enderror
             </div>
         </div>
@@ -181,7 +181,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition placeholder:text-muted focus:border-agenda-uts focus:outline-none focus:ring-2 focus:ring-agenda-uts/25"
         >
         @error('lokasi')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
         <p class="mt-1.5 text-[11px] leading-4 text-muted">
             Ujian pada lokasi yang sama tidak boleh bertabrakan dengan jadwal ujian lain. Lokasi boleh kosong bila belum ditentukan.
@@ -199,7 +199,7 @@
             placeholder="Informasi tambahan untuk mahasiswa dan dosen"
         >{{ $deskripsiValue }}</textarea>
         @error('deskripsi')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -220,7 +220,7 @@
             </span>
         </label>
         @error('dipublikasikan')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 </div>

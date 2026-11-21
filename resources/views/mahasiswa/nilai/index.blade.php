@@ -64,7 +64,7 @@
                     </div>
                     <button
                         type="submit"
-                        class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                        class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         Tampilkan
                     </button>

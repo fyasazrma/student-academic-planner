@@ -27,7 +27,7 @@ class MataKuliahController extends Controller
     {
         return view('dosen.mata-kuliah.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $this->service->daftar((int) $request->user()->getAuthIdentifier(), $request->query('q')),
             'kataKunci' => is_string($request->query('q')) ? trim($request->query('q')) : '',
         ]);
@@ -37,7 +37,7 @@ class MataKuliahController extends Controller
     {
         return view('dosen.mata-kuliah.create', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'data' => $this->service->dataFormulir(),
             'mode' => 'create',
             'mataKuliahOptions' => $this->service->opsiMataKuliah(),
@@ -70,7 +70,7 @@ class MataKuliahController extends Controller
 
         return view('dosen.mata-kuliah.show', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'detail' => $this->service->detail($milik),
         ]);
@@ -82,7 +82,7 @@ class MataKuliahController extends Controller
 
         return view('dosen.mata-kuliah.edit', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'detail' => $this->service->detail($milik),
             'data' => $this->service->dataFormulir($milik),

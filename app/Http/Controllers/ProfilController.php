@@ -26,7 +26,7 @@ class ProfilController extends Controller
 
         return view($this->viewPrefix($user).'.show', [
             'user' => $user,
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'profil' => $this->service->dataProfil($user),
             'routePrefix' => $this->routePrefix($user),
             'peranLabel' => $user->isDosen() ? 'Dosen' : 'Mahasiswa',
@@ -39,7 +39,7 @@ class ProfilController extends Controller
 
         return view($this->viewPrefix($user).'.edit', [
             'user' => $user,
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'profil' => $this->service->dataProfil($user),
             'routePrefix' => $this->routePrefix($user),
             'peranLabel' => $user->isDosen() ? 'Dosen' : 'Mahasiswa',

@@ -42,7 +42,7 @@
                 <button
                     type="submit"
                     data-submit-button
-                    class="rounded-xl bg-agenda-tugas px-4 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2"
+                    class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     <span data-dosen-dialog-submit data-submit-label>Konfirmasi</span>
                 </button>

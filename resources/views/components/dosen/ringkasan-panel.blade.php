@@ -9,6 +9,14 @@
         'belum_mengisi' => 0,
         'url' => null,
     ],
+    'tugasRingkasan' => [
+        'dibuat' => 0,
+        'masuk' => 0,
+        'belum_dinilai' => 0,
+        'belum_dikumpulkan' => 0,
+        'terlambat' => 0,
+        'url' => null,
+    ],
 ])
 
 <aside id="panel-ringkasan" class="space-y-4">
@@ -71,6 +79,42 @@
             <div class="rounded-xl bg-soft px-2 py-3">
                 <p class="text-sm font-bold text-text">{{ $absensiRingkasan['belum_mengisi'] }}</p>
                 <p class="mt-1 text-[10px] leading-4 text-muted">Belum mengisi</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <x-icon name="clipboard" class="h-5 w-5 text-agenda-tugas" />
+                <h3 class="text-sm font-bold text-text">Ringkasan tugas</h3>
+            </div>
+            @if ($tugasRingkasan['url'] !== null)
+                <a href="{{ $tugasRingkasan['url'] }}" class="text-[11px] font-semibold text-agenda-tugas transition hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">Kelola</a>
+            @endif
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div class="rounded-xl bg-soft px-2 py-3">
+                <p class="text-sm font-bold text-text">{{ $tugasRingkasan['dibuat'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Tugas terbit</p>
+            </div>
+            <div class="rounded-xl bg-soft px-2 py-3">
+                <p class="text-sm font-bold text-text">{{ $tugasRingkasan['masuk'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Pengumpulan masuk</p>
+            </div>
+            <div class="rounded-xl bg-soft px-2 py-3">
+                <p class="text-sm font-bold text-text">{{ $tugasRingkasan['belum_dinilai'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Belum dinilai</p>
+            </div>
+        </div>
+        <div class="mt-2 grid grid-cols-2 gap-2 text-center">
+            <div class="rounded-xl bg-agenda-tugas/10 px-2 py-3">
+                <p class="text-sm font-bold text-agenda-tugas">{{ $tugasRingkasan['belum_dikumpulkan'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Belum dikumpulkan</p>
+            </div>
+            <div class="rounded-xl bg-agenda-terlambat/10 px-2 py-3">
+                <p class="text-sm font-bold text-agenda-terlambat">{{ $tugasRingkasan['terlambat'] }}</p>
+                <p class="mt-1 text-[10px] leading-4 text-muted">Terlambat</p>
             </div>
         </div>
     </section>

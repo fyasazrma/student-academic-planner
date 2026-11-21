@@ -4,6 +4,7 @@ namespace App\Services\Absensi;
 
 use App\Enums\StatusAbsensi;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Enums\StatusSesiAbsensi;
 use App\Models\Absensi;
 use App\Models\KelasMataKuliah;
@@ -59,10 +60,7 @@ class RekapAbsensiService
 
         $peserta = $kelas->peserta()
             ->with('mahasiswa')
-            ->whereIn('status', [
-                StatusPeserta::Aktif->value,
-                StatusPeserta::Mengulang->value,
-            ])
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->get()
             ->sortBy(fn (PesertaMataKuliah $item): string => Str::lower((string) $item->mahasiswa?->name))
             ->values();
@@ -100,10 +98,7 @@ class RekapAbsensiService
     {
         $peserta = PesertaMataKuliah::query()
             ->where('mahasiswa_id', $mahasiswaId)
-            ->whereIn('status', [
-                StatusPeserta::Aktif->value,
-                StatusPeserta::Mengulang->value,
-            ])
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->with(['kelasMataKuliah.mataKuliah', 'kelasMataKuliah.tahunAkademik'])
             ->get();
 

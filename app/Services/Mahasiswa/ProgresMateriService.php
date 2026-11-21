@@ -4,6 +4,7 @@ namespace App\Services\Mahasiswa;
 
 use App\Enums\JenisAktivitasMateri;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Enums\StatusProgres;
 use App\Models\MateriPembelajaran;
 use App\Models\PesertaMataKuliah;
@@ -234,7 +235,7 @@ class ProgresMateriService
         $pendaftaran = PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
             ->where('kelas_mata_kuliah_id', $kelasId)
-            ->where('status', StatusPeserta::Aktif->value)
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->with('kelasMataKuliah.mataKuliah')
             ->firstOrFail();
 

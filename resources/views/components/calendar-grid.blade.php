@@ -73,10 +73,10 @@
                             <span class="truncate">{{ $segment['judul'] }}</span>
                             @if (($segment['kind'] ?? 'point') === 'range' && (int) $segment['end_col'] > (int) $segment['start_col'])
                                 @if (! $segment['continues_left'])
-                                    <span class="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-80" title="Tanggal dipublikasikan" aria-label="Tanggal dipublikasikan"></span>
+                                    <span class="ml-auto h-2 w-2 shrink-0 rounded-full border border-current" title="Tanggal dipublikasikan" aria-label="Tanggal dipublikasikan"></span>
                                 @endif
                                 @if (! $segment['continues_right'])
-                                    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-80" title="Deadline" aria-label="Deadline"></span>
+                                    <span class="h-2 w-2 shrink-0 rotate-45 rounded-[2px] bg-current" title="Deadline" aria-label="Deadline"></span>
                                 @endif
                             @endif
                         </button>

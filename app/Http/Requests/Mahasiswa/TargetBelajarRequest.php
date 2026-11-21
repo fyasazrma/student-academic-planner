@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Mahasiswa;
 
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -100,7 +101,7 @@ abstract class TargetBelajarRequest extends FormRequest
         return DB::table('peserta_mata_kuliah as pmk')
             ->join('kelas_mata_kuliah as kmk', 'kmk.id', '=', 'pmk.kelas_mata_kuliah_id')
             ->where('pmk.mahasiswa_id', $this->user()->getAuthIdentifier())
-            ->where('pmk.status', StatusPeserta::Aktif->value)
+            ->whereIn('pmk.status', KelayakanPeserta::nilaiStatusBerhak())
             ->where('kmk.mata_kuliah_id', $mataKuliahId)
             ->exists();
     }

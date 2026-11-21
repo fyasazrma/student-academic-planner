@@ -98,6 +98,37 @@ class PengumumanBatchDTest extends TestCase
         $this->actingAs($mahasiswa)->get(route('mahasiswa.pengumuman.show', $milikKelasB))->assertNotFound();
     }
 
+    public function test_filter_status_pengumuman_memisahkan_draft_terbit_dan_terjadwal(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $this->pengumumanBatchD($admin, null, null, 'Pengumuman Draft Filter');
+        $this->pengumumanBatchD($admin, null, now()->addDay(), 'Pengumuman Terjadwal Filter');
+        $this->pengumumanBatchD($admin, null, now()->subDay(), 'Pengumuman Terbit Filter');
+
+        $terjadwal = $this->actingAs($admin)
+            ->get(route('admin.pengumuman.index', ['status' => 'terjadwal']))
+            ->assertOk()
+            ->assertSee('Pengumuman Terjadwal Filter')
+            ->assertDontSee('Pengumuman Draft Filter')
+            ->assertDontSee('Pengumuman Terbit Filter');
+
+        $this->assertArrayHasKey('terjadwal', $terjadwal->viewData('statusOptions'));
+
+        $this->actingAs($admin)
+            ->get(route('admin.pengumuman.index', ['status' => 'terbit']))
+            ->assertOk()
+            ->assertSee('Pengumuman Terbit Filter')
+            ->assertDontSee('Pengumuman Draft Filter')
+            ->assertDontSee('Pengumuman Terjadwal Filter');
+
+        $this->actingAs($admin)
+            ->get(route('admin.pengumuman.index', ['status' => 'draft']))
+            ->assertOk()
+            ->assertSee('Pengumuman Draft Filter')
+            ->assertDontSee('Pengumuman Terbit Filter')
+            ->assertDontSee('Pengumuman Terjadwal Filter');
+    }
+
     public function test_pengumuman_global_terbit_menimbulkan_notifikasi_setelah_commit_dan_tidak_duplikat(): void
     {
         $admin = User::factory()->admin()->create();

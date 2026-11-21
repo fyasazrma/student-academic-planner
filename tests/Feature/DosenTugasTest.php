@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\StatusPeserta;
 use App\Models\KelasMataKuliah;
 use App\Models\MataKuliah;
+use App\Models\Notifikasi;
 use App\Models\PengumpulanTugas;
 use App\Models\PesertaMataKuliah;
 use App\Models\TahunAkademik;
@@ -148,6 +149,38 @@ class DosenTugasTest extends TestCase
         $tugas->refresh();
         $this->assertNull($tugas->dipublikasikan_pada);
         $this->assertSame('Tugas Kembali Draft', $tugas->judul);
+    }
+
+    public function test_notifikasi_publikasi_tugas_dihapus_saat_tugas_kembali_draft(): void
+    {
+        $dosen = $this->dosen();
+        $kelas = $this->kelas($dosen, 'TG-NOTIF');
+        $this->enroll(User::factory()->mahasiswa()->create(), $kelas);
+
+        $this->actingAs($dosen)
+            ->post(route('dosen.mata-kuliah.tugas.store', $kelas), $this->payload([
+                'judul' => 'Tugas Notifikasi Draft',
+                'status' => 'dipublikasikan',
+                'dipublikasikan_pada' => '2026-11-18T08:00',
+                'deadline' => '2026-11-27T23:59',
+            ]))
+            ->assertRedirect(route('dosen.mata-kuliah.tugas.index', $kelas));
+
+        $tugas = Tugas::query()->firstOrFail();
+        $sumber = 'tugas:'.$tugas->getKey().':dipublikasikan';
+
+        $this->assertSame(1, Notifikasi::query()->where('data->sumber', $sumber)->count());
+
+        $this->actingAs($dosen)
+            ->put(route('dosen.mata-kuliah.tugas.update', [$kelas, $tugas]), $this->payload([
+                'judul' => 'Tugas Notifikasi Draft',
+                'status' => 'draft',
+                'deadline' => '2026-11-27T23:59',
+            ]))
+            ->assertRedirect(route('dosen.mata-kuliah.tugas.index', $kelas));
+
+        $this->assertNull($tugas->refresh()->dipublikasikan_pada);
+        $this->assertSame(0, Notifikasi::query()->where('data->sumber', $sumber)->count());
     }
 
     public function test_validasi_formulir_tugas_dan_manipulasi_field_ditolak(): void

@@ -22,7 +22,7 @@ class JadwalKuliahController extends Controller
 
         return view('dosen.mata-kuliah.jadwal.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $data['kelas'],
             'jadwal' => $data['jadwal'],
         ]);
@@ -32,7 +32,7 @@ class JadwalKuliahController extends Controller
     {
         return view('dosen.mata-kuliah.jadwal.create', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $this->service->kelasMilikDosen($this->dosenId($request), $kelas),
             'jadwal' => null,
             'hariOptions' => $this->service->opsiHari(),
@@ -62,7 +62,7 @@ class JadwalKuliahController extends Controller
 
         return view('dosen.mata-kuliah.jadwal.edit', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'jadwal' => $this->service->jadwalMilikKelas($milik, $jadwal),
             'hariOptions' => $this->service->opsiHari(),

@@ -9,6 +9,7 @@ use App\Models\JadwalKuliah;
 use App\Models\KelasMataKuliah;
 use App\Models\MataKuliah;
 use App\Models\MateriPembelajaran;
+use App\Models\Notifikasi;
 use App\Models\TahunAkademik;
 use App\Models\User;
 use App\Services\Calendar\CalendarCategory;
@@ -121,7 +122,9 @@ class AdminDashboardDataService
 
         return [
             'user' => $user,
-            'unreadCount' => 0,
+            'unreadCount' => Notifikasi::untukUser((int) $user->getAuthIdentifier())
+                ->belumDibaca()
+                ->count(),
             'statistik' => $statistik,
             'tahunAkademikAktif' => $tahunAktif,
             'agendaMendatang' => $agendaMendatang,

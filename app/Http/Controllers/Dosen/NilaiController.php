@@ -25,7 +25,7 @@ class NilaiController extends Controller
 
         return view('dosen.nilai.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $daftar,
             'belum_dikonfigurasi' => $daftar
                 ->filter(fn (array $item): bool => $item['gunakan_tugas_label'] === 'Belum ditentukan')
@@ -39,7 +39,7 @@ class NilaiController extends Controller
 
         return view('dosen.nilai.kelas', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             ...$this->service->rekapKelas($milik),
         ]);
     }
@@ -96,7 +96,7 @@ class NilaiController extends Controller
 
         return view('dosen.nilai.riwayat', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'peserta' => $pesertaMilik,
             'riwayat' => $this->service->riwayat($milik, $pesertaMilik),

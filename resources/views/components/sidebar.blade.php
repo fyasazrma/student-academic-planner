@@ -21,6 +21,7 @@
             ['label' => 'Manajemen Pengguna', 'icon' => 'user', 'routeName' => 'admin.pengguna.index'],
             ['label' => 'Data Mahasiswa', 'icon' => 'user', 'routeName' => 'admin.mahasiswa.index'],
             ['label' => 'Data Dosen', 'icon' => 'user', 'routeName' => 'admin.dosen.index'],
+            ['label' => 'Notifikasi', 'icon' => 'bell', 'routeName' => 'admin.notifikasi'],
         ]
         : ($isDosen
             ? [
@@ -31,6 +32,7 @@
                 ['label' => 'Absensi', 'icon' => 'check', 'routeName' => 'dosen.absensi.index'],
                 ['label' => 'Jadwal Ujian', 'icon' => 'exam', 'routeName' => 'dosen.jadwal-ujian'],
                 ['label' => 'Pengumuman Kelas', 'icon' => 'info', 'routeName' => 'dosen.pengumuman.index'],
+                ['label' => 'Notifikasi', 'icon' => 'bell', 'routeName' => 'dosen.notifikasi'],
             ]
             : [
                 ['label' => 'Dashboard', 'icon' => 'dashboard', 'routeName' => 'mahasiswa.dashboard'],
@@ -96,7 +98,7 @@
                         >
                             <x-icon :name="$item['icon']" class="h-[18px] w-[18px] shrink-0" />
                             <span>{{ $item['label'] }}</span>
-                            @if ($isMahasiswa && $item['label'] === 'Notifikasi' && $unreadCount > 0)
+                            @if ($item['label'] === 'Notifikasi' && $unreadCount > 0)
                                 <span @class([
                                     'ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold text-white',
                                     'bg-sidebar' => $active,

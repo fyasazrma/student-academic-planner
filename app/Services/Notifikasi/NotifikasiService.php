@@ -3,11 +3,13 @@
 namespace App\Services\Notifikasi;
 
 use App\Enums\JenisNotifikasi;
-use App\Enums\StatusPeserta;
 use App\Enums\UserRole;
+use App\Models\KelasMataKuliah;
 use App\Models\Notifikasi;
 use App\Models\PesertaMataKuliah;
 use App\Models\User;
+use App\Support\KelayakanPeserta;
+use App\Support\TautanNotifikasi;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -15,7 +17,8 @@ use Illuminate\Support\Facades\DB;
  *
  * Notifikasi memakai tabel `notifikasi` kustom (bukan tabel `notifications`
  * bawaan Laravel). Pemilik dan status baca ditetapkan server-side; duplikasi
- * dicegah berdasarkan kunci sumber yang stabil.
+ * dicegah berdasarkan kunci sumber yang stabil. Penerima selalu diturunkan
+ * dari role dan relasi kelas, bukan dari data request.
  */
 class NotifikasiService
 {
@@ -29,58 +32,9 @@ class NotifikasiService
         string $pesan,
         ?string $tautan,
         string $sumber,
+        ?int $kecualiUserId = null,
     ): int {
-        $ids = collect($userIds)
-            ->map(fn (mixed $id): int => (int) $id)
-            ->filter(fn (int $id): bool => $id > 0)
-            ->unique()
-            ->values();
-
-        if ($ids->isEmpty()) {
-            return 0;
-        }
-
-        $penerima = User::query()
-            ->whereIn('id', $ids->all())
-            ->where('role', UserRole::Mahasiswa->value)
-            ->where('is_active', true)
-            ->pluck('id');
-
-        if ($penerima->isEmpty()) {
-            return 0;
-        }
-
-        $tautanAman = $this->tautanAman($tautan);
-
-        return DB::transaction(function () use ($penerima, $tipe, $judul, $pesan, $tautanAman, $sumber): int {
-            $dibuat = 0;
-
-            foreach ($penerima as $userId) {
-                $sudahAda = Notifikasi::untukUser((int) $userId)
-                    ->where('tipe', $tipe->value)
-                    ->where('data->sumber', $sumber)
-                    ->exists();
-
-                if ($sudahAda) {
-                    continue;
-                }
-
-                $notifikasi = new Notifikasi();
-                $notifikasi->forceFill([
-                    'user_id' => (int) $userId,
-                    'tipe' => $tipe->value,
-                    'judul' => $judul,
-                    'pesan' => $pesan,
-                    'data' => ['sumber' => $sumber],
-                    'tautan' => $tautanAman,
-                    'dibaca_pada' => null,
-                ])->save();
-
-                $dibuat++;
-            }
-
-            return $dibuat;
-        });
+        return $this->kirimKeRole($userIds, UserRole::Mahasiswa, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
     }
 
     public function kirimKeSemuaMahasiswa(
@@ -89,13 +43,9 @@ class NotifikasiService
         string $pesan,
         ?string $tautan,
         string $sumber,
+        ?int $kecualiUserId = null,
     ): int {
-        $ids = User::query()
-            ->where('role', UserRole::Mahasiswa->value)
-            ->where('is_active', true)
-            ->pluck('id');
-
-        return $this->kirimKeMahasiswa($ids, $tipe, $judul, $pesan, $tautan, $sumber);
+        return $this->kirimKeRole($this->semuaPengguna(UserRole::Mahasiswa), UserRole::Mahasiswa, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
     }
 
     public function kirimKeKelas(
@@ -105,13 +55,90 @@ class NotifikasiService
         string $pesan,
         ?string $tautan,
         string $sumber,
+        ?int $kecualiUserId = null,
     ): int {
         $ids = PesertaMataKuliah::query()
             ->where('kelas_mata_kuliah_id', $kelasId)
-            ->where('status', StatusPeserta::Aktif->value)
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->pluck('mahasiswa_id');
 
-        return $this->kirimKeMahasiswa($ids, $tipe, $judul, $pesan, $tautan, $sumber);
+        return $this->kirimKeMahasiswa($ids, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
+    }
+
+    /**
+     * @param  iterable<int>  $userIds
+     */
+    public function kirimKeDosen(
+        iterable $userIds,
+        JenisNotifikasi $tipe,
+        string $judul,
+        string $pesan,
+        ?string $tautan,
+        string $sumber,
+        ?int $kecualiUserId = null,
+    ): int {
+        return $this->kirimKeRole($userIds, UserRole::Dosen, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
+    }
+
+    public function kirimKeSemuaDosen(
+        JenisNotifikasi $tipe,
+        string $judul,
+        string $pesan,
+        ?string $tautan,
+        string $sumber,
+        ?int $kecualiUserId = null,
+    ): int {
+        return $this->kirimKeRole($this->semuaPengguna(UserRole::Dosen), UserRole::Dosen, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
+    }
+
+    /**
+     * Dosen pengampu kelas. Dosen yang menjadi aktor dilewati agar tidak
+     * menerima notifikasi atas tindakannya sendiri.
+     */
+    public function kirimKeDosenPengampu(
+        int $kelasId,
+        JenisNotifikasi $tipe,
+        string $judul,
+        string $pesan,
+        ?string $tautan,
+        string $sumber,
+        ?int $kecualiUserId = null,
+    ): int {
+        $dosenId = KelasMataKuliah::query()
+            ->whereKey($kelasId)
+            ->value('dosen_id');
+
+        if ($dosenId === null) {
+            return 0;
+        }
+
+        return $this->kirimKeDosen([(int) $dosenId], $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
+    }
+
+    /**
+     * @param  iterable<int>  $userIds
+     */
+    public function kirimKeAdmin(
+        iterable $userIds,
+        JenisNotifikasi $tipe,
+        string $judul,
+        string $pesan,
+        ?string $tautan,
+        string $sumber,
+        ?int $kecualiUserId = null,
+    ): int {
+        return $this->kirimKeRole($userIds, UserRole::Admin, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
+    }
+
+    public function kirimKeSemuaAdmin(
+        JenisNotifikasi $tipe,
+        string $judul,
+        string $pesan,
+        ?string $tautan,
+        string $sumber,
+        ?int $kecualiUserId = null,
+    ): int {
+        return $this->kirimKeRole($this->semuaPengguna(UserRole::Admin), UserRole::Admin, $tipe, $judul, $pesan, $tautan, $sumber, $kecualiUserId);
     }
 
     public function tandaiSemuaDibaca(int $userId): int
@@ -132,37 +159,79 @@ class NotifikasiService
     }
 
     /**
-     * Hanya path internal area mahasiswa yang disimpan. Tautan eksternal,
-     * protocol-relative, atau hasil obfuskasi ditolak sejak penulisan.
+     * @param  iterable<int>  $userIds
      */
-    private function tautanAman(?string $tautan): ?string
+    private function kirimKeRole(
+        iterable $userIds,
+        UserRole $role,
+        JenisNotifikasi $tipe,
+        string $judul,
+        string $pesan,
+        ?string $tautan,
+        string $sumber,
+        ?int $kecualiUserId = null,
+    ): int {
+        $ids = collect($userIds)
+            ->map(fn (mixed $id): int => (int) $id)
+            ->filter(fn (int $id): bool => $id > 0 && $id !== $kecualiUserId)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return 0;
+        }
+
+        $penerima = User::query()
+            ->whereIn('id', $ids->all())
+            ->where('role', $role->value)
+            ->where('is_active', true)
+            ->pluck('id');
+
+        if ($penerima->isEmpty()) {
+            return 0;
+        }
+
+        $tautanAman = TautanNotifikasi::valid($tautan, $role);
+
+        return DB::transaction(function () use ($penerima, $role, $tipe, $judul, $pesan, $tautanAman, $sumber): int {
+            $dibuat = 0;
+
+            foreach ($penerima as $userId) {
+                $sudahAda = Notifikasi::untukUser((int) $userId)
+                    ->where('tipe', $tipe->value)
+                    ->where('data->sumber', $sumber)
+                    ->exists();
+
+                if ($sudahAda) {
+                    continue;
+                }
+
+                $notifikasi = new Notifikasi();
+                $notifikasi->forceFill([
+                    'user_id' => (int) $userId,
+                    'tipe' => $tipe->value,
+                    'judul' => $judul,
+                    'pesan' => $pesan,
+                    'data' => ['sumber' => $sumber, 'peran' => $role->value],
+                    'tautan' => $tautanAman,
+                    'dibaca_pada' => null,
+                ])->save();
+
+                $dibuat++;
+            }
+
+            return $dibuat;
+        });
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, int>
+     */
+    private function semuaPengguna(UserRole $role): \Illuminate\Support\Collection
     {
-        if ($tautan === null || $tautan === '') {
-            return null;
-        }
-
-        if (preg_match('/[\x00-\x1F\x7F\\\\@]/', $tautan) === 1) {
-            return null;
-        }
-
-        $bagian = parse_url($tautan);
-        if (! is_array($bagian) || isset($bagian['scheme']) || isset($bagian['host']) || isset($bagian['user']) || isset($bagian['pass'])) {
-            return null;
-        }
-
-        $path = $bagian['path'] ?? '';
-        if ($path !== '/mahasiswa' && ! str_starts_with($path, '/mahasiswa/')) {
-            return null;
-        }
-
-        if (str_contains($path, '..') || str_contains($tautan, '//')) {
-            return null;
-        }
-
-        if (rawurldecode(rawurldecode($path)) !== $path) {
-            return null;
-        }
-
-        return $path.(isset($bagian['query']) ? '?'.$bagian['query'] : '');
+        return User::query()
+            ->where('role', $role->value)
+            ->where('is_active', true)
+            ->pluck('id');
     }
 }

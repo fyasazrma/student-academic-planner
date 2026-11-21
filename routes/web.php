@@ -31,11 +31,24 @@ use App\Http\Controllers\Mahasiswa\PengumpulanTugasController as MahasiswaPengum
 use App\Http\Controllers\Mahasiswa\ProgresMateriController as MahasiswaProgresMateriController;
 use App\Http\Controllers\Mahasiswa\TargetBelajarController as MahasiswaTargetBelajarController;
 use App\Http\Controllers\Mahasiswa\TugasController;
+use App\Http\Controllers\NotifikasiController as NotifikasiBersamaController;
 use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    $user = auth()->user();
+
+    if ($user === null) {
+        return redirect()->route('login');
+    }
+
+    $rute = match (true) {
+        $user->isAdmin() => 'admin.dashboard',
+        $user->isDosen() => 'dosen.dashboard',
+        default => 'mahasiswa.dashboard',
+    };
+
+    return redirect()->route($rute);
 });
 
 require __DIR__.'/auth.php';
@@ -116,6 +129,13 @@ Route::middleware(['auth', 'active', 'role:admin'])->group(function (): void {
     Route::delete('/admin/pengumuman/{pengumuman}', [AdminPengumumanController::class, 'destroy'])
         ->whereNumber('pengumuman')
         ->name('admin.pengumuman.destroy');
+
+    Route::get('/admin/notifikasi', [NotifikasiBersamaController::class, 'index'])->name('admin.notifikasi');
+    Route::post('/admin/notifikasi/baca-semua', [NotifikasiBersamaController::class, 'tandaiSemuaDibaca'])
+        ->name('admin.notifikasi.baca-semua');
+    Route::post('/admin/notifikasi/{notifikasi}/baca', [NotifikasiBersamaController::class, 'tandaiDibaca'])
+        ->whereNumber('notifikasi')
+        ->name('admin.notifikasi.baca');
 
     foreach (['pengguna' => 'admin.pengguna', 'mahasiswa' => 'admin.mahasiswa', 'dosen' => 'admin.dosen'] as $segmen => $prefiks) {
         Route::get('/admin/'.$segmen, [AdminUserController::class, 'index'])->name($prefiks.'.index');
@@ -305,6 +325,13 @@ Route::middleware(['auth', 'active', 'role:dosen'])->group(function (): void {
     Route::post('/dosen/absensi/{kelas}/sesi/{sesi}/peserta/{peserta}/koreksi', [DosenAbsensiController::class, 'koreksi'])
         ->whereNumber(['kelas', 'sesi', 'peserta'])
         ->name('dosen.absensi.koreksi');
+
+    Route::get('/dosen/notifikasi', [NotifikasiBersamaController::class, 'index'])->name('dosen.notifikasi');
+    Route::post('/dosen/notifikasi/baca-semua', [NotifikasiBersamaController::class, 'tandaiSemuaDibaca'])
+        ->name('dosen.notifikasi.baca-semua');
+    Route::post('/dosen/notifikasi/{notifikasi}/baca', [NotifikasiBersamaController::class, 'tandaiDibaca'])
+        ->whereNumber('notifikasi')
+        ->name('dosen.notifikasi.baca');
 });
 
 Route::middleware(['auth', 'active', 'role:mahasiswa'])->group(function (): void {

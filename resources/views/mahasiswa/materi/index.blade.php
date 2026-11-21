@@ -65,7 +65,7 @@
                 <noscript>
                     <button
                         type="submit"
-                        class="inline-flex items-center justify-center rounded-xl bg-agenda-tugas px-3 py-2 text-xs font-semibold text-white transition hover:bg-agenda-tugas/90"
+                        class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-text transition hover:bg-primary-hover"
                     >
                         Terapkan
                     </button>
@@ -114,7 +114,7 @@
                 >
                     <a
                         href="{{ route('mahasiswa.mata-kuliah') }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-agenda-tugas px-4 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <x-icon name="search" class="h-3.5 w-3.5" />
                         <span>Cari & Gabung Kelas</span>
@@ -208,7 +208,7 @@
                                 </a>
                                 <a
                                     href="{{ route('mahasiswa.materi.unduh', [$item['kelas_id'], $item['id']]) }}"
-                                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-agenda-tugas px-4 py-2.5 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2"
+                                    class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                                     aria-label="Unduh berkas {{ $item['judul'] }}"
                                 >
                                     <x-icon name="file" class="h-4 w-4" />

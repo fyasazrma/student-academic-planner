@@ -47,13 +47,13 @@
             <div class="sm:col-span-2">
                 <label for="judul" class="block text-xs font-semibold text-text">Judul pengumuman</label>
                 <input id="judul" name="judul" type="text" required maxlength="200" value="{{ old('judul', $pengumuman?->judul) }}" class="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text focus:border-agenda-pengumuman focus:outline-none focus:ring-2 focus:ring-agenda-pengumuman/25">
-                @error('judul')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('judul')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="sm:col-span-2">
                 <label for="isi" class="block text-xs font-semibold text-text">Isi pengumuman</label>
                 <textarea id="isi" name="isi" rows="6" required maxlength="5000" class="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text focus:border-agenda-pengumuman focus:outline-none focus:ring-2 focus:ring-agenda-pengumuman/25">{{ old('isi', $pengumuman?->deskripsi) }}</textarea>
-                @error('isi')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('isi')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="sm:col-span-2">
@@ -64,7 +64,7 @@
                         <option value="{{ $value }}" @selected((string) old('kelas_mata_kuliah_id', $pengumuman?->kelas_mata_kuliah_id ?? '') === (string) $value)>{{ $label }}</option>
                     @endforeach
                 </select>
-                @error('kelas_mata_kuliah_id')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('kelas_mata_kuliah_id')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="sm:col-span-2">
@@ -77,30 +77,30 @@
                         </label>
                     @endforeach
                 </div>
-                @error('status')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('status')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div class="sm:col-span-2">
                 <label for="tanggal_publikasi" class="block text-xs font-semibold text-text">Waktu publikasi (untuk status terjadwal)</label>
                 <input id="tanggal_publikasi" name="tanggal_publikasi" type="datetime-local" value="{{ $publikasiValue }}" class="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text focus:border-agenda-pengumuman focus:outline-none focus:ring-2 focus:ring-agenda-pengumuman/25">
-                @error('tanggal_publikasi')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('tanggal_publikasi')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div>
                 <label for="tanggal_mulai" class="block text-xs font-semibold text-text">Tanggal mulai berlaku</label>
                 <input id="tanggal_mulai" name="tanggal_mulai" type="date" required value="{{ old('tanggal_mulai', $pengumuman?->tanggal_mulai?->toDateString() ?? now()->toDateString()) }}" class="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text focus:border-agenda-pengumuman focus:outline-none focus:ring-2 focus:ring-agenda-pengumuman/25">
-                @error('tanggal_mulai')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('tanggal_mulai')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
 
             <div>
                 <label for="tanggal_selesai" class="block text-xs font-semibold text-text">Tanggal berakhir (opsional)</label>
                 <input id="tanggal_selesai" name="tanggal_selesai" type="date" value="{{ old('tanggal_selesai', $pengumuman?->tanggal_selesai?->toDateString()) }}" class="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-sm text-text focus:border-agenda-pengumuman focus:outline-none focus:ring-2 focus:ring-agenda-pengumuman/25">
-                @error('tanggal_selesai')<p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>@enderror
+                @error('tanggal_selesai')<p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>@enderror
             </div>
         </div>
 
         <div class="mt-6 flex flex-wrap justify-end gap-3">
-            <button type="submit" data-submit-button class="rounded-xl bg-agenda-pengumuman px-5 py-2.5 text-sm font-bold text-white transition hover:bg-agenda-pengumuman/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-pengumuman focus-visible:ring-offset-2">
+            <button type="submit" data-submit-button class="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 {{ $pengumuman === null ? 'Simpan pengumuman' : 'Simpan perubahan' }}
             </button>
         </div>

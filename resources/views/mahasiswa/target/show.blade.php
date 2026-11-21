@@ -93,7 +93,7 @@
                         >
                         @error('capaian') <p class="mt-1 text-xs text-danger">{{ $message }}</p> @enderror
                     </div>
-                    <button type="submit" class="rounded-xl bg-agenda-tugas px-4 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2">
+                    <button type="submit" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                         Simpan Capaian
                     </button>
                 </form>
@@ -111,7 +111,7 @@
                                 <x-icon name="close" class="h-4 w-4" /> Batalkan Status Selesai
                             </button>
                         </form>
-                    @elseif ($target['status'] !== 'selesai')
+                    @elseif ($target['bisa_tandai_selesai'])
                         <form method="POST" action="{{ route('mahasiswa.target.selesai', $target['id']) }}">
                             @csrf
                             <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-success px-3.5 py-2 text-xs font-bold text-white transition hover:bg-success/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-success focus-visible:ring-offset-2">

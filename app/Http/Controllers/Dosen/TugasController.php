@@ -25,7 +25,7 @@ class TugasController extends Controller
 
         return view('dosen.mata-kuliah.tugas.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $data['kelas'],
             'tugas' => $data['tugas'],
         ]);
@@ -37,7 +37,7 @@ class TugasController extends Controller
 
         return view('dosen.mata-kuliah.tugas.create', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'data' => $this->service->dataFormulir(),
         ]);
@@ -63,7 +63,7 @@ class TugasController extends Controller
 
         return view('dosen.mata-kuliah.tugas.edit', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'tugas' => $tugasMilik,
             'data' => $this->service->dataFormulir($tugasMilik),

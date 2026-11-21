@@ -17,7 +17,7 @@
                     </span>
                     <a
                         href="{{ route('admin.jadwal-ujian.index') }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-agenda-uts px-3 py-2 font-bold text-white transition hover:bg-agenda-uts/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-uts"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         <x-icon name="exam" class="h-4 w-4" />
                         Kelola jadwal ujian

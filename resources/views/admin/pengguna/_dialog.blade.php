@@ -22,7 +22,7 @@
             <button
                 type="submit"
                 data-user-dialog-submit
-                class="rounded-xl bg-agenda-tugas px-4 py-2 text-sm font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2"
+                class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
                 Konfirmasi
             </button>

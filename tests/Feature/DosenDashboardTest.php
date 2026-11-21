@@ -3,17 +3,23 @@
 namespace Tests\Feature;
 
 use App\Enums\JenisAgenda;
+use App\Enums\StatusAbsensi;
 use App\Enums\StatusPendaftaranKelas;
 use App\Enums\StatusPeserta;
+use App\Enums\StatusSesiAbsensi;
+use App\Models\Absensi;
 use App\Models\AgendaAkademik;
 use App\Models\JadwalKuliah;
 use App\Models\KelasMataKuliah;
 use App\Models\MataKuliah;
 use App\Models\Notifikasi;
+use App\Models\PengumpulanTugas;
 use App\Models\PesertaMataKuliah;
+use App\Models\SesiAbsensi;
 use App\Models\TahunAkademik;
 use App\Models\Tugas;
 use App\Models\User;
+use App\Services\Calendar\CalendarCategory;
 use App\Services\Kelas\KunciGabungKelasService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -323,6 +329,120 @@ class DosenDashboardTest extends TestCase
             ->assertDontSee('Menu mahasiswa');
     }
 
+    public function test_ringkasan_absensi_tidak_menghitung_peserta_nonaktif(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $kelas = $this->createKelas($dosen, $this->createTahunAkademik(), $this->createMataKuliah('MK-ABSENSI'), 'A01');
+        $aktif = $this->enroll(User::factory()->mahasiswa()->create(), $kelas);
+        $this->enroll(User::factory()->mahasiswa()->create(), $kelas, StatusPeserta::Mengulang->value);
+        $nonaktif = $this->enroll(User::factory()->mahasiswa()->create(), $kelas, StatusPeserta::Nonaktif->value);
+
+        $sesi = new SesiAbsensi();
+        $sesi->forceFill([
+            'kelas_mata_kuliah_id' => $kelas->id,
+            'dibuat_oleh' => $dosen->id,
+            'pertemuan_ke' => 1,
+            'tanggal' => today()->toDateString(),
+            'status' => StatusSesiAbsensi::Dibuka->value,
+        ])->save();
+
+        $this->createAbsensi($sesi, $aktif);
+        $this->createAbsensi($sesi, $nonaktif);
+
+        $respons = $this->actingAs($dosen)->get(route('dosen.dashboard'));
+
+        $respons->assertOk()
+            ->assertViewHas('absensiRingkasan', fn (array $ringkasan): bool => $ringkasan['belum_mengisi'] === 1);
+
+        $this->assertSame(1, $respons->viewData('absensiRingkasan')['belum_mengisi']);
+    }
+
+    public function test_ringkasan_tugas_hanya_memakai_kelas_sendiri_dan_tugas_terpublikasi(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $tahun = $this->createTahunAkademik();
+        $kelas = $this->createKelas($dosen, $tahun, $this->createMataKuliah('MK-RINGKASAN'), 'A01');
+        $pesertaSatu = $this->enroll(User::factory()->mahasiswa()->create(), $kelas);
+        $pesertaDua = $this->enroll(User::factory()->mahasiswa()->create(), $kelas);
+
+        $tugas = $this->createTask(
+            $kelas,
+            'Tugas Ringkasan',
+            Carbon::parse('2026-11-17 08:00:00'),
+            Carbon::parse('2026-11-25 23:59:00'),
+        );
+        $draft = $this->createTask(
+            $kelas,
+            'Tugas Draft Ringkasan',
+            null,
+            Carbon::parse('2026-11-26 23:59:00'),
+        );
+
+        $this->createSubmission($tugas, $pesertaSatu, true);
+        $this->createSubmission($tugas, $pesertaDua, false);
+        $this->createSubmission($draft, $pesertaSatu, false);
+
+        $dosenLain = User::factory()->dosen()->create();
+        $kelasLain = $this->createKelas($dosenLain, $tahun, $this->createMataKuliah('MK-LAIN-RING'), 'B02');
+        $pesertaLain = $this->enroll(User::factory()->mahasiswa()->create(), $kelasLain);
+        $tugasLain = $this->createTask(
+            $kelasLain,
+            'Tugas Dosen Lain Ringkasan',
+            Carbon::parse('2026-11-17 08:00:00'),
+            Carbon::parse('2026-11-25 23:59:00'),
+        );
+        $this->createSubmission($tugasLain, $pesertaLain, false);
+
+        $respons = $this->actingAs($dosen)->get(route('dosen.dashboard'));
+
+        $respons->assertOk()
+            ->assertSee('Ringkasan tugas')
+            ->assertSee('Belum dinilai');
+
+        $this->assertSame([
+            'dibuat' => 1,
+            'masuk' => 2,
+            'belum_dinilai' => 1,
+            'belum_dikumpulkan' => 0,
+            'terlambat' => 0,
+            'url' => route('dosen.mata-kuliah.index'),
+        ], $respons->viewData('tugasRingkasan'));
+    }
+
+    public function test_unread_count_shell_berasal_dari_data_notifikasi(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $notifikasi = $this->createNotification($dosen, 'Notifikasi belum dibaca dosen');
+
+        $respons = $this->actingAs($dosen)->get(route('dosen.mata-kuliah.index'));
+
+        $respons->assertOk()->assertViewHas('unreadCount', 1);
+
+        $notifikasi->forceFill(['dibaca_pada' => now()])->save();
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.mata-kuliah.index'))
+            ->assertOk()
+            ->assertViewHas('unreadCount', 0);
+    }
+
+    public function test_filter_kalender_dosen_memakai_kategori_dosen(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+
+        $respons = $this->actingAs($dosen)->get(route('dosen.dashboard', [
+            'jenis' => ['tugas', 'kategori-tidak-valid'],
+        ]));
+
+        $respons->assertOk();
+
+        $this->assertSame(['tugas'], $respons->viewData('activeFilters'));
+        $this->assertSame(
+            array_keys(CalendarCategory::options(CalendarCategory::DOSEN)),
+            array_keys($respons->viewData('filterOptions')),
+        );
+    }
+
     // ---------------------------------------------------------------------
     // Helpers
     // ---------------------------------------------------------------------
@@ -466,5 +586,39 @@ class DosenDashboardTest extends TestCase
         ])->save();
 
         return $notifikasi;
+    }
+
+    private function createSubmission(Tugas $tugas, PesertaMataKuliah $peserta, bool $dinilai): PengumpulanTugas
+    {
+        $pengumpulan = new PengumpulanTugas();
+        $pengumpulan->forceFill([
+            'tugas_id' => $tugas->id,
+            'peserta_mata_kuliah_id' => $peserta->id,
+            'file_path' => 'pengumpulan/'.$tugas->id.'-'.$peserta->id.'.pdf',
+            'file_name' => 'jawaban.pdf',
+            'file_mime' => 'application/pdf',
+            'file_size' => 1024,
+            'dikumpulkan_pada' => Carbon::now()->subHour(),
+            'nilai' => $dinilai ? '80.00' : null,
+            'dinilai_pada' => $dinilai ? Carbon::now() : null,
+            'dinilai_oleh' => $dinilai ? $tugas->dibuat_oleh : null,
+        ])->save();
+
+        return $pengumpulan;
+    }
+
+    private function createAbsensi(SesiAbsensi $sesi, PesertaMataKuliah $peserta): Absensi
+    {
+        $absensi = new Absensi();
+        $absensi->forceFill([
+            'sesi_absensi_id' => $sesi->id,
+            'peserta_mata_kuliah_id' => $peserta->id,
+            'status' => StatusAbsensi::Hadir->value,
+            'metode' => 'manual',
+            'dicatat_pada' => Carbon::now(),
+            'dicatat_oleh' => $sesi->dibuat_oleh,
+        ])->save();
+
+        return $absensi;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
+use App\Models\Notifikasi;
 use App\Services\Mahasiswa\DashboardDataService;
 use App\Services\Notifikasi\NotifikasiService;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,8 @@ class NotifikasiController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Notifikasi::class);
+
         return view('mahasiswa.notifikasi.index', $this->dashboardData->buildNotifications($request));
     }
 
@@ -30,6 +33,11 @@ class NotifikasiController extends Controller
      */
     public function tandaiDibaca(Request $request, int $notifikasi): RedirectResponse
     {
+        $record = Notifikasi::untukUser((int) $request->user()->getAuthIdentifier())
+            ->whereKey($notifikasi)
+            ->firstOrFail();
+        $this->authorize('tandaiDibaca', $record);
+
         $this->dashboardData->tandaiNotifikasiDibaca($request->user()->id, $notifikasi);
 
         $status = $this->dashboardData->notificationStatusFilter($request->input('status'));

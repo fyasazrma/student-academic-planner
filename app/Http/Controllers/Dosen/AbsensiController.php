@@ -8,7 +8,6 @@ use App\Http\Requests\Dosen\AbsensiKelasRequest;
 use App\Http\Requests\Dosen\KoreksiAbsensiRequest;
 use App\Http\Requests\Dosen\RiwayatAbsensiRequest;
 use App\Http\Requests\Dosen\SimpanSesiAbsensiRequest;
-use App\Models\Notifikasi;
 use App\Models\PesertaMataKuliah;
 use App\Services\Absensi\AbsensiService;
 use App\Services\Absensi\RekapAbsensiService;
@@ -29,7 +28,7 @@ class AbsensiController extends Controller
     {
         return view('dosen.absensi.index', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $this->sesi->daftarKelas((int) $request->user()->getAuthIdentifier()),
         ]);
     }
@@ -40,7 +39,7 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.kelas', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'sesi' => $this->sesi->daftarSesi($milik),
             'ringkasan' => $this->rekap->rekapKelas($milik),
@@ -53,7 +52,7 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.form', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'sesi' => null,
             'mode' => 'buat',
@@ -88,7 +87,7 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.sesi', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'sesi' => $sesiMilik,
             'waktu_label' => $this->absensi->rentangWaktu($sesiMilik),
@@ -105,7 +104,7 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.form', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'sesi' => $sesiMilik,
             'mode' => 'ubah',
@@ -188,7 +187,7 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.koreksi', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'sesi' => $sesiMilik,
             'peserta' => $pesertaMilik,
@@ -238,7 +237,7 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.riwayat', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'sesi' => $sesiMilik,
             'riwayat' => $this->absensi->riwayatKoreksi($sesiMilik),
@@ -251,15 +250,9 @@ class AbsensiController extends Controller
 
         return view('dosen.absensi.rekap', [
             'user' => $request->user(),
-            'unreadCount' => $this->unreadCount($request),
+            'unreadCount' => $this->unreadCount(),
             ...$this->rekap->rekapKelas($milik),
         ]);
     }
 
-    private function unreadCount($request): int
-    {
-        return Notifikasi::untukUser((int) $request->user()->getAuthIdentifier())
-            ->belumDibaca()
-            ->count();
-    }
 }

@@ -28,7 +28,7 @@ class MataKuliahController extends Controller
 
         return view('admin.mata-kuliah.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'mataKuliah' => $this->service->daftar($kataKunci),
             'kataKunci' => $kataKunci,
         ]);
@@ -41,7 +41,7 @@ class MataKuliahController extends Controller
     {
         return view('admin.mata-kuliah.create', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'data' => $this->service->dataFormulir(),
             'mataKuliahId' => null,
             'mode' => 'create',
@@ -74,7 +74,7 @@ class MataKuliahController extends Controller
     {
         return view('admin.mata-kuliah.edit', [
             'user' => request()->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'data' => $this->service->dataFormulir($mataKuliah),
             'mataKuliahId' => $mataKuliah->getKey(),
             'mode' => 'edit',

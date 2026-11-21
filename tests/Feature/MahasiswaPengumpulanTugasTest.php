@@ -83,7 +83,11 @@ class MahasiswaPengumpulanTugasTest extends TestCase
         $this->assertStringStartsWith('pengumpulan/'.$data['class']->id.'/', $pengumpulan->file_path);
         Storage::disk('local')->assertExists($pengumpulan->file_path);
         $this->assertSame(1, PengumpulanTugas::count());
-        $this->assertSame($jumlahNotifikasi, Notifikasi::count());
+        $this->assertSame($jumlahNotifikasi + 1, Notifikasi::count());
+        $notifikasiDosen = Notifikasi::untukUser($data['dosen']->id)->firstOrFail();
+        $this->assertStringStartsWith('Pengumpulan tugas baru:', $notifikasiDosen->judul);
+        $this->assertStringStartsWith('/dosen/', (string) $notifikasiDosen->tautan);
+        $this->assertSame('dosen', $notifikasiDosen->data['peran']);
     }
 
     public function test_resubmit_mengganti_file_dan_catatan_dalam_satu_baris(): void
@@ -112,28 +116,40 @@ class MahasiswaPengumpulanTugasTest extends TestCase
         Storage::disk('local')->assertExists($baru->file_path);
     }
 
-    public function test_peserta_nonaktif_dan_mengulang_ditolak(): void
+    public function test_peserta_nonaktif_ditolak_dan_mengulang_diizinkan(): void
     {
-        foreach ([StatusPeserta::Nonaktif, StatusPeserta::Mengulang] as $status) {
-            $data = $this->mahasiswaWithClass();
-            $tugas = $this->createTask($data['class'], now()->subDay(), now()->addDay());
+        $data = $this->mahasiswaWithClass();
+        $tugas = $this->createTask($data['class'], now()->subDay(), now()->addDay());
+        $data['enrollment']->status = StatusPeserta::Nonaktif->value;
+        $data['enrollment']->save();
 
-            $data['enrollment']->status = $status->value;
-            $data['enrollment']->save();
+        $this->actingAs($data['user'])
+            ->post(route('mahasiswa.tugas.pengumpulan.simpan', $tugas->id), [
+                'lampiran' => $this->jawaban(),
+            ])
+            ->assertNotFound();
 
-            $this->actingAs($data['user'])
-                ->post(route('mahasiswa.tugas.pengumpulan.simpan', $tugas->id), [
-                    'lampiran' => $this->jawaban(),
-                ])
-                ->assertNotFound();
+        $this->actingAs($data['user'])
+            ->get(route('mahasiswa.tugas.pengumpulan', $tugas->id))
+            ->assertNotFound();
 
-            $this->actingAs($data['user'])
-                ->get(route('mahasiswa.tugas.pengumpulan', $tugas->id))
-                ->assertNotFound();
-        }
+        $dataMengulang = $this->mahasiswaWithClass();
+        $tugasMengulang = $this->createTask($dataMengulang['class'], now()->subDay(), now()->addDay());
+        $dataMengulang['enrollment']->status = StatusPeserta::Mengulang->value;
+        $dataMengulang['enrollment']->save();
 
-        $this->assertSame(0, PengumpulanTugas::count());
-        $this->assertSame([], Storage::disk('local')->allFiles());
+        $this->actingAs($dataMengulang['user'])
+            ->post(route('mahasiswa.tugas.pengumpulan.simpan', $tugasMengulang->id), [
+                'lampiran' => $this->jawaban('mengulang.pdf'),
+            ])
+            ->assertRedirect(route('mahasiswa.tugas'));
+
+        $this->actingAs($dataMengulang['user'])
+            ->get(route('mahasiswa.tugas.pengumpulan', $tugasMengulang->id))
+            ->assertOk();
+
+        $this->assertSame(1, PengumpulanTugas::count());
+        $this->assertCount(1, Storage::disk('local')->allFiles());
     }
 
     public function test_tugas_draft_dan_publikasi_mendatang_ditolak(): void

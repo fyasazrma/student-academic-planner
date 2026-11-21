@@ -6,6 +6,7 @@ use App\Enums\JenisNotifikasi;
 use App\Enums\KomponenNilai;
 use App\Enums\StatusNilaiAkhir;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Models\KelasMataKuliah;
 use App\Models\Nilai;
 use App\Models\PengumpulanTugas;
@@ -81,6 +82,8 @@ class PenilaianService
 
         try {
             $model = DB::transaction(function () use ($peserta, $komponen, $nilai, $alasan, $actor, $kelas): Nilai {
+                $statusSebelum = $this->statusNilaiAkhir($peserta);
+
                 $model = Nilai::query()
                     ->where('peserta_mata_kuliah_id', $peserta->getKey())
                     ->where('komponen', $komponen->value)
@@ -126,6 +129,10 @@ class PenilaianService
                     ));
                 }
 
+                // Nilai akhir dihitung dinamis. Notifikasi hanya ketika nilai
+                // akhir bertransisi menjadi lengkap, bukan pada setiap koreksi.
+                $this->notifikasiNilaiAkhirJikaLengkap($peserta, $statusSebelum, $kelas);
+
                 return $model;
             });
         } catch (Throwable $exception) {
@@ -170,6 +177,12 @@ class PenilaianService
 
         try {
             DB::transaction(function () use ($kelas, $gunakanTugas, $sebelum, $alasan, $actor): void {
+                $peserta = $kelas->peserta()->with('mahasiswa')->get();
+                $statusSebelum = [];
+                foreach ($peserta as $item) {
+                    $statusSebelum[$item->getKey()] = $this->statusNilaiAkhir($item, $sebelum);
+                }
+
                 $kelas->forceFill(['gunakan_tugas' => $gunakanTugas])->save();
 
                 $this->catatPerubahan(
@@ -181,6 +194,27 @@ class PenilaianService
                     $actor,
                     $alasan ?: 'Perubahan konfigurasi komponen tugas',
                 );
+
+                foreach ($peserta as $item) {
+                    // Audit konfigurasi juga ditautkan ke peserta agar tampil
+                    // pada riwayat mahasiswa yang bersangkutan.
+                    $this->catatPerubahan(
+                        null,
+                        $item,
+                        self::KOMPONEN_KONFIGURASI,
+                        $sebelum === null ? null : ($sebelum ? '1' : '0'),
+                        $gunakanTugas ? '1' : '0',
+                        $actor,
+                        $alasan ?: 'Perubahan konfigurasi komponen tugas',
+                    );
+
+                    $this->notifikasiNilaiAkhirJikaLengkap(
+                        $item,
+                        $statusSebelum[$item->getKey()],
+                        $kelas,
+                        $gunakanTugas,
+                    );
+                }
             });
         } catch (Throwable $exception) {
             Log::error('Gagal mengubah konfigurasi komponen tugas', [
@@ -287,7 +321,7 @@ class PenilaianService
             ->values();
 
         $baris = $models
-            ->filter(fn (PesertaMataKuliah $item): bool => $item->status === StatusPeserta::Aktif
+            ->filter(fn (PesertaMataKuliah $item): bool => KelayakanPeserta::berhak($item->status)
                 || $item->nilai->isNotEmpty()
                 || $item->pengumpulanTugas->isNotEmpty())
             ->map(fn (PesertaMataKuliah $item): array => $this->barisRekap($item, $kelas))
@@ -350,12 +384,14 @@ class PenilaianService
             abort(404);
         }
 
+        $komponen = array_merge(
+            array_map(fn (KomponenNilai $item): string => $item->value, self::KOMPONEN_DITULIS),
+            [self::KOMPONEN_KONFIGURASI],
+        );
+
         return RiwayatPerubahanNilai::query()
             ->where('peserta_mata_kuliah_id', $peserta->getKey())
-            ->whereIn('komponen', array_map(
-                fn (KomponenNilai $item): string => $item->value,
-                self::KOMPONEN_DITULIS,
-            ))
+            ->whereIn('komponen', $komponen)
             ->with('actor')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
@@ -374,7 +410,7 @@ class PenilaianService
             'nama' => $peserta->mahasiswa?->name ?? 'Mahasiswa tidak tersedia',
             'nim' => $peserta->mahasiswa?->nim ?? '-',
             'status_peserta' => $peserta->status?->value ?? '-',
-            'arsip' => $peserta->status !== StatusPeserta::Aktif,
+            'arsip' => ! KelayakanPeserta::berhak($peserta->status),
             'uts_label' => $detail['uts_label'],
             'uas_label' => $detail['uas_label'],
             'tugas_label' => $detail['tugas_label'],
@@ -386,6 +422,65 @@ class PenilaianService
             'alasan_label' => $detail['alasan_label'],
             'riwayat_url' => route('dosen.nilai.riwayat', [$kelas->getKey(), $peserta->getKey()]),
         ];
+    }
+
+    /**
+     * Hitung ulang status dari data terbaru. Relasi pada instance caller bisa
+     * sudah stale setelah transaksi, sehingga selalu memakai model segar.
+     */
+    private function statusNilaiAkhir(PesertaMataKuliah $peserta, ?bool $gunakanTugas = null): StatusNilaiAkhir
+    {
+        $terbaru = $peserta->fresh();
+
+        if ($terbaru === null) {
+            return StatusNilaiAkhir::BelumLengkap;
+        }
+
+        $konfigurasi = $gunakanTugas ?? $terbaru->kelasMataKuliah?->gunakanTugas();
+        $hasil = $this->akhir->hitung(
+            $this->nilaiKomponen($terbaru, KomponenNilai::Uts),
+            $this->nilaiKomponen($terbaru, KomponenNilai::Uas),
+            $this->nilaiTugas($terbaru),
+            $konfigurasi,
+        );
+
+        return $hasil['status'];
+    }
+
+    /**
+     * Kirim notifikasi nilai akhir sekali per peserta ketika nilainya menjadi
+     * lengkap. Kunci sumber stabil mencegah duplikat saat nilai dikoreksi.
+     */
+    private function notifikasiNilaiAkhirJikaLengkap(
+        PesertaMataKuliah $peserta,
+        StatusNilaiAkhir $sebelum,
+        KelasMataKuliah $kelas,
+        ?bool $konfigurasiSesudah = null,
+    ): void {
+        if ($sebelum === StatusNilaiAkhir::Lengkap) {
+            return;
+        }
+
+        if ($this->statusNilaiAkhir($peserta, $konfigurasiSesudah) !== StatusNilaiAkhir::Lengkap) {
+            return;
+        }
+
+        $mahasiswaId = (int) $peserta->mahasiswa_id;
+        if ($mahasiswaId <= 0) {
+            return;
+        }
+
+        $mataKuliah = $kelas->mataKuliah?->nama ?? 'mata kuliah';
+        $sumber = 'nilai-akhir:'.$peserta->getKey();
+
+        DB::afterCommit(fn (): int => $this->notifikasi->kirimKeMahasiswa(
+            [$mahasiswaId],
+            JenisNotifikasi::Nilai,
+            'Nilai akhir tersedia',
+            'Nilai akhir untuk '.$mataKuliah.' telah tersedia.',
+            '/mahasiswa/nilai',
+            $sumber,
+        ));
     }
 
     private function catatPerubahan(

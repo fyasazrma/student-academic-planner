@@ -55,12 +55,31 @@
             />
             <x-stat-card
                 :label="'Progres materi ('.$stats['progres_selesai'].'/'.$stats['progres_total'].')'"
-                :value="$stats['progres_persen'].'%'"
+                :value="number_format((float) $stats['progres_persen'], 2, ',', '.').'%'"
                 hint="Materi selesai dari kelas Anda"
                 icon="book"
                 tone="kuliah"
             />
         </section>
+
+        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <x-mahasiswa.calendar-panel
+                :calendar="$calendar"
+                :timeline="$timeline"
+                :current-view="$currentView"
+                :active-filters="$activeFilters"
+                :filter-options="$filterOptions"
+                :today="$today"
+                route-name="mahasiswa.dashboard"
+            />
+
+            <x-notification-panel
+                :notifications="$notifications"
+                :deadlines="$deadlines"
+                :next-schedules="$nextSchedules"
+                :unread-count="$unreadCount"
+            />
+        </div>
 
         <section aria-label="Ringkasan belajar" class="grid gap-4 lg:grid-cols-2">
             <article class="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
@@ -119,24 +138,5 @@
                 @endif
             </article>
         </section>
-
-        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <x-mahasiswa.calendar-panel
-                :calendar="$calendar"
-                :timeline="$timeline"
-                :current-view="$currentView"
-                :active-filters="$activeFilters"
-                :filter-options="$filterOptions"
-                :today="$today"
-                route-name="mahasiswa.dashboard"
-            />
-
-            <x-notification-panel
-                :notifications="$notifications"
-                :deadlines="$deadlines"
-                :next-schedules="$nextSchedules"
-                :unread-count="$unreadCount"
-            />
-        </div>
     </div>
 </x-app-layout>

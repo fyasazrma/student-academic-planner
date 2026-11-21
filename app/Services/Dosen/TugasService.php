@@ -264,6 +264,12 @@ class TugasService
 
                 $tugas->fill($atribut)->save();
 
+                // Kembali ke draft: notifikasi lama tidak boleh menunjuk ke
+                // tugas yang sudah tidak dapat dilihat mahasiswa.
+                if (! $tugas->sudahDipublikasikan() && $duluDipublikasi) {
+                    $this->notifikasi->hapusBersumber('tugas:'.$tugas->getKey().':dipublikasikan');
+                }
+
                 if ($tugas->sudahDipublikasikan() && ! $duluDipublikasi) {
                     DB::afterCommit(fn (): int => $this->notifikasi->kirimKeKelas(
                         $kelas->getKey(),

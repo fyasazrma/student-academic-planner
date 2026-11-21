@@ -76,7 +76,7 @@
                         @if ($item['boleh_isi'])
                             <form method="POST" action="{{ $item['url'] }}" class="mt-4 border-t border-border pt-4">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-primary-text transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
                                     <x-icon name="check" class="h-4 w-4" />
                                     Isi absensi hadir
                                 </button>

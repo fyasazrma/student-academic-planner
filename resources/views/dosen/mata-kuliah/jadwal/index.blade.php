@@ -16,7 +16,7 @@
                     </a>
                     <a
                         href="{{ route('dosen.mata-kuliah.jadwal.create', $kelas) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-agenda-tugas px-3 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas focus-visible:ring-offset-2"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                     >
                         <x-icon name="calendar" class="h-4 w-4" />
                         Tambah jadwal
@@ -39,7 +39,7 @@
             >
                 <a
                     href="{{ route('dosen.mata-kuliah.jadwal.create', $kelas) }}"
-                    class="inline-flex items-center justify-center rounded-xl bg-agenda-tugas px-3 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                    class="inline-flex items-center justify-center rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                     Tambah jadwal
                 </a>

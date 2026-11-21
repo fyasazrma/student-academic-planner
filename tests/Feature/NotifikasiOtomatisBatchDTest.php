@@ -253,7 +253,10 @@ class NotifikasiOtomatisBatchDTest extends TestCase
             ->assertRedirect(route('mahasiswa.tugas'));
         $this->actingAs($mahasiswa)->get(route('mahasiswa.tugas.pengumpulan.unduh', $tugas->id))->assertOk();
 
-        $this->assertSame(1, Notifikasi::count());
+        $this->assertSame(2, Notifikasi::count());
+        $notifikasiDosen = Notifikasi::untukUser($dosen->id)->firstOrFail();
+        $this->assertStringStartsWith('Pengumpulan tugas baru:', $notifikasiDosen->judul);
+        $this->assertStringStartsWith('/dosen/', (string) $notifikasiDosen->tautan);
     }
 
     /**

@@ -22,7 +22,7 @@ class JadwalKuliahController extends Controller
 
         return view('admin.jadwal-kuliah.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'jadwal' => $this->service->daftar($filters),
             'filters' => $filters,
             'hariOptions' => $this->service->opsiHari(),
@@ -79,7 +79,7 @@ class JadwalKuliahController extends Controller
     {
         return [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'jadwal' => $jadwal,
             'hariOptions' => $this->service->opsiHari(),
             'jenisOptions' => $this->service->opsiJenis(),

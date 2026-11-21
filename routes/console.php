@@ -17,3 +17,13 @@ Schedule::command('absensi:tutup-otomatis')
     ->timezone('Asia/Jakarta')
     ->everyMinute()
     ->withoutOverlapping();
+
+/*
+ * Pengumuman terjadwal menjadi terlihat otomatis saat waktunya tiba karena query
+ * mahasiswa memfilter dipublikasikan_pada <= now(). Command ini memastikan
+ * notifikasi ikut dikirim tepat saat publikasi dan aman dijalankan berulang.
+ */
+Schedule::command('pengumuman:terbitkan-terjadwal')
+    ->timezone('Asia/Jakarta')
+    ->everyMinute()
+    ->withoutOverlapping();

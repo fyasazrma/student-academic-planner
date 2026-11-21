@@ -7,7 +7,7 @@
 @endphp
 
 @if ($errors->any())
-    <div role="alert" class="mb-6 rounded-xl border border-agenda-terlambat/30 bg-agenda-terlambat/10 px-4 py-3 text-xs leading-5 text-text">
+    <div role="alert" class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-xs leading-5 text-text">
         <p class="font-bold">Periksa kembali formulir jadwal.</p>
         <ul class="mt-2 list-disc space-y-1 pl-5">
             @foreach ($errors->all() as $error)
@@ -36,7 +36,7 @@
             @endforeach
         </select>
         @error('hari')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -58,7 +58,7 @@
             @endforeach
         </div>
         @error('jenis')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -73,7 +73,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition focus:border-agenda-tugas focus:outline-none focus:ring-2 focus:ring-agenda-tugas/25"
         >
         @error('jam_mulai')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -88,7 +88,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition focus:border-agenda-tugas focus:outline-none focus:ring-2 focus:ring-agenda-tugas/25"
         >
         @error('jam_selesai')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -104,7 +104,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition placeholder:text-muted focus:border-agenda-tugas focus:outline-none focus:ring-2 focus:ring-agenda-tugas/25"
         >
         @error('ruang')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
         <p class="mt-1.5 text-[11px] leading-4 text-muted">Kosongkan jika ruang belum ditentukan.</p>
     </div>

@@ -3,6 +3,9 @@
 namespace App\Services\Dosen;
 
 use App\Enums\StatusPeserta;
+use App\Enums\StatusTugasMahasiswa;
+use App\Support\KelayakanPeserta;
+use App\Support\StatusTugasResolver;
 use App\Models\KelasMataKuliah;
 use App\Models\PengumpulanTugas;
 use App\Models\PesertaMataKuliah;
@@ -66,7 +69,7 @@ class PengumpulanTugasService
             ->keyBy('peserta_mata_kuliah_id');
 
         $peserta = $pesertaModels
-            ->filter(fn (PesertaMataKuliah $item): bool => $item->status === StatusPeserta::Aktif
+            ->filter(fn (PesertaMataKuliah $item): bool => KelayakanPeserta::berhak($item->status)
                 || $pengumpulanModels->has($item->getKey()))
             ->map(fn (PesertaMataKuliah $item): array => $this->barisPeserta(
                 $item,
@@ -88,6 +91,14 @@ class PengumpulanTugasService
                     ->count(),
                 'sudah_dinilai' => $peserta->where('sudah_dinilai', true)->count(),
                 'terlambat' => $peserta->where('terlambat', true)->count(),
+                'belum_dikumpulkan' => $peserta
+                    ->filter(fn (array $baris): bool => ! $baris['sudah_mengumpulkan']
+                        && $baris['status'] === StatusTugasMahasiswa::BelumDikumpulkan->value)
+                    ->count(),
+                'terlambat_belum_mengumpulkan' => $peserta
+                    ->filter(fn (array $baris): bool => ! $baris['sudah_mengumpulkan']
+                        && $baris['status'] === StatusTugasMahasiswa::Terlambat->value)
+                    ->count(),
             ],
             'peserta' => $peserta,
         ];
@@ -107,7 +118,7 @@ class PengumpulanTugasService
         $pengumpulan = $this->pengumpulanMilikTugasKelas($kelas, $tugas, $pengumpulanId);
         $peserta = $pengumpulan->pesertaMataKuliah;
         $sudahDinilai = $pengumpulan->sudahDinilai();
-        $arsip = $peserta !== null && $peserta->status !== StatusPeserta::Aktif;
+        $arsip = $peserta !== null && ! KelayakanPeserta::berhak($peserta->status);
 
         return [
             'kelas' => $kelas,
@@ -150,8 +161,10 @@ class PengumpulanTugasService
     ): array {
         $sudahMengumpulkan = $pengumpulan !== null;
         $sudahDinilai = $sudahMengumpulkan && $pengumpulan->sudahDinilai();
-        $status = $sudahMengumpulkan ? $pengumpulan->status : 'belum_mengumpulkan';
-        $arsip = $peserta->status !== StatusPeserta::Aktif && $sudahMengumpulkan;
+        $status = $sudahMengumpulkan
+            ? $pengumpulan->status
+            : StatusTugasResolver::tentukan(null, $tugas->deadline)->value;
+        $arsip = ! KelayakanPeserta::berhak($peserta->status) && $sudahMengumpulkan;
 
         return [
             'peserta_id' => $peserta->getKey(),
@@ -164,8 +177,8 @@ class PengumpulanTugasService
             'sudah_dinilai' => $sudahDinilai,
             'terlambat' => $sudahMengumpulkan && (bool) $pengumpulan->terlambat,
             'status' => $status,
-            'status_label' => $sudahMengumpulkan ? $this->labelStatus($status) : 'Belum mengumpulkan',
-            'status_tone' => $sudahMengumpulkan ? $this->toneStatus($status) : 'netral',
+            'status_label' => $sudahMengumpulkan ? $this->labelStatus($status) : StatusTugasMahasiswa::labelDariNilai($status),
+            'status_tone' => $sudahMengumpulkan ? $this->toneStatus($status) : StatusTugasMahasiswa::toneDariNilai($status),
             'dikumpulkan_label' => $pengumpulan?->dikumpulkan_pada?->translatedFormat('d M Y H:i') ?? '-',
             'lampiran_nama' => $pengumpulan?->file_name,
             'nilai_label' => $sudahDinilai

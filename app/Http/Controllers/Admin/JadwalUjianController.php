@@ -22,7 +22,7 @@ class JadwalUjianController extends Controller
 
         return view('admin.jadwal-ujian.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'ujian' => $this->service->daftar($filters),
             'filters' => $filters,
             'jenisUjianOptions' => $this->service->opsiJenisUjian(),
@@ -80,7 +80,7 @@ class JadwalUjianController extends Controller
 
         return [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'ujian' => $ujian,
             'jenisUjianOptions' => $this->service->opsiJenisUjian(),
             'tahunOptions' => $this->service->opsiTahunAkademik(),

@@ -37,7 +37,7 @@
                     </a>
                     <a
                         href="{{ route('dosen.mata-kuliah.edit', $kelas->id) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-agenda-tugas px-3 py-2 text-xs font-bold text-white transition hover:bg-agenda-tugas/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-text transition hover:bg-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         <x-icon name="check" class="h-4 w-4" />
                         Edit kelas

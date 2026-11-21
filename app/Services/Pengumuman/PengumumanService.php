@@ -6,9 +6,11 @@ use App\Enums\JenisAgenda;
 use App\Enums\JenisNotifikasi;
 use App\Enums\StatusPublikasi;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Enums\UserRole;
 use App\Models\AgendaAkademik;
 use App\Models\KelasMataKuliah;
+use App\Models\Notifikasi;
 use App\Models\PesertaMataKuliah;
 use App\Services\Notifikasi\NotifikasiService;
 use Carbon\Carbon;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Pengumuman memakai satu sumber data: agenda_akademik dengan jenis=pengumuman.
@@ -140,7 +143,7 @@ class PengumumanService
             }
 
             if ($publikasi !== null && $publikasi->lessThanOrEqualTo(now()) && ($baru || $duluPublikasi === null)) {
-                DB::afterCommit(fn () => $this->kirimNotifikasi($record));
+                DB::afterCommit(fn () => $this->kirimNotifikasi($record, $userId));
             }
 
             return $record;
@@ -158,20 +161,110 @@ class PengumumanService
         });
     }
 
-    private function kirimNotifikasi(AgendaAkademik $record): void
+    /**
+     * Publikasi otomatis pengumuman terjadwal yang sudah mencapai waktunya.
+     *
+     * Tidak ada kolom status baru: penanda "sudah diberitahu" memakai dedup
+     * notifikasi pada kunci sumber `pengumuman:{id}`. Karena itu proses aman
+     * dijalankan berulang kali dan tidak perlu migration baru.
+     *
+     * @return array{diproses: int, notifikasi: int, gagal: int}
+     */
+    public function terbitkanYangJatuhTempo(): array
+    {
+        $kandidat = AgendaAkademik::query()
+            ->where('jenis', JenisAgenda::Pengumuman->value)
+            ->whereNotNull('dipublikasikan_pada')
+            ->where('dipublikasikan_pada', '<=', now())
+            ->orderBy('dipublikasikan_pada')
+            ->get();
+
+        $diproses = 0;
+        $notifikasi = 0;
+        $gagal = 0;
+
+        foreach ($kandidat as $item) {
+            try {
+                $baru = DB::transaction(function () use ($item): bool {
+                    $record = AgendaAkademik::query()
+                        ->whereKey($item->getKey())
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($record === null || $this->sudahDiberitahu($record)) {
+                        return false;
+                    }
+
+                    DB::afterCommit(function () use ($record): void {
+                        $this->kirimNotifikasi($record, (int) ($record->dibuat_oleh ?? 0));
+                    });
+
+                    return true;
+                });
+            } catch (Throwable $exception) {
+                report($exception);
+                $gagal++;
+
+                continue;
+            }
+
+            if (! $baru) {
+                continue;
+            }
+
+            $diproses++;
+            $notifikasi += Notifikasi::query()
+                ->where('tipe', JenisNotifikasi::Pengumuman->value)
+                ->where('data->sumber', $this->kunciSumber((int) $item->getKey()))
+                ->count();
+        }
+
+        return [
+            'diproses' => $diproses,
+            'notifikasi' => $notifikasi,
+            'gagal' => $gagal,
+        ];
+    }
+
+    private function sudahDiberitahu(AgendaAkademik $record): bool
+    {
+        return Notifikasi::query()
+            ->where('tipe', JenisNotifikasi::Pengumuman->value)
+            ->where('data->sumber', $this->kunciSumber((int) $record->getKey()))
+            ->exists();
+    }
+
+    private function kirimNotifikasi(AgendaAkademik $record, ?int $aktorId = null): void
     {
         $judul = 'Pengumuman baru: '.$record->judul;
         $ringkasan = Str::limit(strip_tags($record->deskripsi ?? ''), 180);
-        $tautan = '/mahasiswa/pengumuman/'.$record->getKey();
-        $sumber = $this->kunciSumber((int) $record->getKey());
+        $id = (int) $record->getKey();
+        $sumber = $this->kunciSumber($id);
 
         if ($record->kelas_mata_kuliah_id === null) {
             $this->notifikasi->kirimKeSemuaMahasiswa(
                 JenisNotifikasi::Pengumuman,
                 $judul,
                 $ringkasan,
-                $tautan,
+                '/mahasiswa/pengumuman/'.$id,
                 $sumber,
+                $aktorId,
+            );
+            $this->notifikasi->kirimKeSemuaAdmin(
+                JenisNotifikasi::Pengumuman,
+                $judul,
+                $ringkasan,
+                '/admin/pengumuman/'.$id,
+                $sumber,
+                $aktorId,
+            );
+            $this->notifikasi->kirimKeSemuaDosen(
+                JenisNotifikasi::Pengumuman,
+                $judul,
+                $ringkasan,
+                '/dosen/pengumuman/'.$id,
+                $sumber,
+                $aktorId,
             );
 
             return;
@@ -182,8 +275,18 @@ class PengumumanService
             JenisNotifikasi::Pengumuman,
             $judul,
             $ringkasan,
-            $tautan,
+            '/mahasiswa/pengumuman/'.$id,
             $sumber,
+            $aktorId,
+        );
+        $this->notifikasi->kirimKeDosenPengampu(
+            (int) $record->kelas_mata_kuliah_id,
+            JenisNotifikasi::Pengumuman,
+            $judul,
+            $ringkasan,
+            '/dosen/pengumuman/'.$id,
+            $sumber,
+            $aktorId,
         );
     }
 
@@ -251,7 +354,11 @@ class PengumumanService
         if ($status === 'draft') {
             $query->whereNull('dipublikasikan_pada');
         } elseif ($status === 'terbit') {
-            $query->whereNotNull('dipublikasikan_pada');
+            $query->whereNotNull('dipublikasikan_pada')
+                ->where('dipublikasikan_pada', '<=', now());
+        } elseif ($status === 'terjadwal') {
+            $query->whereNotNull('dipublikasikan_pada')
+                ->where('dipublikasikan_pada', '>', now());
         }
 
         if (($filters['q'] ?? null) !== null && trim((string) $filters['q']) !== '') {
@@ -284,7 +391,7 @@ class PengumumanService
     {
         $kelasIds = PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
-            ->where('status', StatusPeserta::Aktif->value)
+            ->whereIn('status', \App\Support\KelayakanPeserta::nilaiStatusBerhak())
             ->pluck('kelas_mata_kuliah_id');
 
         return AgendaAkademik::query()

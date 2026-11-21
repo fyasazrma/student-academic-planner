@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Mahasiswa\AbsensiRequest;
-use App\Models\Notifikasi;
 use App\Services\Absensi\AbsensiService;
 use App\Services\Absensi\RekapAbsensiService;
 use Illuminate\Http\RedirectResponse;
@@ -25,7 +24,7 @@ class AbsensiController extends Controller
 
         return view('mahasiswa.absensi.index', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount($id),
+            'unreadCount' => $this->unreadCount(),
             'sesi' => $this->absensi->daftarSesiMahasiswa($id),
             'rekap' => $this->rekap->rekapMahasiswa($id),
         ]);
@@ -50,7 +49,7 @@ class AbsensiController extends Controller
 
         return view('mahasiswa.absensi.riwayat', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount($id),
+            'unreadCount' => $this->unreadCount(),
             'riwayat' => $this->absensi->riwayatPribadi($id),
         ]);
     }
@@ -62,15 +61,9 @@ class AbsensiController extends Controller
 
         return view('mahasiswa.absensi.rekap', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount($id),
+            'unreadCount' => $this->unreadCount(),
             'rekap' => $this->rekap->rekapMahasiswa($id),
         ]);
     }
 
-    private function unreadCount(int $userId): int
-    {
-        return Notifikasi::untukUser($userId)
-            ->belumDibaca()
-            ->count();
-    }
 }

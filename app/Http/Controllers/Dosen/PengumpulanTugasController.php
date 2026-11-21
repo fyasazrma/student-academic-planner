@@ -20,7 +20,7 @@ class PengumpulanTugasController extends Controller
 
         return view('dosen.mata-kuliah.tugas.pengumpulan.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $data['kelas'],
             'infoTugas' => $data['info_tugas'],
             'statistik' => $data['statistik'],
@@ -38,7 +38,7 @@ class PengumpulanTugasController extends Controller
 
         return view('dosen.mata-kuliah.tugas.pengumpulan.show', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $data['kelas'],
             'infoTugas' => $data['info_tugas'],
             'pengumpulan' => $data['pengumpulan'],

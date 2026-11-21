@@ -4,7 +4,9 @@ namespace App\Services\Mahasiswa;
 
 use App\Enums\JenisAgenda;
 use App\Enums\StatusPeserta;
-use App\Enums\StatusProgres;
+use App\Enums\StatusTugasMahasiswa;
+use App\Support\KelayakanPeserta;
+use App\Support\StatusTugasResolver;
 use App\Services\Calendar\CalendarCategory;
 use App\Services\Calendar\CalendarEventFactory;
 use App\Services\Calendar\CalendarViewBuilder;
@@ -12,7 +14,6 @@ use App\Models\AgendaAkademik;
 use App\Models\MateriPembelajaran;
 use App\Models\Notifikasi;
 use App\Models\PesertaMataKuliah;
-use App\Models\ProgresMateri;
 use App\Models\TahunAkademik;
 use App\Models\Tugas;
 use Carbon\Carbon;
@@ -40,8 +41,8 @@ class DashboardDataService
         'belum_dikumpulkan' => 'Belum dikumpulkan',
         'mendekati_deadline' => 'Mendekati deadline',
         'terlambat' => 'Terlambat',
-        'terkumpul' => 'Terkumpul',
-        'dinilai' => 'Dinilai',
+        'terkumpul' => 'Dikumpulkan',
+        'dinilai' => 'Sudah dinilai',
     ];
 
     /** @var array<string, string> */
@@ -82,18 +83,18 @@ class DashboardDataService
         $agendas = $this->agendas($classIds);
         $exams = $agendas->where('jenis', JenisAgenda::Ujian);
         $materials = $this->materials($classIds);
-        $progress = $this->materialProgress($registrationIds, $materials);
         $events = $this->calendarEvents($tasks, $agendas, $registrations, $materials);
         $targetRingkasan = $this->targetBelajar->ringkasan((int) $user->getAuthIdentifier());
         $progresOtomatis = $this->progresMateri->ringkasanOtomatis((int) $user->getAuthIdentifier());
 
         $stats = [
-            'belum_dikumpulkan' => $tasks->filter(fn (array $task): bool => ! $task['sudah_dikumpulkan'])->count(),
+            'belum_dikumpulkan' => $tasks->filter(fn (array $task): bool => $task['status'] === StatusTugasMahasiswa::BelumDikumpulkan->value)->count(),
+            'terlambat' => $tasks->filter(fn (array $task): bool => $task['status'] === StatusTugasMahasiswa::Terlambat->value)->count(),
             'mendekati_deadline' => $tasks->filter(fn (array $task): bool => $task['mendekati_deadline'])->count(),
             'ujian_mendatang' => $exams->filter(fn (AgendaAkademik $agenda): bool => $agenda->tanggal_mulai->greaterThanOrEqualTo(today()))->count(),
-            'progres_selesai' => $progress['selesai'],
-            'progres_total' => $progress['total'],
-            'progres_persen' => $progress['persen'],
+            'progres_selesai' => $progresOtomatis['selesai'],
+            'progres_total' => $progresOtomatis['total'],
+            'progres_persen' => $progresOtomatis['persentase'],
             'target_aktif' => $targetRingkasan['aktif'],
             'target_selesai' => $targetRingkasan['selesai'],
         ];
@@ -104,7 +105,7 @@ class DashboardDataService
         $calendar = $this->viewBuilder->build($events, $view, $date, $filters);
         $timeline = $this->viewBuilder->timeline($events);
         $deadlines = $tasks
-            ->filter(fn (array $task): bool => ! $task['sudah_dikumpulkan'] && Carbon::parse($task['deadline_at'])->isFuture())
+            ->filter(fn (array $task): bool => ! $task['sudah_dikumpulkan'] && Carbon::parse($task['deadline_at'])->greaterThanOrEqualTo(now()))
             ->sortBy('deadline_at')
             ->take(3)
             ->values()
@@ -207,13 +208,17 @@ class DashboardDataService
             }
 
             $statusCounts[$status] = $tasks
-                ->filter(fn (array $task): bool => $task['status'] === $status)
+                ->filter(fn (array $task): bool => $status === 'mendekati_deadline'
+                    ? $task['mendekati_deadline']
+                    : $task['status'] === $status)
                 ->count();
         }
 
         $filtered = $activeStatus === 'semua'
             ? $tasks
-            : $tasks->filter(fn (array $task): bool => $task['status'] === $activeStatus)->values();
+            : $tasks->filter(fn (array $task): bool => $activeStatus === 'mendekati_deadline'
+                ? $task['mendekati_deadline']
+                : $task['status'] === $activeStatus)->values();
 
         return [
             'user' => $user,
@@ -277,7 +282,7 @@ class DashboardDataService
     {
         return PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
-            ->where('status', StatusPeserta::Aktif->value)
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->with([
                 'kelasMataKuliah.mataKuliah',
                 'kelasMataKuliah.tahunAkademik',
@@ -323,20 +328,17 @@ class DashboardDataService
             $submission = $submissions->get($task->id);
             $published = $task->dipublikasikan_pada;
             $deadline = $task->deadline;
-            $isLate = $deadline->isPast();
+            $isLate = StatusTugasResolver::sudahLewatDeadline($deadline);
             $hoursToDeadline = now()->diffInHours($deadline, false);
             $deadlineDitutup = $isLate && ! $task->izinkan_terlambat;
             $bisaDikumpulkan = ! $deadlineDitutup
                 && ($submission === null || ! $submission->sudahDinilai());
 
-            $status = 'belum_dikumpulkan';
-            if ($submission !== null) {
-                $status = $submission->status;
-            } elseif ($isLate) {
-                $status = 'terlambat';
-            } elseif ($hoursToDeadline <= self::DEADLINE_DEKAT_JAM) {
-                $status = 'mendekati_deadline';
-            }
+            $statusTugas = StatusTugasResolver::tentukan($submission, $deadline);
+            $status = $statusTugas->value;
+            $mendekatiDeadline = $submission === null
+                && ! $isLate
+                && $hoursToDeadline <= self::DEADLINE_DEKAT_JAM;
 
             return [
                 'id' => $task->id,
@@ -350,7 +352,8 @@ class DashboardDataService
                 'deadline_label' => $deadline->translatedFormat('d M Y H:i'),
                 'deadline_tanggal' => $deadline->toDateString(),
                 'status' => $status,
-                'status_label' => $this->taskStatusLabel($status),
+                'status_label' => $statusTugas->label(),
+                'status_tone' => $statusTugas->tone(),
                 'sudah_dikumpulkan' => $submission !== null,
                 'bisa_dikumpulkan' => $bisaDikumpulkan,
                 'pengumpulan' => $submission === null ? null : [
@@ -364,8 +367,8 @@ class DashboardDataService
                     'umpan_balik' => $submission->umpan_balik,
                     'terlambat' => (bool) $submission->terlambat,
                 ],
-                'mendekati_deadline' => $submission === null && ! $isLate && $hoursToDeadline <= self::DEADLINE_DEKAT_JAM,
-                'terlambat' => ! $submission && $isLate,
+                'mendekati_deadline' => $mendekatiDeadline,
+                'terlambat' => $statusTugas === StatusTugasMahasiswa::Terlambat,
             ];
         })->values();
     }
@@ -405,36 +408,6 @@ class DashboardDataService
             ->with('kelasMataKuliah.mataKuliah')
             ->orderBy('dipublikasikan_pada')
             ->get();
-    }
-
-    /**
-     * @param  array<int, int>  $registrationIds
-     * @param  \Illuminate\Support\Collection<int, MateriPembelajaran>  $materials
-     * @return array{total: int, selesai: int, persen: int}
-     */
-    private function materialProgress(array $registrationIds, Collection $materials): array
-    {
-        if ($materials->isEmpty() || $registrationIds === []) {
-            return ['total' => 0, 'selesai' => 0, 'persen' => 0];
-        }
-
-        $materialIds = $materials->pluck('id')->all();
-
-        $progressRows = ProgresMateri::query()
-            ->whereIn('peserta_mata_kuliah_id', $registrationIds)
-            ->whereIn('materi_pembelajaran_id', $materialIds)
-            ->get();
-
-        $total = count($materialIds);
-        $selesai = $progressRows
-            ->filter(fn (ProgresMateri $row): bool => $row->status === StatusProgres::Selesai)
-            ->count();
-
-        return [
-            'total' => $total,
-            'selesai' => $selesai,
-            'persen' => $total === 0 ? 0 : (int) round($selesai / $total * 100),
-        ];
     }
 
     /**

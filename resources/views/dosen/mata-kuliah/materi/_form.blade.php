@@ -7,7 +7,7 @@
 @endphp
 
 @if ($errors->any())
-    <div role="alert" class="mb-6 rounded-xl border border-agenda-terlambat/30 bg-agenda-terlambat/10 px-4 py-3 text-xs leading-5 text-text">
+    <div role="alert" class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-xs leading-5 text-text">
         <p class="font-bold">Periksa kembali formulir materi.</p>
         <ul class="mt-2 list-disc space-y-1 pl-5">
             @foreach ($errors->all() as $error)
@@ -36,7 +36,7 @@
             class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition placeholder:text-muted focus:border-agenda-tugas focus:outline-none focus:ring-2 focus:ring-agenda-tugas/25"
         >
         @error('judul')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
     </div>
 
@@ -51,7 +51,7 @@
             class="mt-2 w-full resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-6 text-text transition placeholder:text-muted focus:border-agenda-tugas focus:outline-none focus:ring-2 focus:ring-agenda-tugas/25"
         >{{ $deskripsiValue }}</textarea>
         @error('deskripsi')
-            <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+            <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
         @enderror
         <p class="mt-1.5 text-[11px] leading-4 text-muted">Maksimal 5000 karakter.</p>
     </div>
@@ -94,7 +94,7 @@
         </label>
     </div>
     @error('status')
-        <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+        <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
     @enderror
 
     @if ($sedangMengubah)
@@ -128,7 +128,7 @@
         class="mt-2 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-text transition file:mr-3 file:rounded-lg file:border-0 file:bg-sidebar file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-white focus:border-agenda-tugas focus:outline-none focus:ring-2 focus:ring-agenda-tugas/25"
     >
     @error('file')
-        <p class="mt-1.5 text-xs text-agenda-terlambat">{{ $message }}</p>
+        <p role="alert" aria-live="assertive" class="mt-1.5 text-xs text-danger">{{ $message }}</p>
     @enderror
     <p class="mt-2 text-[11px] leading-5 text-muted">
         Ukuran maksimal 10 MB (10240 KB). Format yang didukung: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, TXT, ZIP.

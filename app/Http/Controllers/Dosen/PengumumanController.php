@@ -91,7 +91,7 @@ class PengumumanController extends Controller
     {
         return [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'pengumuman' => $this->service->daftar(
                 UserRole::Dosen->value,
                 (int) $request->user()->getAuthIdentifier(),
@@ -102,6 +102,7 @@ class PengumumanController extends Controller
                 'semua' => 'Semua status',
                 'draft' => 'Draft',
                 'terbit' => 'Terbit',
+                'terjadwal' => 'Terjadwal',
             ],
         ];
     }
@@ -123,7 +124,7 @@ class PengumumanController extends Controller
 
         return [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'pengumuman' => $record,
             'statusOptions' => [
                 'draft' => 'Draft',

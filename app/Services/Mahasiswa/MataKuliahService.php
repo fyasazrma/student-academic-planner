@@ -4,6 +4,7 @@ namespace App\Services\Mahasiswa;
 
 use App\Enums\StatusPendaftaranKelas;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
 use App\Models\KelasMataKuliah;
 use App\Models\PesertaMataKuliah;
 use App\Services\Kelas\KunciGabungKelasService;
@@ -50,7 +51,7 @@ class MataKuliahService
     {
         return PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
-            ->where('status', StatusPeserta::Aktif->value)
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->with([
                 'kelasMataKuliah.mataKuliah',
                 'kelasMataKuliah.tahunAkademik',
@@ -175,7 +176,7 @@ class MataKuliahService
                 ->first();
 
             if ($riwayat !== null) {
-                $kode = $riwayat->status === StatusPeserta::Aktif
+                $kode = KelayakanPeserta::berhak($riwayat->status)
                     ? self::HASIL_SUDAH_TERDAFTAR
                     : self::HASIL_RIWAYAT_NONAKTIF;
 

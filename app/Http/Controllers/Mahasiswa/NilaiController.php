@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Mahasiswa;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Mahasiswa\NilaiRequest;
-use App\Models\Notifikasi;
 use App\Services\Akademik\IndeksPrestasiService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,7 +20,7 @@ class NilaiController extends Controller
 
         return view('mahasiswa.nilai.index', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount($user->getAuthIdentifier()),
+            'unreadCount' => $this->unreadCount(),
             ...$this->service->ringkasan(
                 (int) $user->getAuthIdentifier(),
                 $request->query('tahun_akademik_id'),
@@ -39,13 +38,9 @@ class NilaiController extends Controller
 
         return view('mahasiswa.nilai.show', [
             'user' => $user,
-            'unreadCount' => $this->unreadCount($user->getAuthIdentifier()),
+            'unreadCount' => $this->unreadCount(),
             ...$data,
         ]);
     }
 
-    private function unreadCount(int $userId): int
-    {
-        return Notifikasi::untukUser($userId)->belumDibaca()->count();
-    }
 }

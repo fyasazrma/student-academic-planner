@@ -10,54 +10,50 @@ Antarmuka harus membuat pengguna cepat memahami:
 Desain bukan sekadar dekorasi. Kejelasan informasi, konsistensi, dan kemudahan penggunaan lebih penting daripada efek visual.
 
 ## 2. Arah visual
-Tema utama aplikasi adalah **Light Lavender Academic Dashboard**: modern, bersih, profesional, dan berorientasi produktivitas dengan nuansa lavender yang hangat namun tidak berat.
+Tema utama aplikasi adalah **Lavender Floating Dashboard**, mengikuti gambar referensi Eduplex (`docs/reference/eduplex-dashboard.png`, disetujui pengguna 21 Nov 2026): modern, bersih, ramah, dan berorientasi produktivitas. Nilai warna, radius, dan bayangan final ada di `docs/DESIGN_SYSTEM.md`.
 
-- Latar halaman (page background): lavender terang — memberi identitas aplikasi dan memisahkan browser chrome dari konten.
-- Permukaan aplikasi (application surface): putih/off-white — area konten utama yang bersih dan mudah dibaca.
-- Sidebar: navy gelap — memberikan kontras tegas dan struktur navigasi yang jelas.
-- Aksen utama: lime — digunakan untuk menu aktif pada sidebar; memberikan identitas visual yang kuat tanpa berlebihan.
-- Card: putih dengan border halus dan rounded corners.
-- Warna status: gunakan warna semantik secara konsisten (merah/rose untuk terlambat/urgent, amber untuk perhatian, hijau untuk selesai/sukses, biru untuk informasi).
-- Font: Plus Jakarta Sans (sudah dikonfigurasi via Bunny Fonts di vite.config.js).
-- Ikon: satu keluarga ikon konsisten yang sudah ada di proyek.
-- Sudut komponen: rounded sedang; jangan setiap elemen memakai radius berbeda.
-- Bayangan: halus dan seperlunya; hindari glow yang berlebihan.
+- **Latar halaman:** lavender jenuh (`#C2A5F9`) sebagai bingkai identitas aplikasi.
+- **Bingkai aplikasi:** off-white (`#F8F8F8`) dengan sudut sangat bulat (32px) dan bayangan lembut, mengambang di atas lavender dengan jarak ke tepi layar.
+- **Sidebar:** navy gelap (`#201F31`) yang juga mengambang di dalam bingkai (sudut 24px), bukan menempel ke tepi layar.
+- **Aksen:** lime (`#DAF17C`) untuk item menu aktif (pil penuh), CTA utama, hari ini di kalender, dan tombol "+" bulat. Teks di atas lime selalu gelap.
+- **Card:** putih, **tanpa border**, radius ±20px, bayangan sangat halus.
+- **Ubin ikon dan pil status:** pastel (peach, lime muda, lavender, sand) agar daftar terasa hangat dan mudah dipindai.
+- **Bentuk kontrol:** tombol, pil, tab, dropdown, dan avatar berbentuk `rounded-full`.
+- **Grafik:** batang navy ber-sudut bulat dengan satu batang lime sebagai sorotan dan tooltip gelap.
+- **Font:** Plus Jakarta Sans (sudah dikonfigurasi via Bunny Fonts di `vite.config.js`); hierarki lewat ukuran dan weight, bukan lewat banyak font.
+- **Ikon:** satu keluarga ikon outline tipis yang sudah ada di proyek.
+- **Bayangan:** halus dan berlapis dua; tanpa glow.
 
-Jangan menetapkan nilai hex final secara terpisah di setiap halaman. Nilai warna final didefinisikan terpusat di `DESIGN_SYSTEM.md` atau konfigurasi theme proyek (`resources/css/app.css`).
+**Tiru gaya, bukan konten.** Rating bintang, "Go Premium", "Download mobile app", dan angka jam dari gambar referensi tidak boleh muncul sebagai data palsu; ganti dengan padanan data nyata (pemetaan di `DESIGN_SYSTEM.md` §7).
+
+Jangan menetapkan nilai hex final secara terpisah di setiap halaman; semuanya terpusat di `resources/css/app.css`.
 
 ## 3. Kerangka aplikasi (Application Shell)
 Gunakan **satu shell aplikasi** untuk ketiga role (mahasiswa, dosen, admin). Perbedaan role hanya pada isi menu dan data yang ditampilkan.
 
 ### Desktop
-- Sidebar kiri berisi navigasi utama (navy gelap, item aktif lime).
-- Topbar di bagian atas berisi judul halaman, breadcrumb jika diperlukan, notifikasi, dan profil pengguna.
-- Area konten utama (putih/off-white) di tengah dengan lebar yang nyaman dan spacing konsisten.
-- Panel kanan (opsional, untuk dashboard) menampilkan notifikasi dan informasi penting.
-- Background luar (lavender) terlihat sebagai bingkai visual keseluruhan.
-- Konten utama tidak boleh tertutup sidebar atau topbar.
+- Bingkai off-white mengambang di atas latar lavender, dengan jarak ke tepi layar dan bayangan lembut.
+- Di dalam bingkai: sidebar navy mengambang (232px) di kiri, area utama di tengah, panel kanan (300px) khusus dashboard.
+- **Tidak ada topbar berlatar.** Baris header berada di dalam area utama: sapaan atau judul halaman di kiri; pencarian (bila nyata), lonceng notifikasi dengan badge, dan avatar di kanan.
+- Konten utama tidak boleh tertutup sidebar atau header.
 
 ### Sidebar
 - Logo dan nama aplikasi di bagian atas.
-- Kelompok menu berdasarkan role.
-- Item menu aktif menggunakan aksen lime (teks gelap pada background lime).
-- Item menu tidak aktif menggunakan teks putih/off-white pada background navy.
-- Hover state: warna latar sidebar hover (navy sedikit lebih terang).
-- Ikon konsisten dari satu library.
-- Area profil dan logout di bagian bawah sidebar.
+- Kelompok menu berdasarkan role; ikon outline tipis dari satu library.
+- Item aktif: pil lime penuh dengan teks gelap. Item tidak aktif: teks abu-terang pada navy. Hover: navy sedikit lebih terang.
+- Badge hitung notifikasi berwarna peach pada item Notifikasi, hanya bila angka > 0 dari data nyata.
+- Bagian bawah: kartu lime berisi pintasan nyata sesuai role (bila tidak ada pintasan nyata, kartu dihilangkan). Profil dan logout tetap mudah dijangkau.
 
-### Topbar
-- Judul halaman aktif.
-- Breadcrumb jika membantu orientasi (halaman dalam, bukan dashboard).
-- Ikon notifikasi dengan badge jumlah notifikasi belum dibaca.
-- Avatar/nama pengguna dan menu dropdown (profil, logout).
+### Header halaman
+- Dashboard: sapaan besar ("Halo, {nama} 👋") dengan sub-baris NIM/tahun akademik/semester.
+- Halaman dalam: judul halaman + breadcrumb ringkas di atasnya bila membantu orientasi.
+- Menu avatar (dropdown): profil, logout.
 
 ### Mobile
-- Sidebar berubah menjadi drawer yang bisa dibuka dan ditutup.
-- Topbar tetap ringkas dengan hamburger menu.
-- Main content menjadi satu kolom penuh.
-- Panel kanan berpindah ke dalam aliran konten utama (di bawah konten prioritas).
-- Kalender menggunakan tampilan agenda/list yang mudah dibaca.
-- Tabel lebar menggunakan horizontal scroll atau diubah menjadi card/list.
+- Bingkai penuh layar tanpa margin luar dan tanpa sudut bulat; sidebar menjadi drawer (buka/tutup via hamburger).
+- Header ringkas; konten satu kolom.
+- Panel kanan berpindah ke aliran konten utama (setelah konten prioritas).
+- Kalender memakai tampilan agenda/list; tabel lebar memakai scroll horizontal atau diubah menjadi card/list.
 
 ## 4. Navigasi
 - Menu disesuaikan dengan role.
@@ -70,13 +66,13 @@ Gunakan **satu shell aplikasi** untuk ketiga role (mahasiswa, dosen, admin). Per
 ## 5. Dashboard
 Kalender akademik adalah fokus utama dashboard. Pada desktop, kalender harus mendapat area visual yang dominan dan mudah ditemukan tanpa menggulir terlalu jauh.
 
+**Susunan visual (mengikuti referensi, kalender tetap dominan):** header sapaan → 3 kartu ringkas → kalender akademik sebagai card terbesar → baris dua card (Aktivitas Belajar | Jadwal Hari Ini) → Mata Kuliah Diikuti. Panel kanan: kartu fitur gelap → mini kalender (navigator) → Tugas & Deadline → Notifikasi terbaru. Detail ada di `DESIGN_SYSTEM.md` §7.
+
 ### Dashboard Mahasiswa — urutan prioritas konten
 1. Greeting dan identitas (nama mahasiswa, NIM, tahun akademik, semester aktif).
 2. Ringkasan cepat: tugas aktif, belum dikumpulkan, deadline terdekat, ujian mendatang — hanya angka yang didukung data nyata.
-3. Kalender akademik berukuran besar (Calendar View dan Timeline View).
-4. Jadwal kuliah terdekat.
-5. Progres materi pembelajaran.
-6. Panel notifikasi (notifikasi terbaru, deadline, ujian mendatang).
+3. Kalender akademik berukuran besar (Calendar View dan Timeline View) dengan panel notifikasi di kanan: notifikasi terbaru, deadline terdekat, ujian mendatang, agenda penting, dan jadwal kuliah terdekat.
+4. Ringkasan belajar: Target Belajar dan Progres Materi Otomatis dengan angka yang bersumber dari query yang sama seperti halaman detail.
 
 ### Dashboard Dosen — urutan prioritas konten
 1. Jadwal mengajar hari ini dan minggu ini.
@@ -173,7 +169,8 @@ Setiap komponen interaktif harus memiliki state yang jelas:
 
 ## 8. Form dan feedback
 - Label harus terlihat; jangan hanya mengandalkan placeholder.
-- Validasi ditampilkan dekat field terkait.
+- Validasi ditampilkan dekat field terkait dengan `text-danger`, `role="alert"`, dan `aria-live="assertive"`; ringkasan error memakai `border-danger/30 bg-danger/10`.
+- Field dengan error menambahkan `aria-invalid="true"` dan `aria-describedby` yang mengarah ke pesan terkait.
 - Pertahankan input pengguna ketika validasi gagal.
 - Berikan konfirmasi untuk aksi destruktif.
 - Setelah aksi berhasil, tampilkan feedback yang jelas.
@@ -202,3 +199,17 @@ Setiap komponen interaktif harus memiliki state yang jelas:
 - Menampilkan angka statistik tanpa sumber data nyata.
 - Menyamakan tanggal publikasi tugas dengan deadline.
 - Menyebut UTS/UAS hanya sebagai "Ujian" tanpa label yang jelas.
+- Card ber-border tebal, topbar berlatar, atau sidebar yang menempel ke tepi layar (menyimpang dari referensi).
+- Radius campur-aduk di luar skala token (frame 32 / panel 24 / card 20 / tile 14 / control 12 / full).
+- Menyalin konten palsu dari gambar referensi (rating, premium, download app, angka jam).
+- Library grafik/animasi berat, animasi `infinite` dekoratif, blur, atau glow.
+- Penyorotan yang hanya bergantung pada warna lime di atas putih (kontras rendah); selalu tambah tooltip/label.
+
+## 11. Interaksi dan performa
+Antarmuka harus terasa hidup tetapi tetap ringan di perangkat biasa.
+- Hover/fokus card dan baris: angkat 2px + bayangan sedikit lebih tegas (150–250 ms).
+- Grafik batang dan cincin progres beranimasi sekali saat muat; tooltip chart muncul saat hover **dan** fokus keyboard.
+- Mini kalender mengendalikan kalender utama; tab, dropdown, drawer, dan modal bekerja tanpa reload penuh bila memungkinkan, dengan fallback server-side.
+- Hormati `prefers-reduced-motion`.
+- Tidak menambah library animasi/grafik tanpa persetujuan; CSS dulu, JavaScript seperlunya, server-render dulu.
+- Aturan lengkap, anggaran performa, dan daftar periksa kemiripan: `DESIGN_SYSTEM.md` §8 dan §9.

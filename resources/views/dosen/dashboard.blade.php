@@ -69,6 +69,7 @@
                 :next-schedules="$nextSchedules"
                 :unread-count="$unreadCount"
                 :absensi-ringkasan="$absensiRingkasan"
+                :tugas-ringkasan="$tugasRingkasan"
             />
         </div>
 

@@ -281,8 +281,13 @@ class MahasiswaMataKuliahControllerTest extends TestCase
         );
     }
 
-    public function test_riwayat_nonaktif_dan_mengulang_minta_hubungi_dosen(): void
+    public function test_riwayat_nonaktif_minta_hubungi_dosen_dan_mengulang_dianggap_terdaftar(): void
     {
+        $pesan = [
+            StatusPeserta::Nonaktif->value => 'Anda memiliki riwayat pendaftaran pada kelas ini. Hubungi dosen untuk informasi lebih lanjut.',
+            StatusPeserta::Mengulang->value => 'Anda sudah terdaftar pada kelas ini.',
+        ];
+
         foreach ([StatusPeserta::Nonaktif, StatusPeserta::Mengulang] as $status) {
             [$kelas, $kunci] = $this->buatKelas();
             $mahasiswa = User::factory()->mahasiswa()->create();
@@ -291,7 +296,7 @@ class MahasiswaMataKuliahControllerTest extends TestCase
             $this->actingAs($mahasiswa)
                 ->post(route('mahasiswa.mata-kuliah.gabung'), ['kode_gabung' => $kunci])
                 ->assertRedirect()
-                ->assertSessionHas('status', 'Anda memiliki riwayat pendaftaran pada kelas ini. Hubungi dosen untuk informasi lebih lanjut.');
+                ->assertSessionHas('status', $pesan[$status->value]);
 
             $this->assertSame($status->value, $lama->fresh()->status->value);
         }

@@ -5,6 +5,8 @@ namespace App\Services\Dosen;
 use App\Enums\JenisAgenda;
 use App\Enums\StatusPendaftaranKelas;
 use App\Enums\StatusPeserta;
+use App\Support\KelayakanPeserta;
+use App\Support\StatusTugasResolver;
 use App\Enums\StatusSesiAbsensi;
 use App\Models\AgendaAkademik;
 use App\Models\JadwalKuliah;
@@ -107,6 +109,7 @@ class DashboardDataService
             'deadlines' => $this->deadlines($tasks),
             'nextSchedules' => $this->nextSchedules($schedules, $exams),
             'absensiRingkasan' => $this->absensiRingkasan($classIds),
+            'tugasRingkasan' => $this->tugasRingkasan($classIds),
             'calendar' => $this->viewBuilder->build($events, $view, $date, $filters),
             'timeline' => $this->viewBuilder->timeline($events),
             'filterOptions' => CalendarCategory::options(CalendarCategory::DOSEN),
@@ -311,7 +314,12 @@ class DashboardDataService
         $query = SesiAbsensi::query()->whereIn('kelas_mata_kuliah_id', $classIds);
         $dibuka = (clone $query)
             ->where('status', StatusSesiAbsensi::Dibuka->value)
-            ->withCount('absensi')
+            ->withCount([
+                'absensi as absensi_berhak_count' => fn ($absensi) => $absensi->whereHas(
+                    'pesertaMataKuliah',
+                    fn ($peserta) => $peserta->whereIn('status', KelayakanPeserta::nilaiStatusBerhak()),
+                ),
+            ])
             ->get();
 
         $belumMengisi = 0;
@@ -319,19 +327,76 @@ class DashboardDataService
         foreach ($dibuka as $sesi) {
             $berhak = PesertaMataKuliah::query()
                 ->where('kelas_mata_kuliah_id', $sesi->kelas_mata_kuliah_id)
-                ->whereIn('status', [
-                    StatusPeserta::Aktif->value,
-                    StatusPeserta::Mengulang->value,
-                ])
+                ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
                 ->count();
 
-            $belumMengisi += max(0, $berhak - (int) $sesi->absensi_count);
+            $belumMengisi += max(0, $berhak - (int) $sesi->absensi_berhak_count);
         }
 
         return [
             'sesi_dibuka' => $dibuka->count(),
             'sesi_hari_ini' => (clone $query)->whereDate('tanggal', today())->count(),
             'belum_mengisi' => $belumMengisi,
+            'url' => $url,
+        ];
+    }
+
+    /**
+     * Ringkasan tugas yang dibuat pada kelas milik dosen. Hanya tugas yang
+     * sudah dipublikasikan yang dihitung agar sejalan dengan tampilan tugas
+     * mahasiswa.
+     *
+     * @param  array<int, int>  $classIds
+     * @return array{dibuat: int, masuk: int, belum_dinilai: int, belum_dikumpulkan: int, terlambat: int, url: string}
+     */
+    private function tugasRingkasan(array $classIds): array
+    {
+        $url = route('dosen.mata-kuliah.index');
+
+        if ($classIds === []) {
+            return [
+                'dibuat' => 0,
+                'masuk' => 0,
+                'belum_dinilai' => 0,
+                'belum_dikumpulkan' => 0,
+                'terlambat' => 0,
+                'url' => $url,
+            ];
+        }
+
+        $tugas = Tugas::query()
+            ->whereIn('kelas_mata_kuliah_id', $classIds)
+            ->dipublikasikan()
+            ->withCount([
+                'pengumpulan as jumlah_masuk',
+                'pengumpulan as jumlah_belum_dinilai' => fn ($query) => $query
+                    ->whereNull('nilai')
+                    ->orWhereNull('dinilai_pada'),
+            ])
+            ->get();
+
+        $belumDikumpulkan = 0;
+        $terlambat = 0;
+
+        foreach ($tugas as $item) {
+            $berhak = $item->kelasMataKuliah?->peserta()
+                ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
+                ->count() ?? 0;
+            $sisa = max(0, $berhak - (int) $item->jumlah_masuk);
+
+            if (StatusTugasResolver::sudahLewatDeadline($item->deadline)) {
+                $terlambat += $sisa;
+            } else {
+                $belumDikumpulkan += $sisa;
+            }
+        }
+
+        return [
+            'dibuat' => $tugas->count(),
+            'masuk' => (int) $tugas->sum('jumlah_masuk'),
+            'belum_dinilai' => (int) $tugas->sum('jumlah_belum_dinilai'),
+            'belum_dikumpulkan' => $belumDikumpulkan,
+            'terlambat' => $terlambat,
             'url' => $url,
         ];
     }
@@ -467,6 +532,6 @@ class DashboardDataService
             return [];
         }
 
-        return CalendarCategory::parseFilters($value, CalendarCategory::MAHASISWA);
+        return CalendarCategory::parseFilters($value, CalendarCategory::DOSEN);
     }
 }

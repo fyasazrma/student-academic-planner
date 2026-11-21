@@ -169,6 +169,8 @@ class DosenPengumpulanTugasTest extends TestCase
             'belum_dinilai' => 2,
             'sudah_dinilai' => 1,
             'terlambat' => 1,
+            'belum_dikumpulkan' => 1,
+            'terlambat_belum_mengumpulkan' => 0,
         ], $statistik);
 
         $baris = $response->viewData('peserta');
@@ -198,7 +200,7 @@ class DosenPengumpulanTugasTest extends TestCase
         $response->assertOk()
             ->assertSee('Arsip Nonaktif')
             ->assertSee('Aktif Tanpa')
-            ->assertDontSee('Mengulang Tanpa');
+            ->assertSee('Mengulang Tanpa');
 
         $baris = $response->viewData('peserta');
         $arsip = $baris->firstWhere('nama', 'Arsip Nonaktif');
@@ -206,13 +208,17 @@ class DosenPengumpulanTugasTest extends TestCase
         $this->assertSame('Nonaktif', $arsip['status_peserta_label']);
         $this->assertTrue($arsip['sudah_mengumpulkan']);
 
-        $this->assertTrue($baris->firstWhere('nama', 'Aktif Tanpa')['arsip'] === false);
+        $this->assertFalse($baris->firstWhere('nama', 'Aktif Tanpa')['arsip']);
         $this->assertFalse($baris->firstWhere('nama', 'Aktif Tanpa')['sudah_mengumpulkan']);
-        $this->assertNull($baris->firstWhere('nama', 'Mengulang Tanpa'));
+        $mengulang = $baris->firstWhere('nama', 'Mengulang Tanpa');
+        $this->assertNotNull($mengulang);
+        $this->assertFalse($mengulang['arsip']);
+        $this->assertSame('Mengulang', $mengulang['status_peserta_label']);
+        $this->assertFalse($mengulang['sudah_mengumpulkan']);
 
-        $this->assertSame(2, $response->viewData('statistik')['jumlah_peserta']);
+        $this->assertSame(3, $response->viewData('statistik')['jumlah_peserta']);
         $this->assertSame(1, $response->viewData('statistik')['sudah_mengumpulkan']);
-        $this->assertSame(1, $response->viewData('statistik')['belum_mengumpulkan']);
+        $this->assertSame(2, $response->viewData('statistik')['belum_mengumpulkan']);
 
         $this->assertDatabaseHas('peserta_mata_kuliah', ['id' => $mengulangTanpa->id]);
     }

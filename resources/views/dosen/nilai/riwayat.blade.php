@@ -12,7 +12,7 @@
         <x-page-header
             title="Riwayat Perubahan Nilai"
             eyebrow="{{ $kelas->kode_kelas }} — {{ $kelas->mataKuliah?->nama ?? 'Mata kuliah tidak tersedia' }}"
-            description="Catatan pembuatan dan perubahan nilai UTS/UAS {{ $peserta->mahasiswa?->name ?? 'mahasiswa' }} (NIM {{ $peserta->mahasiswa?->nim ?? '-' }})."
+            description="Catatan perubahan nilai UTS/UAS dan konfigurasi komponen tugas {{ $peserta->mahasiswa?->name ?? 'mahasiswa' }} (NIM {{ $peserta->mahasiswa?->nim ?? '-' }})."
         >
             <x-slot:actions>
                 <a
@@ -28,7 +28,7 @@
         @if ($riwayat->isEmpty())
             <x-empty-state
                 title="Belum ada perubahan yang tercatat"
-                description="Setiap nilai UTS/UAS yang dibuat atau diubah pada kelas ini akan muncul di sini."
+                description="Setiap perubahan nilai UTS/UAS dan konfigurasi komponen tugas akan muncul di sini."
                 icon="clock"
             />
         @else

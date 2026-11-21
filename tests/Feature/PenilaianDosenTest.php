@@ -201,6 +201,35 @@ class PenilaianDosenTest extends TestCase
         ]);
     }
 
+    public function test_perubahan_konfigurasi_tugas_juga_tercatat_per_peserta_dan_tampil_di_riwayat(): void
+    {
+        $dosen = $this->dosenNilai();
+        $tahun = $this->tahunNilai(2026);
+        $kelas = $this->kelasNilai($dosen, $this->mataKuliahNilai(), $tahun, 'AVH', null);
+        $peserta = $this->pesertaNilai($kelas, $this->mahasiswaNilai('Mahasiswa Konfigurasi', 'NIM-KON'));
+
+        $this->actingAs($dosen)
+            ->post(route('dosen.nilai.konfigurasi', $kelas->getKey()), [
+                'gunakan_tugas' => '1',
+                'alasan' => 'Tugas diperhitungkan',
+            ])
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('riwayat_perubahan_nilai', [
+            'peserta_mata_kuliah_id' => $peserta->getKey(),
+            'komponen' => 'konfigurasi_tugas',
+            'nilai_sebelum' => null,
+            'nilai_sesudah' => '1.00',
+            'alasan' => 'Tugas diperhitungkan',
+        ]);
+
+        $this->actingAs($dosen)
+            ->get(route('dosen.nilai.riwayat', [$kelas->getKey(), $peserta->getKey()]))
+            ->assertOk()
+            ->assertSee('Konfigurasi tugas')
+            ->assertSee('Tugas diperhitungkan');
+    }
+
     public function test_halaman_riwayat_menampilkan_perubahan_nilai(): void
     {
         $dosen = $this->dosenNilai();

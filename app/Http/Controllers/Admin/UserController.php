@@ -29,7 +29,7 @@ class UserController extends Controller
 
         return view($konteks['view'].'.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'pengguna' => $this->service->daftar($request->query(), $konteks['peran']),
             'filter' => $this->service->normalisasiFilter($request->query()),
             'roleTetap' => $konteks['peran'],
@@ -44,7 +44,7 @@ class UserController extends Controller
 
         return view($konteks['view'].'.create', $this->viewData($konteks, [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'mode' => 'create',
             'target' => null,
             'data' => $this->service->dataFormulir(null, $konteks['peran']),
@@ -81,7 +81,7 @@ class UserController extends Controller
 
         return view($konteks['view'].'.show', $this->viewData($konteks, [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'detail' => $this->service->detail($target),
         ]));
     }
@@ -94,7 +94,7 @@ class UserController extends Controller
 
         return view($konteks['view'].'.edit', $this->viewData($konteks, [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'mode' => 'edit',
             'target' => $target,
             'data' => $this->service->dataFormulir($target, $konteks['peran']),

@@ -25,7 +25,7 @@ class MateriPembelajaranController extends Controller
 
         return view('dosen.mata-kuliah.materi.index', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $data['kelas'],
             'materi' => $data['materi'],
         ]);
@@ -37,7 +37,7 @@ class MateriPembelajaranController extends Controller
 
         return view('dosen.mata-kuliah.materi.create', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'data' => $this->service->dataFormulir(),
         ]);
@@ -63,7 +63,7 @@ class MateriPembelajaranController extends Controller
 
         return view('dosen.mata-kuliah.materi.edit', [
             'user' => $request->user(),
-            'unreadCount' => 0,
+            'unreadCount' => $this->unreadCount(),
             'kelas' => $milik,
             'materi' => $materiMilik,
             'data' => $this->service->dataFormulir($materiMilik),

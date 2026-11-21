@@ -10,6 +10,7 @@
     $isDosen = $role === 'dosen';
     $dashboardRoute = $isAdmin ? 'admin.dashboard' : ($isDosen ? 'dosen.dashboard' : 'mahasiswa.dashboard');
     $dashboardLabel = $isAdmin ? 'Dashboard Admin' : ($isDosen ? 'Dashboard Dosen' : 'Dashboard Mahasiswa');
+    $notifikasiRoute = $isAdmin ? 'admin.notifikasi' : ($isDosen ? 'dosen.notifikasi' : 'mahasiswa.notifikasi');
 
     $breadcrumbLabels = $isAdmin
         ? [
@@ -42,6 +43,7 @@
             'admin.dosen.create' => 'Tambah Dosen',
             'admin.dosen.show' => 'Detail Dosen',
             'admin.dosen.edit' => 'Ubah Dosen',
+            'admin.notifikasi' => 'Notifikasi',
         ]
         : ($isDosen
             ? [
@@ -71,6 +73,7 @@
                 'dosen.pengumuman.edit' => 'Ubah Pengumuman Kelas',
                 'dosen.profil' => 'Profil Saya',
                 'dosen.profil.edit' => 'Edit Profil',
+                'dosen.notifikasi' => 'Notifikasi',
             ]
             : [
                 'mahasiswa.dashboard' => 'Dashboard Mahasiswa',
@@ -130,20 +133,18 @@
         </div>
 
         <div class="ml-auto flex items-center gap-2 sm:gap-4">
-            @unless ($isAdmin || $isDosen)
-                <a
-                    href="{{ route('mahasiswa.notifikasi') }}"
-                    class="relative rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
-                    aria-label="Lihat notifikasi{{ $unreadCount > 0 ? ', '.$unreadCount.' belum dibaca' : '' }}"
-                >
-                    <x-icon name="bell" class="h-5 w-5" />
-                    @if ($unreadCount > 0)
-                        <span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
-                            {{ $unreadCount > 99 ? '99+' : $unreadCount }}
-                        </span>
-                    @endif
-                </a>
-            @endunless
+            <a
+                href="{{ route($notifikasiRoute) }}"
+                class="relative rounded-xl border border-border p-2 text-text transition hover:bg-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-agenda-tugas"
+                aria-label="Lihat notifikasi{{ $unreadCount > 0 ? ', '.$unreadCount.' belum dibaca' : '' }}"
+            >
+                <x-icon name="bell" class="h-5 w-5" />
+                @if ($unreadCount > 0)
+                    <span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-danger px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white">
+                        {{ $unreadCount > 99 ? '99+' : $unreadCount }}
+                    </span>
+                @endif
+            </a>
 
             @php
                 $profilRoute = $isDosen ? 'dosen.profil' : ($isAdmin ? null : 'mahasiswa.profil');

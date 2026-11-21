@@ -4,6 +4,8 @@ namespace App\Services\Mahasiswa;
 
 use App\Enums\StatusPeserta;
 use App\Enums\StatusTargetBelajar;
+use App\Support\KelayakanPeserta;
+use App\Support\StatusTargetResolver;
 use App\Models\PesertaMataKuliah;
 use App\Models\TargetBelajar;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -30,23 +32,40 @@ class TargetBelajarService
      */
     public function daftar(int $userId, ?string $statusFilter = null, ?int $mataKuliahId = null): array
     {
+        $filterStatus = $statusFilter !== null
+            && in_array($statusFilter, StatusTargetBelajar::nilaiFilter(), true);
+
         $query = TargetBelajar::query()
             ->where('mahasiswa_id', $userId)
             ->with('mataKuliah');
-
-        if ($statusFilter !== null && in_array($statusFilter, StatusTargetBelajar::nilaiFilter(), true)) {
-            $query->where('status', $statusFilter);
-        }
 
         if ($mataKuliahId !== null) {
             $query->where('mata_kuliah_id', $mataKuliahId);
         }
 
-        /** @var LengthAwarePaginator<int, TargetBelajar> $targets */
-        $targets = $query->orderByDesc('created_at')->paginate(10)->withQueryString();
+        $models = $query->orderByDesc('created_at')->get();
+
+        if ($filterStatus) {
+            $models = $models
+                ->filter(fn (TargetBelajar $target): bool => $this->statusEfetif($target)->value === $statusFilter)
+                ->values();
+        }
+
+        $perPage = 10;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $targets = new LengthAwarePaginator(
+            $models->slice(($page - 1) * $perPage, $perPage)
+                ->map(fn (TargetBelajar $target): array => $this->format($target))
+                ->all(),
+            $models->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()],
+        );
+        $targets->withQueryString();
 
         return [
-            'targets' => $targets->through(fn (TargetBelajar $target): array => $this->format($target)),
+            'targets' => $targets,
             'statuses' => collect(StatusTargetBelajar::cases())
                 ->map(fn (StatusTargetBelajar $status): array => [
                     'value' => $status->value,
@@ -116,7 +135,7 @@ class TargetBelajarService
     {
         return PesertaMataKuliah::query()
             ->where('mahasiswa_id', $userId)
-            ->where('status', StatusPeserta::Aktif->value)
+            ->whereIn('status', KelayakanPeserta::nilaiStatusBerhak())
             ->with('kelasMataKuliah.mataKuliah')
             ->get()
             ->pluck('kelasMataKuliah.mataKuliah')
@@ -231,7 +250,7 @@ class TargetBelajarService
         return DB::transaction(function () use ($userId, $targetId): TargetBelajar {
             $target = $this->targetMilik($userId, $targetId);
 
-            if ($target->status !== StatusTargetBelajar::Selesai) {
+            if ($this->statusEfetif($target) !== StatusTargetBelajar::Selesai) {
                 return $target;
             }
 
@@ -286,34 +305,12 @@ class TargetBelajarService
 
     private function statusEfetif(TargetBelajar $target): StatusTargetBelajar
     {
-        if ($target->status === StatusTargetBelajar::Dibatalkan) {
-            return StatusTargetBelajar::Dibatalkan;
-        }
-
-        if ($target->status === StatusTargetBelajar::Selesai) {
-            return StatusTargetBelajar::Selesai;
-        }
-
-        if ($this->capaianMencapaiTarget($target)) {
-            return StatusTargetBelajar::Selesai;
-        }
-
-        if ($target->deadline !== null && $target->deadline->isBefore(today())) {
-            return StatusTargetBelajar::Terlambat;
-        }
-
-        if ((float) $target->capaian > 0 || ($target->tanggal_mulai !== null && $target->tanggal_mulai->lessThanOrEqualTo(today()))) {
-            return StatusTargetBelajar::Berlangsung;
-        }
-
-        return StatusTargetBelajar::BelumDimulai;
+        return StatusTargetResolver::hitung($target);
     }
 
     private function capaianMencapaiTarget(TargetBelajar $target): bool
     {
-        return $target->target_nilai !== null
-            && $target->target_nilai > 0
-            && (float) $target->capaian >= $target->target_nilai;
+        return StatusTargetResolver::capaianMencapaiTarget($target);
     }
 
     private function persentase(float $capaian, ?float $targetNilai): int
@@ -365,6 +362,7 @@ class TargetBelajarService
             'status_label' => $status->label(),
             'status_tone' => $status->tone(),
             'persentase' => $this->persentase((float) $target->capaian, $target->target_nilai),
+            'bisa_tandai_selesai' => ! in_array($status, [StatusTargetBelajar::Selesai, StatusTargetBelajar::Dibatalkan], true),
             'bisa_dibatalkan_selesai' => $status === StatusTargetBelajar::Selesai && ! $this->capaianMencapaiTarget($target),
             'bisa_dibatalkan' => ! in_array($status, [StatusTargetBelajar::Dibatalkan], true),
             'dibuat_label' => $target->created_at?->translatedFormat('d M Y H:i') ?? '-',
